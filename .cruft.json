@@ -1,0 +1,21 @@
+{
+  "template": "https://github.com/fdrgsp/pyrepo-cookiecutter",
+  "commit": "b88c1cdc74cacc806c32985fe8692110857c0cba",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "full_name": "Federico Gasparoli",
+      "email": "federico.gasparoli@gmail.com",
+      "github_username": "fdrgsp",
+      "project_name": "micromanager-gui",
+      "project_slug": "micromanager_gui",
+      "project_short_description": "A Micro-Manager GUI based on pymmcore-widgets and pymmcore-plus.",
+      "pypi_username": "fdrgsp",
+      "_copy_without_render": [
+        ".github/workflows/*"
+      ],
+      "_template": "https://github.com/fdrgsp/pyrepo-cookiecutter"
+    }
+  },
+  "directory": null
+}
