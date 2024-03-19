@@ -29,7 +29,8 @@ dependencies = [
     "pymmcore-widgets >= 0.7.1",
     "pymmcore-plus >= 0.9.4",
     "qtpy",
-    "vispy"
+    "vispy",
+    "zarr"
 ]
 
 # extras
