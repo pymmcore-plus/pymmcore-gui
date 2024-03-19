@@ -14,6 +14,8 @@ class _ShuttersToolbar(QToolBar):
     ) -> None:
         super().__init__("Shutters ToolBar", parent)
 
+        self.setObjectName("Shutters ToolBar")
+
         self.setAllowedAreas(Qt.ToolBarArea.AllToolBarAreas)
 
         self._mmc = mmcore or CMMCorePlus.instance()

@@ -64,6 +64,9 @@ class MicroManagerGUI(QMainWindow):
 
         self._wizard: HardwareConfigWizard | None = None
 
+        # load latest layout
+        self._toolbar._widgets_toolbar._load_layout()
+
     def _add_menu(self) -> None:
 
         menubar = QMenuBar(self)

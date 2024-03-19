@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import base64
+import json
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from fonticon_mdi6 import MDI6
+from platformdirs import user_data_dir
 from pymmcore_widgets import MDAWidget, PropertyBrowser
-from qtpy.QtCore import QSize, Qt
+from qtpy.QtCore import QByteArray, QSize, Qt
 from qtpy.QtWidgets import (
     QDockWidget,
     QPushButton,
@@ -25,6 +29,10 @@ from ._widgets._stage_control import _StagesControlWidget
 if TYPE_CHECKING:
     from ._main_window import MicroManagerGUI
 
+
+# Path to the user data directory to store the layout
+USER_DATA_DIR = Path(user_data_dir(appname="micromanager_gui"))
+USER_LAYOUT_PATH = USER_DATA_DIR / "micromanager_gui_layout.json"
 
 BTN_SIZE = (60, 40)
 ALLOWED_AREAS = (
@@ -51,8 +59,18 @@ WIDGETS: dict[str, tuple[type[QWidget], str, str | None]] = {
 class ScrollableDockWidget(QDockWidget):
     """A QDockWidget with a QScrollArea."""
 
-    def __init__(self, title: str, parent: QWidget | None = None, *, widget: QWidget):
+    def __init__(
+        self,
+        title: str,
+        parent: QWidget | None = None,
+        *,
+        widget: QWidget,
+        objectName: str,
+    ):
         super().__init__(title, parent)
+        # set the object name
+        self.setObjectName(objectName)
+
         # set allowed dock areas
         self.setAllowedAreas(ALLOWED_AREAS)
 
@@ -78,21 +96,15 @@ class MainToolBar(QToolBar):
         self.setAllowedAreas(Qt.ToolBarArea.AllToolBarAreas)
 
         # snap and live toolbar
-        self._snap_live_toolbar = QToolBar("Snap/Live Toolbar", self)
-        self._snap_live_toolbar.setAllowedAreas(Qt.ToolBarArea.AllToolBarAreas)
+        self._snap_live_toolbar = SnapLiveToolBar(self)
         self._main_window.addToolBar(
             Qt.ToolBarArea.TopToolBarArea, self._snap_live_toolbar
         )
-        self._snap_button = Snap()
-        self._live_button = Live()
-        self._snap_live_toolbar.addWidget(self._snap_button)
-        self._snap_live_toolbar.addWidget(self._live_button)
 
         # widgets toolbar
         self._widgets_toolbar = _WidgetsToolBar(
             self, main_window=self._main_window, main_toolbar=self
         )
-        self._widgets_toolbar.setAllowedAreas(Qt.ToolBarArea.AllToolBarAreas)
         self._main_window.addToolBar(
             Qt.ToolBarArea.TopToolBarArea, self._widgets_toolbar
         )
@@ -113,6 +125,23 @@ class MainToolBar(QToolBar):
         menu.exec_(event.globalPos())
 
 
+class SnapLiveToolBar(QToolBar):
+    """A QToolBar containing QPushButtons for snap and live."""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__("Snap/Live Toolbar", parent)
+
+        self.setObjectName("Snap/Live ToolBar")
+
+        self.setAllowedAreas(Qt.ToolBarArea.AllToolBarAreas)
+
+        self._snap_button = Snap()
+        self._live_button = Live()
+
+        self.addWidget(self._snap_button)
+        self.addWidget(self._live_button)
+
+
 class _WidgetsToolBar(QToolBar):
     """A QToolBar containing QPushButtons for pymmcore-widgets.
 
@@ -131,13 +160,15 @@ class _WidgetsToolBar(QToolBar):
     ) -> None:
         super().__init__("Widgets ToolBar", parent)
 
+        self.setObjectName("Widgets ToolBar")
+
+        self.setAllowedAreas(Qt.ToolBarArea.AllToolBarAreas)
+
         self._main_window = main_window
         self._main_toolbar = main_toolbar
 
         # keep track of the created widgets
         self._widgets: dict[str, ScrollableDockWidget] = {}
-
-        self.setAllowedAreas(Qt.ToolBarArea.AllToolBarAreas)
 
         for key in WIDGETS:
             _, windows_name, btn_icon = WIDGETS[key]
@@ -163,11 +194,12 @@ class _WidgetsToolBar(QToolBar):
         else:
             self._main_toolbar._shutter_toolbar.show()
 
-    def _show_widget(self) -> None:
+    def _show_widget(self, key: str = "") -> None:
         """Show or raise a widget."""
-        # using QPushButton.whatsThis() property to get the key.
-        btn = cast(QPushButton, self.sender())
-        key = btn.whatsThis()
+        if not key:
+            # using QPushButton.whatsThis() property to get the key.
+            btn = cast(QPushButton, self.sender())
+            key = btn.whatsThis()
 
         if key in self._widgets:
             # already exists
@@ -193,13 +225,87 @@ class _WidgetsToolBar(QToolBar):
         wdg = wdg_cls(parent=self, mmcore=self._main_window._mmc)
 
         windows_title = WIDGETS[key][1]
-        dock = ScrollableDockWidget(windows_title, self, widget=wdg)
+        dock = ScrollableDockWidget(windows_title, self, widget=wdg, objectName=key)
+        self._connect_dock_widget(dock)
         self._main_window.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock)
         dock.setFloating(True)
         self._widgets[key] = dock
 
-        # if the widget is an MDAWidget, connect the onRunClicked signal
-        # if isinstance(wdg, _MDAWidget):
-        #     wdg.onRunClicked.connect(self._on_mda_run)
-
         return dock
+
+    def _connect_dock_widget(self, dock_wdg: QDockWidget) -> None:
+        """Connect the dock widget to the main window."""
+        dock_wdg.visibilityChanged.connect(self._save_layout)
+        dock_wdg.topLevelChanged.connect(self._save_layout)
+        dock_wdg.dockLocationChanged.connect(self._save_layout)
+
+    def _save_layout(self) -> None:
+        """Save the napa-micromanager layout to a json file.
+
+        The json file has two keys:
+        - "layout_state" where the state of napari main window is stored using the
+          saveState() method. The state is base64 encoded to be able to save it to the
+          json file.
+        - "pymmcore_widgets" where the names of the docked pymmcore_widgets are stored.
+
+        IMPORTANT: The "pymmcore_widgets" key is crucial in our layout saving process.
+        It stores the names of all active pymmcore_widgets at the time of saving. Before
+        restoring the layout, we must recreate these widgets. If not, they won't be
+        included in the restored layout.
+        """
+        # get the names of the pymmcore_widgets that are part of the layout
+        pymmcore_wdgs: list[str] = []
+        for dock_wdg in self._main_window.findChildren(ScrollableDockWidget):
+            wdg_name = dock_wdg.objectName()
+            if wdg_name in WIDGETS:
+                pymmcore_wdgs.append(wdg_name)
+
+        # get the state of the napari main window as bytes
+        state_bytes = self._main_window.saveState().data()
+
+        # Create dictionary with widget names and layout state. The layout state is
+        # base64 encoded to be able to save it to a json file.
+        data = {
+            "pymmcore_widgets": pymmcore_wdgs,
+            "layout_state": base64.b64encode(state_bytes).decode(),
+        }
+
+        # if the user layout path does not exist, create it
+        if not USER_LAYOUT_PATH.exists():
+            USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+        try:
+            with open(USER_LAYOUT_PATH, "w") as json_file:
+                json.dump(data, json_file)
+        except Exception as e:
+            print(f"Was not able to save layout to file. Error: {e}")
+
+    def _load_layout(self) -> None:
+        """Load the napari-micromanager layout from a json file."""
+        if not USER_LAYOUT_PATH.exists():
+            return
+
+        try:
+            with open(USER_LAYOUT_PATH) as f:
+                data = json.load(f)
+
+                # get the layout state bytes
+                state_bytes = data.get("layout_state")
+
+                if state_bytes is None:
+                    return
+
+                # add pymmcore_widgets to the main window
+                pymmcore_wdgs = data.get("pymmcore_widgets", [])
+                for wdg_name in pymmcore_wdgs:
+                    if wdg_name in WIDGETS:
+                        self._show_widget(wdg_name)
+
+                # Convert base64 encoded string back to bytes
+                state_bytes = base64.b64decode(state_bytes)
+
+                # restore the layout state
+                self._main_window.restoreState(QByteArray(state_bytes))
+
+        except Exception as e:
+            print(f"Was not able to load layout from file. Error: {e}")
