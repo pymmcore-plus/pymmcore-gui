@@ -429,7 +429,7 @@ class MDAViewer(OMEZarrWriter, QWidget):
         self._cmap = cmap
 
     def _on_save(self) -> None:
-        """Save the data as a tif or zarr."""
+        """Save the data as a zarr."""
         save_path, _ = QFileDialog.getSaveFileName(
             self,
             "Saving directory and filename.",
