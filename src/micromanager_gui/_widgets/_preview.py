@@ -123,7 +123,7 @@ class Preview(QWidget):
         btn_wdg_layout.addWidget(self._reset_view)
         # btn_wdg_layout.addWidget(self._save)
         main_layout.addWidget(btn_wdg)
-        
+
         # connections
         self._mmc.events.systemConfigurationLoaded.connect(self._on_sys_cfg_loaded)
 
@@ -131,7 +131,7 @@ class Preview(QWidget):
 
         self._reset()
         self._on_sys_cfg_loaded()
-    
+
     def _disconnect(self) -> None:
         self._mmc.events.systemConfigurationLoaded.disconnect(self._on_sys_cfg_loaded)
 
