@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets.hcwizard.intro_page import SRC_CONFIG
 from qtpy.QtCore import Qt
@@ -19,6 +21,9 @@ from ._util import (
     save_sys_config_dialog,
 )
 from ._widgets._config_wizard import HardwareConfigWizard
+
+if TYPE_CHECKING:
+    from qtpy.QtGui import QCloseEvent
 
 FLAGS = Qt.WindowType.Dialog
 DEFAULT = "Experiment"
@@ -108,3 +113,9 @@ class MicroManagerGUI(QMainWindow):
             current_cfg = self._mmc.systemConfigurationFile() or ""
             self._wizard.setField(SRC_CONFIG, current_cfg)
             self._wizard.show()
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        # close all viewers
+        for viewer in self._core_link._viewers:
+            viewer.close()
+        super().closeEvent(event)
