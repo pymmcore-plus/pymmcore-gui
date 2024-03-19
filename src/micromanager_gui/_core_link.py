@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, cast
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 from qtpy.QtCore import QObject, Qt
+from qtpy.QtGui import QScreen
 
 from ._widgets._mda._mda_viewer import MDAViewer
 from ._widgets._preview import Preview
@@ -24,7 +25,10 @@ class _CoreLink(QObject):
         self._mmc = mmcore or CMMCorePlus.instance()
 
         self._main_window = parent
-        self._canvas_size = (parent.size().height(), parent.size().height())
+
+        # set max canvas size to the screen height
+        screen_height = QScreen().geometry().height()
+        self._canvas_size = (screen_height, screen_height)
 
         self._is_mda_running: bool = False
 
