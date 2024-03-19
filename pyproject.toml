@@ -30,7 +30,8 @@ dependencies = [
     "pymmcore-plus >= 0.9.4",
     "qtpy",
     "vispy",
-    "zarr"
+    "zarr",
+    "tifffile"
 ]
 
 # extras
