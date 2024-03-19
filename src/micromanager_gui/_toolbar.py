@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import base64
 import json
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from fonticon_mdi6 import MDI6
-from platformdirs import user_data_dir
 from pymmcore_widgets import MDAWidget, PropertyBrowser
 from qtpy.QtCore import QByteArray, QSize, Qt
 from qtpy.QtWidgets import (
@@ -19,6 +17,11 @@ from qtpy.QtWidgets import (
 )
 from superqt.fonticon import icon
 
+from micromanager_gui._util import (
+    USER_DIR,
+    USER_LAYOUT_PATH,
+)
+
 from ._widgets._camera_roi import _CameraRoiWidget
 from ._widgets._group_and_preset import _GroupsAndPresets
 from ._widgets._pixel_configurations import _PixelConfigurationWidget
@@ -29,10 +32,6 @@ from ._widgets._stage_control import _StagesControlWidget
 if TYPE_CHECKING:
     from ._main_window import MicroManagerGUI
 
-
-# Path to the user data directory to store the layout
-USER_DATA_DIR = Path(user_data_dir(appname="micromanager_gui"))
-USER_LAYOUT_PATH = USER_DATA_DIR / "micromanager_gui_layout.json"
 
 BTN_SIZE = (60, 40)
 ALLOWED_AREAS = (
@@ -272,7 +271,7 @@ class _WidgetsToolBar(QToolBar):
 
         # if the user layout path does not exist, create it
         if not USER_LAYOUT_PATH.exists():
-            USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
+            USER_DIR.mkdir(parents=True, exist_ok=True)
 
         try:
             with open(USER_LAYOUT_PATH, "w") as json_file:

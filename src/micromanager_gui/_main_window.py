@@ -15,11 +15,9 @@ from qtpy.QtWidgets import (
 )
 
 from ._core_link import _CoreLink
+from ._init_system_config import InitializeSystemConfigurations
 from ._toolbar import MainToolBar
-from ._util import (
-    load_sys_config_dialog,
-    save_sys_config_dialog,
-)
+from ._util import load_sys_config_dialog, save_sys_config_dialog
 from ._widgets._config_wizard import HardwareConfigWizard
 
 if TYPE_CHECKING:
@@ -36,7 +34,11 @@ ALLOWED_AREAS = (
 
 class MicroManagerGUI(QMainWindow):
     def __init__(
-        self, parent: QWidget | None = None, *, mmcore: CMMCorePlus | None = None
+        self,
+        parent: QWidget | None = None,
+        *,
+        mmcore: CMMCorePlus | None = None,
+        config: str | None = None,
     ) -> None:
         super().__init__(parent)
 
@@ -71,6 +73,17 @@ class MicroManagerGUI(QMainWindow):
 
         # load latest layout
         self._toolbar._widgets_toolbar._load_layout()
+
+        # handle the system configurations at startup.
+        # with this we create/updatethe list of the Micro-Manager hardware system
+        # configurations files path stored as a json file in the user's configuration
+        # file directory (USER_CONFIGS_PATHS).
+        # a dialog will be also displayed if no system configuration file is
+        # provided to either select one from the list of available ones or to create
+        # a new one.
+        self._init_cfg = InitializeSystemConfigurations(
+            parent=self, config=config, mmcore=self._mmc
+        )
 
     def _add_menu(self) -> None:
 

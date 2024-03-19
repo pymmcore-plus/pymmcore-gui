@@ -13,8 +13,8 @@ from qtpy.QtWidgets import (
 )
 from superqt.utils import signals_blocked
 
-PLATE_FROM_CALIBRATION = "custom_from_calibration"
-USER_DIR = Path(user_config_dir("napari_micromanager"))
+USER_DIR = Path(user_config_dir("micromanager_gui"))
+USER_LAYOUT_PATH = USER_DIR / "micromanager_gui_layout.json"
 USER_CONFIGS_PATHS = USER_DIR / "system_configurations.json"
 
 
