@@ -126,6 +126,7 @@ class Preview(QWidget):
 
         # connections
         self._mmc.events.systemConfigurationLoaded.connect(self._on_sys_cfg_loaded)
+        self._mmc.events.roiSet.connect(self._reset)
 
         self.destroyed.connect(self._disconnect)
 

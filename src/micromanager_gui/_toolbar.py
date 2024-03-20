@@ -44,10 +44,9 @@ ALLOWED_AREAS = (
 # fmt: off
 # key: (widget, window name, icon)
 WIDGETS: dict[str, tuple[type[QWidget], str, str | None]] = {
-    "Shutters": (_ShuttersToolbar, "Shutters Control", MDI6.hexagon_slice_6),
-    "Camera ROI": (_CameraRoiWidget, "Camera ROI", MDI6.crop),
     "Property Browser": (PropertyBrowser, "Device Property Browser", MDI6.table_large),
     "Group Presets": (_GroupsAndPresets, "Group & Presets Table", MDI6.table_large_plus),  # noqa: E501
+    "Camera ROI": (_CameraRoiWidget, "Camera ROI", MDI6.crop),
     "Stages": (_StagesControlWidget, "Stages Control", MDI6.arrow_all),
     "Pixel": (_PixelConfigurationWidget, "Pixel Configuration Table", None),
     "MDA": (MDAWidget, "Multi-Dimensional Acquisition", None),
