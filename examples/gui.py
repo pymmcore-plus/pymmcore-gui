@@ -3,10 +3,8 @@ from qtpy.QtWidgets import QApplication
 
 from micromanager_gui import MicroManagerGUI
 
+app = QApplication([])
 mmc = CMMCorePlus.instance()
-mmc.loadSystemConfiguration()
 gui = MicroManagerGUI()
 gui.show()
-
-app = QApplication.instance()
-app.setStyle("Fusion")
+app.exec_()
