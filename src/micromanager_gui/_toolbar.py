@@ -255,7 +255,7 @@ class _WidgetsToolBar(QToolBar):
         pymmcore_wdgs: list[str] = []
         for dock_wdg in self._main_window.findChildren(ScrollableDockWidget):
             wdg_name = dock_wdg.objectName()
-            if wdg_name in WIDGETS:
+            if wdg_name in WIDGETS and not dock_wdg.isFloating():
                 pymmcore_wdgs.append(wdg_name)
 
         # get the state of the napari main window as bytes
