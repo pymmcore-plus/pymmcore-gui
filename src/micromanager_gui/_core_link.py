@@ -3,11 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from pymmcore_plus import CMMCorePlus
+from pymmcore_widgets._stack_viewer_v2 import MDAViewer
 from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 from qtpy.QtCore import QObject, Qt
 from qtpy.QtWidgets import QApplication
 
-from ._widgets._mda._mda_viewer import MDAViewer
 from ._widgets._preview import Preview
 
 DIALOG = Qt.WindowType.Dialog
@@ -72,9 +72,7 @@ class _CoreLink(QObject):
             self._preview.raise_()
 
     def _setup_viewer(self, sequence: useq.MDASequence) -> None:
-        self._current_viewer = MDAViewer(
-            self._main_window, mmcore=self._mmc, canvas_size=self._canvas_size
-        )
+        self._current_viewer = MDAViewer(parent=self._main_window)
 
         # rename the viewer if there is a save_name in the metadata or add a digit
         save_meta = cast(dict, sequence.metadata.get(PYMMCW_METADATA_KEY, {}))
@@ -88,7 +86,7 @@ class _CoreLink(QObject):
 
         # call it manually indted in _connect_viewer because this signal has been
         # emitted already
-        self._current_viewer.sequenceStarted(sequence)
+        self._current_viewer.data.sequenceStarted(sequence)
 
         # connect the signals
         self._connect_viewer(self._current_viewer)
@@ -102,13 +100,13 @@ class _CoreLink(QObject):
         self._viewers.append(self._current_viewer)
 
     def _connect_viewer(self, viewer: MDAViewer) -> None:
-        self._mmc.mda.events.sequenceFinished.connect(viewer.sequenceFinished)
-        self._mmc.mda.events.frameReady.connect(viewer.frameReady)
+        self._mmc.mda.events.sequenceFinished.connect(viewer.data.sequenceFinished)
+        self._mmc.mda.events.frameReady.connect(viewer.data.frameReady)
 
     def _disconnect_viewer(self, viewer: MDAViewer) -> None:
         """Disconnect the signals."""
-        self._mmc.mda.events.sequenceFinished.disconnect(viewer.sequenceFinished)
-        self._mmc.mda.events.frameReady.disconnect(viewer.frameReady)
+        self._mmc.mda.events.sequenceFinished.disconnect(viewer.data.sequenceFinished)
+        self._mmc.mda.events.frameReady.disconnect(viewer.data.frameReady)
 
     def _on_sequence_started(self, sequence: useq.MDASequence) -> None:
         """Show the MDAViewer when the MDA sequence starts."""
