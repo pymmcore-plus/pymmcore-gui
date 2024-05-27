@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 
 class TensorstoreZarrReader:
-    """Read data from a tensorstore zarr file.
+    """Read a tensorstore zarr file generated with the 'TensorstoreZarrWriter'.
 
     Parameters
     ----------
@@ -23,9 +23,6 @@ class TensorstoreZarrReader:
         The path to the tensorstore zarr file.
     store : ts.TensorStore
         The tensorstore.
-    metadata : dict
-        The metadata from the acquisition. They are stored in the `.zattrs` file and
-        should contain two keys: `useq_MDASequence` and `useq_MDASequence`.
     sequence : useq.MDASequence
         The acquired useq.MDASequence. It is loaded from the metadata using the
         `useq.MDASequence` key.
@@ -36,6 +33,8 @@ class TensorstoreZarrReader:
     # to get the numpy array for a specific axis, for example, the first time point for
     # the first position and the first z-slice:
     data = reader.isel({"p": 0, "t": 1, "z": 0})
+    # to also get the metadata for the given index:
+    data, metadata = reader.isel({"p": 0, "t": 1, "z": 0}, metadata=True)
     """
 
     def __init__(self, path: str | Path):
@@ -43,7 +42,7 @@ class TensorstoreZarrReader:
 
         spec = {
             "driver": "zarr",
-            "kvstore": {"driver": "file", "path": self._path},
+            "kvstore": {"driver": "file", "path": str(self._path)},
         }
 
         self._store = ts.open(spec)
@@ -63,30 +62,11 @@ class TensorstoreZarrReader:
         return self._store.result()
 
     @property
-    def metadata(self) -> dict:
-        return self._metadata
-
-    @property
     def sequence(self) -> useq.MDASequence:
         seq = self._metadata.get("useq_MDASequence")
         return useq.MDASequence(**json.loads(seq)) if seq is not None else None
 
-    def _get_axis_index(self, indexers: Mapping[str, int]) -> tuple[object, ...]:
-        """Return a tuple to index the data for the given axis."""
-        if self.sequence is None:
-            raise ValueError("No 'useq.MDASequence' found in the metadata!")
-
-        axis_order = self.sequence.axis_order
-
-        # if any of the indexers are not in the axis order, raise an error
-        if not set(indexers.keys()).issubset(set(axis_order)):
-            raise ValueError("Invalid axis in indexers!")
-
-        # get the correct index for the axis
-        # e.g. (slice(None), 1, slice(None), slice(None))
-        return tuple(
-            indexers[axis] if axis in indexers else slice(None) for axis in axis_order
-        )
+    # ___________________________Public Methods___________________________
 
     def isel(
         self, indexers: Mapping[str, int], metadata: bool = False
@@ -107,15 +87,6 @@ class TensorstoreZarrReader:
             meta = self._get_metadata_from_index(indexers)
             return data, meta
         return data
-
-    def _get_metadata_from_index(self, indexers: Mapping[str, int]) -> list[dict]:
-        """Return the metadata for the given indexers."""
-        metadata = []
-        for meta in self._metadata.get("frame_metadatas", []):
-            event_index = meta["Event"]["index"]  # e.g. {"p": 0, "t": 1}
-            if indexers.items() <= event_index.items():
-                metadata.append(meta)
-        return metadata
 
     def write_tiff(
         self,
@@ -162,3 +133,31 @@ class TensorstoreZarrReader:
                     "The path should be a file path, not a directory! "
                     "(e.g. 'path/to/file.tif')"
                 ) from e
+
+    # ___________________________Private Methods___________________________
+
+    def _get_axis_index(self, indexers: Mapping[str, int]) -> tuple[object, ...]:
+        """Return a tuple to index the data for the given axis."""
+        if self.sequence is None:
+            raise ValueError("No 'useq.MDASequence' found in the metadata!")
+
+        axis_order = self.sequence.axis_order
+
+        # if any of the indexers are not in the axis order, raise an error
+        if not set(indexers.keys()).issubset(set(axis_order)):
+            raise ValueError("Invalid axis in indexers!")
+
+        # get the correct index for the axis
+        # e.g. (slice(None), 1, slice(None), slice(None))
+        return tuple(
+            indexers[axis] if axis in indexers else slice(None) for axis in axis_order
+        )
+
+    def _get_metadata_from_index(self, indexers: Mapping[str, int]) -> list[dict]:
+        """Return the metadata for the given indexers."""
+        metadata = []
+        for meta in self._metadata.get("frame_metadatas", []):
+            event_index = meta["Event"]["index"]  # e.g. {"p": 0, "t": 1}
+            if indexers.items() <= event_index.items():
+                metadata.append(meta)
+        return metadata
