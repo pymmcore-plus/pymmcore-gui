@@ -33,7 +33,7 @@ dependencies = [
     "zarr",
     "tifffile",
     "tqdm",
-    "yaml"
+    "pyyaml"
 ]
 
 # extras
