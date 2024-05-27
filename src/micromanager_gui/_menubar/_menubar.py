@@ -109,8 +109,19 @@ class _MenuBar(QMenuBar):
         self._act_load_configuration.triggered.connect(self._load_cfg)
         self._configurations_menu.addAction(self._act_load_configuration)
 
-        # # widgets_menu
+        # widgets_menu
         self._widgets_menu = self.addMenu("Widgets")
+
+        # viewer menu
+        self._viewer_menu = self.addMenu("Viewers")
+        self._act_close_all = QAction("Close All Viewers", self)
+        self._act_close_all.triggered.connect(self._close_all)
+        self._viewer_menu.addAction(self._act_close_all)
+        self._act_close_all_but_current = QAction(
+            "Close All Viewers but the Current", self
+        )
+        self._act_close_all_but_current.triggered.connect(self._close_all_but_current)
+        self._viewer_menu.addAction(self._act_close_all_but_current)
 
         # create actions from WIDGETS and DOCKWIDGETS
         keys = {*WIDGETS.keys(), *DOCKWIDGETS.keys()}
@@ -158,6 +169,29 @@ class _MenuBar(QMenuBar):
             current_cfg = self._mmc.systemConfigurationFile() or ""
             self._wizard.setField(SRC_CONFIG, current_cfg)
             self._wizard.show()
+
+    def _close_all(self, skip: bool | list[int] | None = None) -> None:
+        """Close all viewers."""
+        # the QAction sends a bool when triggered. We don't want to handle a bool
+        # so we convert it to an empty list.
+        if isinstance(skip, bool) or skip is None:
+            skip = []
+        viewer_tab = self._main_window._core_link._viewer_tab
+        for index in reversed(range(viewer_tab.count())):
+            if index in skip or index == 0:  # 0 to skip the prewiew tab
+                continue
+            widget = viewer_tab.widget(index)
+            viewer_tab.removeTab(index)
+            widget.deleteLater()
+
+    def _close_all_but_current(self) -> None:
+        """Close all viewers except the current one."""
+        # build the list of indexes to skip
+        viewer_tab = self._main_window._core_link._viewer_tab
+        current = viewer_tab.currentWidget()
+        skip = [viewer_tab.indexOf(current)]
+        # close all but the current one
+        self._close_all(skip)
 
     def _show_widget(self) -> None:
         """Create or show a widget."""
