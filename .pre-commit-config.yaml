@@ -3,25 +3,18 @@ ci:
   autofix_commit_msg: "style(pre-commit.ci): auto fixes [...]"
   autoupdate_commit_msg: "ci(pre-commit.ci): autoupdate"
 
-default_install_hook_types: [pre-commit, commit-msg]
-
 repos:
-  # - repo: https://github.com/compilerla/conventional-pre-commit
-  #   rev: v2.1.1
-  #   hooks:
-  #     - id: conventional-pre-commit
-  #       stages: [commit-msg]
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.21.0
+    hooks:
+      - id: typos
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.3
     hooks:
       - id: ruff
-        args: [--fix]
-
-  - repo: https://github.com/psf/black
-    rev: 24.4.2
-    hooks:
-      - id: black
+        args: [--fix, --unsafe-fixes]
+      - id: ruff-format
 
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.16
