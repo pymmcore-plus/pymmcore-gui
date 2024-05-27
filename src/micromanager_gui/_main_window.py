@@ -78,18 +78,24 @@ class MicroManagerGUI(QMainWindow):
     def dropEvent(self, event: QDropEvent) -> None:
         """Open a tensorstore from a directory dropped in the window."""
         for idx, url in enumerate(event.mimeData().urls()):
-            path = url.toLocalFile()
-            # if is not a dir, continue
-            if not Path(path).is_dir():
-                continue
+            path = Path(url.toLocalFile())
 
-            # if is a dir, open it as a tensorstore
-            try:
-                reader = TensorstoreZarrReader(path)
-                s = StackViewer(reader.store, parent=self)
-                self._core_link._viewer_tab.addTab(s, f"Zarr Tensorstore_{idx}")
-                self._core_link._viewer_tab.setCurrentWidget(s)
-            except Exception as e:
-                warn(f"Error opening tensorstore: {e}!", stacklevel=2)
+            sw = self._open_datastore(idx, path)
+
+            if sw is not None:
+                self._core_link._viewer_tab.addTab(sw, f"datastore_{idx}")
+                self._core_link._viewer_tab.setCurrentWidget(sw)
 
         super().dropEvent(event)
+
+    def _open_datastore(self, idx: int, path: Path) -> StackViewer | None:
+        if path.name.endswith(".tensorstore.zarr"):
+            try:
+                reader = TensorstoreZarrReader(path)
+                return StackViewer(reader.store, parent=self)
+            except Exception as e:
+                warn(f"Error opening tensorstore-zarr: {e}!", stacklevel=2)
+                return None
+        else:
+            warn(f"Not yet supported format: {path.name}!", stacklevel=2)
+            return None
