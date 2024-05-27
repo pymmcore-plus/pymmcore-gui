@@ -26,8 +26,8 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "pymmcore-widgets >= 0.7.1",
-    "pymmcore-plus >= 0.9.4",
+    "pymmcore-widgets@git+https://github.com/fdrgsp/pymmcore-plus.git@viewer_v2_and_tensorstore",
+    "pymmcore-plus@git+https://github.com/fdrgsp/pymmcore-plus.git@add_tensorstore_to_runner",
     "qtpy",
     "vispy",
     "zarr",
@@ -66,6 +66,9 @@ repository = "https://github.com/fdrgsp/micromanager-gui"
 # https://hatch.pypa.io/latest/config/metadata/
 [tool.hatch.version]
 source = "vcs"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 # https://hatch.pypa.io/latest/config/build/#file-selection
 # [tool.hatch.build.targets.sdist]
