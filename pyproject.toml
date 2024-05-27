@@ -32,7 +32,8 @@ dependencies = [
     "vispy",
     "zarr",
     "tifffile",
-    "tqdm"
+    "tqdm",
+    "yaml"
 ]
 
 # extras
