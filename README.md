@@ -34,3 +34,9 @@ You also need to install the `Micro-Manager` device adapters and C++ core provid
 ```bash
 python -m micromanager_gui
 ```
+
+By passing the `-c` or `-config` flag, you can specify the path to a micromanager configuration file you want to load. For example:
+
+```bash
+python -m micromanager_gui -c path/to/config.cfg
+```
