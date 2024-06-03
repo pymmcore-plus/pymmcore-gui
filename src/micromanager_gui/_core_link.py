@@ -97,7 +97,7 @@ class CoreViewersLink(QObject):
         self._viewer_tab.addTab(self._current_viewer, viewer_name)
         self._viewer_tab.setCurrentWidget(self._current_viewer)
 
-        # call it manually insted in _connect_viewer because this signal has been
+        # call it manually instead in _connect_viewer because this signal has been
         # emitted already
         self._current_viewer.data.sequenceStarted(sequence)
 
