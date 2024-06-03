@@ -5,7 +5,7 @@ from warnings import warn
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets._stack_viewer_v2._mda_viewer import StackViewer
-from qtpy.QtGui import QDragEnterEvent, QDropEvent
+from qtpy.QtGui import QCloseEvent, QDragEnterEvent, QDropEvent
 from qtpy.QtWidgets import (
     QGridLayout,
     QMainWindow,
@@ -99,3 +99,8 @@ class MicroManagerGUI(QMainWindow):
         else:
             warn(f"Not yet supported format: {path.name}!", stacklevel=2)
             return None
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """Close all widgets before closing."""
+        self.deleteLater()
+        super().closeEvent(event)
