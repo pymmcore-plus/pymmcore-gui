@@ -35,7 +35,7 @@ class _SnapLive(QToolBar):
         # camera exposure widget
         exp_wdg = QGroupBox()
         exp_wdg_layout = QHBoxLayout(exp_wdg)
-        exp_wdg_layout.setContentsMargins(5, 0, 0, 0)
+        exp_wdg_layout.setContentsMargins(5, 0, 5, 0)
         exp_wdg_layout.setSpacing(0)
         exp = QLabel("Exposure:")
         self._exposure = DefaultCameraExposureWidget(mmcore=self._mmc)
