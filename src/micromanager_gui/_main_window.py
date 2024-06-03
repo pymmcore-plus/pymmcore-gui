@@ -53,10 +53,10 @@ class MicroManagerGUI(QMainWindow):
         self.setMenuBar(self._menu_bar)
 
         # add toolbar
-        self._shutters_toolbar = _ShuttersToolbar(parent=self, mmcore=self._mmc)
-        self.addToolBar(self._shutters_toolbar)
         self._snap_live_toolbar = _SnapLive(parent=self, mmcore=self._mmc)
         self.addToolBar(self._snap_live_toolbar)
+        self._shutters_toolbar = _ShuttersToolbar(parent=self, mmcore=self._mmc)
+        self.addToolBar(self._shutters_toolbar)
 
         # link the MDA viewers
         self._core_link = CoreViewersLink(self, mmcore=self._mmc)
