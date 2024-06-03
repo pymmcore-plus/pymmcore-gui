@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Mapping, cast
 
 import useq
 import zarr
+from tifffile import imwrite
+from tqdm import tqdm
 
 if TYPE_CHECKING:
     import numpy as np
@@ -75,7 +78,7 @@ class OMEZarrReader:
         return self._sequence
 
     def isel(
-        self, indexers: dict[str, int], metadata: bool = False
+        self, indexers: Mapping[str, int], metadata: bool = False
     ) -> np.ndarray | tuple[np.ndarray, dict]:
         """Select data from the array.
 
@@ -89,10 +92,13 @@ class OMEZarrReader:
             If True, return the metadata as well as a list of dictionaries. By default,
             False.
         """
-        # add the position axis if not present
-        if "p" not in indexers:
-            indexers["p"] = 0
-        pos_key = f"p{indexers['p']}"
+        if len(self.store.keys()) > 1 and "p" not in indexers:
+            raise ValueError(
+                "The indexers should contain the 'p' axis since the zarr store has "
+                "more than one position."
+            )
+
+        pos_key = f"p{indexers.get('p', 0)}"
         index = self._get_axis_index(indexers, pos_key)
         data = self.store[pos_key][index].squeeze()
         if metadata:
@@ -100,25 +106,84 @@ class OMEZarrReader:
             return data, meta
         return data
 
+    def write_tiff(
+        self,
+        path: str | Path,
+        indexers: Mapping[str, int] | list[Mapping[str, int]] | None = None,
+    ) -> None:
+        """Write the data to a tiff file.
+
+        Parameters
+        ----------
+        path : str | Path
+            The path to the tiff file. If `indexers` is a Mapping of axis and index,
+            the path should be a file path (e.g. 'path/to/file.tif'). Otherwise, it
+            should be a directory path (e.g. 'path/to/directory').
+        indexers : Mapping[str, int] | list[Mapping[str, int]] | None
+            The indexers to select the data. If None, write all the data per position
+            to a tiff file. If a list of Mapping of axis and index
+            (e.g. [{"p": 0, "t": 1}, {"p": 1, "t": 0}]), write the data for the given
+            indexes to a tiff file. If a Mapping of axis and index (e.g.
+            {"p": 0, "t": 1}), write the data for the given index to a tiff file.
+        """
+        if indexers is None:
+            keys = [
+                key
+                for key in self.store.keys()
+                if key.startswith("p") and key[1:].isdigit()
+            ]
+            if pos := len(keys):
+                if not Path(path).exists():
+                    Path(path).mkdir(parents=True, exist_ok=False)
+                with tqdm(total=pos) as pbar:
+                    for i in range(pos):
+                        data, metadata = self.isel({"p": i}, metadata=True)
+                        imwrite(Path(path) / f"p{i}.tif", data, imagej=True)
+                        # save metadata as json
+                        dest = Path(path) / f"p{i}.json"
+                        dest.write_text(json.dumps(metadata))
+                        pbar.update(1)
+
+        elif isinstance(indexers, list):
+            if not Path(path).exists():
+                Path(path).mkdir(parents=True, exist_ok=False)
+            for index in indexers:
+                data, metadata = self.isel(index, metadata=True)
+                name = "_".join(f"{k}{v}" for k, v in index.items())
+                imwrite(Path(path) / f"{name}.tif", data, imagej=True)
+                # save metadata as json
+                dest = Path(path) / f"{name}.json"
+                dest.write_text(json.dumps(metadata))
+
+        else:
+            data, metadata = self.isel(indexers, metadata=True)
+            imj = len(data.shape) <= 5
+            if Path(path).suffix not in {".tif", ".tiff"}:
+                path = Path(path).with_suffix(".tiff")
+            imwrite(path, data, imagej=imj)
+            # save metadata as json
+            dest = Path(path).with_suffix(".json")
+            dest.write_text(json.dumps(metadata))
+
     # ___________________________Private Methods___________________________
 
     def _get_axis_index(
         self, indexers: Mapping[str, int], pos_key: str
     ) -> tuple[object, ...]:
         """Return a tuple to index the data for the given axis."""
-        axis_order = self.store[pos_key].attrs.get(ARRAY_DIMS)  # ['t','c','y','x']
-        # add p if not in the axis order
-        if "p" not in axis_order:
-            axis_order = ["p", *axis_order]
+        axis_order = self.store[pos_key].attrs.get(ARRAY_DIMS, [])  # ['t','c','y','x']
         # remove x and y from the axis order
         if "x" in axis_order:
             axis_order.remove("x")
         if "y" in axis_order:
             axis_order.remove("y")
 
-        # if any of the indexers are not in the axis order, raise an error
-        if not set(indexers.keys()).issubset(set(axis_order)):
-            raise ValueError(f"Invalid axis in indexers: {indexers}, {axis_order}")
+        # if any of the indexers are not in the axis order, raise an error, NOTE: we
+        # add "p" to the axis order since the ome-zarr is saved per position
+        if not set(indexers.keys()).issubset({"p", *axis_order}):
+            raise ValueError(
+                f"Invalid axis in indexers {indexers}: available {axis_order}"
+            )
 
         # get the correct index for the axis
         # e.g. (slice(None), 1, slice(None), slice(None))

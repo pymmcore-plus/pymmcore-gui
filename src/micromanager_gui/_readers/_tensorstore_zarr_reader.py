@@ -110,23 +110,27 @@ class TensorstoreZarrReader:
         """
         if indexers is None:
             if pos := len(self.sequence.stage_positions):
+                if not Path(path).exists():
+                    Path(path).mkdir(parents=True, exist_ok=False)
                 with tqdm(total=pos) as pbar:
                     for i in range(pos):
                         data, metadata = self.isel({"p": i}, metadata=True)
                         imwrite(Path(path) / f"p{i}.tif", data, imagej=True)
                         # save metadata as json
-                        with open(Path(path) / f"p{i}.json", "w") as f:
-                            json.dump(metadata, f)
+                        dest = Path(path) / f"p{i}.json"
+                        dest.write_text(json.dumps(metadata))
                         pbar.update(1)
 
         elif isinstance(indexers, list):
+            if not Path(path).exists():
+                Path(path).mkdir(parents=True, exist_ok=False)
             for index in indexers:
                 data, metadata = self.isel(index, metadata=True)
                 name = "_".join(f"{k}{v}" for k, v in index.items())
                 imwrite(Path(path) / f"{name}.tif", data, imagej=True)
                 # save metadata as json
-                with open(Path(path) / f"{name}.json", "w") as f:
-                    json.dump(metadata, f)
+                dest = Path(path) / f"{name}.json"
+                dest.write_text(json.dumps(metadata))
 
         else:
             data, metadata = self.isel(indexers, metadata=True)
@@ -135,8 +139,8 @@ class TensorstoreZarrReader:
                 path = Path(path).with_suffix(".tiff")
             imwrite(path, data, imagej=imj)
             # save metadata as json
-            with open(Path(path).with_suffix(".json"), "w") as f:
-                json.dump(metadata, f)
+            dest = Path(path).with_suffix(".json")
+            dest.write_text(json.dumps(metadata))
 
     # ___________________________Private Methods___________________________
 
