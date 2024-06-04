@@ -1,8 +1,6 @@
-import sys
 from pathlib import Path
 from warnings import warn
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets._stack_viewer_v2._mda_viewer import StackViewer
 from qtpy.QtGui import QCloseEvent, QDragEnterEvent, QDropEvent
@@ -103,4 +101,11 @@ class MicroManagerGUI(QMainWindow):
     def closeEvent(self, event: QCloseEvent) -> None:
         """Close all widgets before closing."""
         self.deleteLater()
+        # delete any remaining widgets
+        from qtpy.QtWidgets import QApplication
+
+        if qapp := QApplication.instance():
+            if remaining := qapp.topLevelWidgets():
+                for w in remaining:
+                    w.deleteLater()
         super().closeEvent(event)

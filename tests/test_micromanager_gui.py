@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from pytestqt.qtbot import QtBot
 
 
-def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus):
+def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
     assert gui._menu_bar._mda
