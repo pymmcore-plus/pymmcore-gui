@@ -111,13 +111,12 @@ def test_mda_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
     assert gui._core_link._viewer_tab.tabText(1) == "MDA Viewer 1"
     assert gui._core_link._viewer_tab.currentIndex() == 1
 
-    dest = tmp_path / "ts.tensorstore.zarr"
     mda = useq.MDASequence(
         channels=["FITC", "DAPI"],
         metadata={
             PYMMCW_METADATA_KEY: {
                 "format": "tensorstore-zarr",
-                "save_dir": str(dest),
+                "save_dir": str(tmp_path),
                 "save_name": "t.tensorstore.zarr",
                 "should_save": True,
             }
