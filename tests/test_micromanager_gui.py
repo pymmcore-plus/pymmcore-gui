@@ -8,7 +8,8 @@ import useq
 # from pymmcore_widgets._stack_viewer_v2._mda_viewer import MDAViewer
 from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 
-# from micromanager_gui import MicroManagerGUI
+from micromanager_gui import MicroManagerGUI
+
 # from micromanager_gui._menubar._menubar import DOCKWIDGETS, WIDGETS
 from micromanager_gui._readers._ome_zarr_reader import OMEZarrReader
 from micromanager_gui._readers._tensorstore_zarr_reader import TensorstoreZarrReader
@@ -21,16 +22,16 @@ if TYPE_CHECKING:
     from pytestqt.qtbot import QtBot
 
 
-# def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
-#     gui = MicroManagerGUI(mmcore=global_mmcore)
-#     qtbot.addWidget(gui)
-#     assert gui._menu_bar._mda
-#     assert gui._core_link._preview
-#     assert not gui._core_link._preview.isHidden()
-#     assert gui._core_link._viewer_tab.count() == 1
-#     assert gui._core_link._viewer_tab.tabText(0) == "Preview"
-#     assert gui._core_link._current_viewer is None
-#     assert gui._core_link._mda_running is False
+def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
+    gui = MicroManagerGUI(mmcore=global_mmcore)
+    qtbot.addWidget(gui)
+    assert gui._menu_bar._mda
+    assert gui._core_link._preview
+    assert not gui._core_link._preview.isHidden()
+    assert gui._core_link._viewer_tab.count() == 1
+    assert gui._core_link._viewer_tab.tabText(0) == "Preview"
+    assert gui._core_link._current_viewer is None
+    assert gui._core_link._mda_running is False
 
 
 # def test_menu_wdg(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
