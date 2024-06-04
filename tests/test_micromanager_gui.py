@@ -9,9 +9,8 @@ from pytestqt.qtbot import QtBot
 
 from micromanager_gui import MicroManagerGUI
 from micromanager_gui._menubar._menubar import DOCKWIDGETS, WIDGETS
-
-# from micromanager_gui._readers._tensorstore_zarr_reader import TensorstoreZarrReader
 from micromanager_gui._readers._ome_zarr_reader import OMEZarrReader
+from micromanager_gui._readers._tensorstore_zarr_reader import TensorstoreZarrReader
 
 
 def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
@@ -130,8 +129,6 @@ def test_mda_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
 
 
 def test_ome_zarr_reader(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
-    dest = tmp_path / "z.ome.zarr"
-
     mda = useq.MDASequence(
         channels=["FITC", "DAPI"],
         stage_positions=[(0, 0), (0, 1)],
@@ -139,13 +136,14 @@ def test_ome_zarr_reader(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Pat
         metadata={
             PYMMCW_METADATA_KEY: {
                 "format": "ome-zarr",
-                "save_dir": str(dest),
+                "save_dir": str(tmp_path),
                 "save_name": "z.ome.zarr",
                 "should_save": True,
             }
         },
     )
 
+    dest = tmp_path / "z.ome.zarr"
     with qtbot.waitSignal(global_mmcore.mda.events.sequenceFinished):
         global_mmcore.mda.run(mda, output=dest)
 
@@ -158,30 +156,33 @@ def test_ome_zarr_reader(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Pat
     assert z.isel({"p": 0, "t": 0}).shape == (2, 512, 512)
 
 
-# def test_tensor_reader(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
-#     dest = tmp_path / "ts.tensorstore.zarr"
+def test_tensorstore_reader(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
+    mda = useq.MDASequence(
+        channels=["FITC", "DAPI"],
+        stage_positions=[(0, 0), (0, 1)],
+        time_plan={"loops": 3, "interval": 0.1},
+        metadata={
+            PYMMCW_METADATA_KEY: {
+                "format": "tensorstore-zarr",
+                "save_dir": str(tmp_path),
+                "save_name": "ts.tensorstore.zarr",
+                "should_save": True,
+            }
+        },
+    )
 
-#     mda = useq.MDASequence(
-#         channels=["FITC", "DAPI"],
-#         stage_positions=[(0, 0), (0, 1)],
-#         time_plan={"loops": 3, "interval": 0.1},
-#         metadata={
-#             PYMMCW_METADATA_KEY: {
-#                 "format": "tensorstore-zarr",
-#                 "save_dir": str(dest),
-#                 "save_name": "t.tensorstore.zarr",
-#                 "should_save": True,
-#             }
-#         },
-#     )
+    dest = tmp_path / "ts.tensorstore.zarr"
+    with qtbot.waitSignal(global_mmcore.mda.events.sequenceFinished):
+        global_mmcore.mda.run(mda, output=tmp_path / "ts.tensorstore.zarr")
 
-#     with qtbot.waitSignal(global_mmcore.mda.events.sequenceFinished):
-#         global_mmcore.mda.run(mda, output=dest)
+    assert dest.exists()
 
-#     assert dest.exists()
-
-#     ts = TensorstoreZarrReader(dest)
-#     assert ts.store
-#     assert ts.sequence
-#     data = ts.isel({"p": 0})
-#     # assert data.shape == (3, 2, 2, 512, 512)
+    ts = TensorstoreZarrReader(dest)
+    assert ts.store
+    # this part will only work in the "calcium" branch since there is an issue with
+    # saving the metadata of the tensorstore. In the "calcium" branch, the tensorstore
+    # handler is subclassed to save the metadata correctly (TODO: to fix)
+    # assert ts.sequence
+    # assert ts.isel({"p": 0}).shape == (3, 2, 512, 512)
+    # assert ts.isel({"t": 0}).shape == (3, 2, 512, 512)
+    # assert ts.isel({"p": 0, "t": 0}).shape == (2, 512, 512)
