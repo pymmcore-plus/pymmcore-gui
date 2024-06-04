@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.11']
+        python-version: ['3.10', '3.11']
         platform: [macos-13, windows-latest]
         backend: [pyside6, pyqt6]
         include:
@@ -41,9 +41,6 @@ jobs:
           - platform: windows-latest
             python-version: "3.11"
             backend: pyqt5
-        exclude:
-          - python-version: "3.11"
-            backend: pyside2
 
     steps:
       - uses: actions/checkout@v4
