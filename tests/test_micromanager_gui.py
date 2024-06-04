@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
 import useq
 from pymmcore_plus.mda.handlers import TensorStoreHandler
 from pymmcore_widgets._stack_viewer_v2._mda_viewer import MDAViewer
@@ -67,6 +68,7 @@ def test_menu_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus):
     assert gui._core_link._viewer_tab.tabText(1) == "MDA4"
 
 
+@pytest.mark.skip(reason="Run only locally")
 def test_snap(qtbot: QtBot, global_mmcore: CMMCorePlus):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
@@ -81,6 +83,7 @@ def test_snap(qtbot: QtBot, global_mmcore: CMMCorePlus):
     assert gui._core_link._preview._image_preview.image._data.shape
 
 
+@pytest.mark.skip(reason="Run only locally")
 def test_live(qtbot: QtBot, global_mmcore: CMMCorePlus):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
