@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import numpy as np
 import tifffile
 from fonticon_mdi6 import MDI6
@@ -235,3 +238,6 @@ class Preview(QWidget):
             imagej=True,
             # description=self._image_preview._meta, # TODO: ome-tiff
         )
+        # save meta as json
+        dest = Path(path).with_suffix(".json")
+        dest.write_text(json.dumps(self._image_preview._meta))
