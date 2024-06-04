@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from pytestqt.qtbot import QtBot
 
 
-def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
+def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
     assert gui._menu_bar._mda
@@ -30,7 +30,7 @@ def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test
     assert gui._core_link._mda_running is False
 
 
-def test_menu_wdg(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
+def test_menu_wdg(qtbot: QtBot, global_mmcore: CMMCorePlus):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
     menu = gui._menu_bar
@@ -41,7 +41,7 @@ def test_menu_wdg(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test
     assert len(menu._widgets.keys()) == len(WIDGETS) + len(DOCKWIDGETS)
 
 
-def test_menu_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
+def test_menu_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
     menu = gui._menu_bar
@@ -65,7 +65,7 @@ def test_menu_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_t
     assert gui._core_link._viewer_tab.tabText(1) == "MDA4"
 
 
-def test_snap(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
+def test_snap(qtbot: QtBot, global_mmcore: CMMCorePlus):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
 
@@ -79,7 +79,7 @@ def test_snap(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
     assert gui._core_link._preview._image_preview.image._data.shape
 
 
-def test_live(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
+def test_live(qtbot: QtBot, global_mmcore: CMMCorePlus):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
 
@@ -95,7 +95,6 @@ def test_live(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
     assert not global_mmcore.isSequenceRunning()
 
 
-# _run_after_each_test not using because it gives an error (to fix)
 def test_mda_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
