@@ -34,6 +34,68 @@ def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test
     assert gui._core_link._mda_running is False
 
 
+def test_ome_zarr_reader(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
+    mda = useq.MDASequence(
+        channels=["FITC", "DAPI"],
+        stage_positions=[(0, 0), (0, 1)],
+        time_plan={"loops": 3, "interval": 0.1},
+        metadata={
+            PYMMCW_METADATA_KEY: {
+                "format": "ome-zarr",
+                "save_dir": str(tmp_path),
+                "save_name": "z.ome.zarr",
+                "should_save": True,
+            }
+        },
+    )
+
+    dest = tmp_path / "z.ome.zarr"
+    with qtbot.waitSignal(global_mmcore.mda.events.sequenceFinished):
+        global_mmcore.mda.run(mda, output=dest)
+
+    assert dest.exists()
+
+    z = OMEZarrReader(dest)
+    assert z.store
+    assert z.sequence
+    assert z.isel({"p": 0}).shape == (3, 2, 512, 512)
+    assert z.isel({"p": 0, "t": 0}).shape == (2, 512, 512)
+
+
+# NOTE: this works only if we use the internal _TensorStoreHandler
+# TODO: fix the main TensorStoreHandler because it does not write the ".zattrs"
+def test_tensorstore_reader(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
+    mda = useq.MDASequence(
+        channels=["FITC", "DAPI"],
+        stage_positions=[(0, 0), (0, 1)],
+        time_plan={"loops": 3, "interval": 0.1},
+        metadata={
+            PYMMCW_METADATA_KEY: {
+                "format": "tensorstore-zarr",
+                "save_dir": str(tmp_path),
+                "save_name": "ts.tensorstore.zarr",
+                "should_save": True,
+            }
+        },
+    )
+
+    dest = tmp_path / "ts.tensorstore.zarr"
+    writer = _TensorStoreHandler(path=dest, delete_existing=True)
+    with qtbot.waitSignal(global_mmcore.mda.events.sequenceFinished):
+        global_mmcore.mda.run(mda, output=writer)
+
+    assert dest.exists()
+
+    ts = TensorstoreZarrReader(dest)
+    assert ts.store
+    assert ts.sequence
+    assert ts.isel({"p": 0}).shape == (3, 2, 512, 512)
+    assert ts.isel({"t": 0}).shape == (2, 2, 512, 512)
+    assert ts.isel({"p": 0, "t": 0}).shape == (2, 512, 512)
+    _, metadata = ts.isel({"p": 0}, metadata=True)
+    assert metadata
+
+
 # def test_menu_wdg(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
 #     gui = MicroManagerGUI(mmcore=global_mmcore)
 #     qtbot.addWidget(gui)
@@ -137,65 +199,3 @@ def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test
 #     # saving tensorstore and MDAViewer datastore should be the same
 #     assert gui._core_link._mda.writer == gui._core_link._viewer_tab.widget(2)._data
 #     gui._menu_bar._close_all()
-
-
-def test_ome_zarr_reader(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
-    mda = useq.MDASequence(
-        channels=["FITC", "DAPI"],
-        stage_positions=[(0, 0), (0, 1)],
-        time_plan={"loops": 3, "interval": 0.1},
-        metadata={
-            PYMMCW_METADATA_KEY: {
-                "format": "ome-zarr",
-                "save_dir": str(tmp_path),
-                "save_name": "z.ome.zarr",
-                "should_save": True,
-            }
-        },
-    )
-
-    dest = tmp_path / "z.ome.zarr"
-    with qtbot.waitSignal(global_mmcore.mda.events.sequenceFinished):
-        global_mmcore.mda.run(mda, output=dest)
-
-    assert dest.exists()
-
-    z = OMEZarrReader(dest)
-    assert z.store
-    assert z.sequence
-    assert z.isel({"p": 0}).shape == (3, 2, 512, 512)
-    assert z.isel({"p": 0, "t": 0}).shape == (2, 512, 512)
-
-
-# NOTE: this works only if we use the internal _TensorStoreHandler
-# TODO: fix the main TensorStoreHandler because it does not write the ".zattrs"
-def test_tensorstore_reader(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
-    mda = useq.MDASequence(
-        channels=["FITC", "DAPI"],
-        stage_positions=[(0, 0), (0, 1)],
-        time_plan={"loops": 3, "interval": 0.1},
-        metadata={
-            PYMMCW_METADATA_KEY: {
-                "format": "tensorstore-zarr",
-                "save_dir": str(tmp_path),
-                "save_name": "ts.tensorstore.zarr",
-                "should_save": True,
-            }
-        },
-    )
-
-    dest = tmp_path / "ts.tensorstore.zarr"
-    writer = _TensorStoreHandler(path=dest, delete_existing=True)
-    with qtbot.waitSignal(global_mmcore.mda.events.sequenceFinished):
-        global_mmcore.mda.run(mda, output=writer)
-
-    assert dest.exists()
-
-    ts = TensorstoreZarrReader(dest)
-    assert ts.store
-    assert ts.sequence
-    assert ts.isel({"p": 0}).shape == (3, 2, 512, 512)
-    assert ts.isel({"t": 0}).shape == (2, 2, 512, 512)
-    assert ts.isel({"p": 0, "t": 0}).shape == (2, 512, 512)
-    _, metadata = ts.isel({"p": 0}, metadata=True)
-    assert metadata
