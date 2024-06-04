@@ -19,6 +19,8 @@ from pymmcore_widgets.mda._save_widget import (
 from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 from useq import MDASequence
 
+from micromanager_gui._writers._tensorstore_zarr import _TensorStoreHandler
+
 OME_TIFFS = tuple(WRITERS[OME_TIFF])
 GB_CACHE = 2_000_000_000  # 2 GB for tensorstore cache
 
@@ -119,9 +121,9 @@ class _MDAWidget(MDAWidget):
         # able to handle it.
         return None
 
-    def _create_zarr_tensorstore(self, save_path: Path) -> TensorStoreHandler:
+    def _create_zarr_tensorstore(self, save_path: Path) -> _TensorStoreHandler:
         """Create a Zarr TensorStore writer."""
-        return TensorStoreHandler(
+        return _TensorStoreHandler(
             driver="zarr",
             path=save_path,
             delete_existing=True,
