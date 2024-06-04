@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
 import useq
 from pymmcore_plus.mda.handlers import TensorStoreHandler
 from pymmcore_widgets._stack_viewer_v2._mda_viewer import MDAViewer
@@ -33,8 +32,7 @@ def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test
     assert gui._core_link._mda_running is False
 
 
-@pytest.mark.skip
-def test_menu_wdg(qtbot: QtBot, global_mmcore: CMMCorePlus):
+def test_menu_wdg(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
     menu = gui._menu_bar
@@ -45,8 +43,7 @@ def test_menu_wdg(qtbot: QtBot, global_mmcore: CMMCorePlus):
     assert len(menu._widgets.keys()) == len(WIDGETS) + len(DOCKWIDGETS)
 
 
-@pytest.mark.skip
-def test_menu_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus):
+def test_menu_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
     menu = gui._menu_bar
@@ -72,8 +69,7 @@ def test_menu_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus):
     menu._close_all()
 
 
-@pytest.mark.skip(reason="Run only locally")
-def test_snap(qtbot: QtBot, global_mmcore: CMMCorePlus):
+def test_snap(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
 
@@ -87,8 +83,7 @@ def test_snap(qtbot: QtBot, global_mmcore: CMMCorePlus):
     assert gui._core_link._preview._image_preview.image._data.shape
 
 
-@pytest.mark.skip(reason="Run only locally")
-def test_live(qtbot: QtBot, global_mmcore: CMMCorePlus):
+def test_live(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
 
@@ -104,8 +99,9 @@ def test_live(qtbot: QtBot, global_mmcore: CMMCorePlus):
     assert not global_mmcore.isSequenceRunning()
 
 
-@pytest.mark.skip
-def test_mda_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
+def test_mda_viewer(
+    qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path, _run_after_each_test
+):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
 
@@ -141,7 +137,6 @@ def test_mda_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
     gui._menu_bar._close_all()
 
 
-@pytest.mark.skip
 def test_ome_zarr_reader(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
     mda = useq.MDASequence(
         channels=["FITC", "DAPI"],
@@ -172,7 +167,6 @@ def test_ome_zarr_reader(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Pat
 
 # NOTE: this works only if we use the internal _TensorStoreHandler
 # TODO: fix the main TensorStoreHandler because it does not write the ".zattrs"
-@pytest.mark.skip
 def test_tensorstore_reader(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
     mda = useq.MDASequence(
         channels=["FITC", "DAPI"],
