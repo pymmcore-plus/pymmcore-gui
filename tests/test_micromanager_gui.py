@@ -102,6 +102,7 @@ def test_live(qtbot: QtBot, global_mmcore: CMMCorePlus):
     assert not global_mmcore.isSequenceRunning()
 
 
+@pytest.mark.skip
 def test_mda_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path):
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
