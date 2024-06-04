@@ -55,42 +55,37 @@ jobs:
           cache-dependency-path: "pyproject.toml"
           cache: "pip"
 
-      # if running a cron job, we add the --pre flag to test against pre-releases
       - name: Install dependencies
         run: |
           python -m pip install -U pip
           python -m pip install -e .[test,${{ matrix.backend }}]
 
-      - name: Test
-        run: pytest --color=yes --cov --cov-report=xml --cov-report=term-missing
+      - name: Install Windows OpenGL
+        if: runner.os == 'Windows'
+        run: |
+          git clone --depth 1 https://github.com/pyvista/gl-ci-helpers.git
+          powershell gl-ci-helpers/appveyor/install_opengl.ps1
+          if (Test-Path -Path "C:\Windows\system32\opengl32.dll" -PathType Leaf) {Exit 0} else {Exit 1}
 
-      # If something goes wrong, we can open an issue in the repo
-      - name: Report --pre Failures
-        if: failure() && github.event_name == 'schedule'
-        uses: JasonEtco/create-an-issue@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PLATFORM: ${{ matrix.platform }}
-          PYTHON: ${{ matrix.python-version }}
-          RUN_ID: ${{ github.run_id }}
-          TITLE: '[test-bot] pip install --pre is failing'
-        with:
-          filename: .github/TEST_FAIL_TEMPLATE.md
-          update_existing: true
+      - name: Install Micro-Manager
+        run: mmcore install
+
+      - name: Test
+        run: pytest -v --cov=pymmcore_widgets --cov-report=xml --color=yes
 
       - name: Coverage
         uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   deploy:
     name: Deploy
     needs: test
-    if: success() && startsWith(github.ref, 'refs/tags/') && github.event_name != 'schedule'
+    if: "success() && startsWith(github.ref, 'refs/tags/')"
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -99,15 +94,18 @@ jobs:
 
       - name: install
         run: |
-          pip install -U pip build twine
+          git tag
+          pip install -U pip
+          pip install -U build twine
           python -m build
           twine check dist/*
+          ls -lh dist
 
       - name: Build and publish
         run: twine upload dist/*
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.TWINE_API_KEY }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
 
       - uses: softprops/action-gh-release@v2
         with:
