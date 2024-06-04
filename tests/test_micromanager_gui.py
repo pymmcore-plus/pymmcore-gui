@@ -67,6 +67,8 @@ def test_menu_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus):
     assert gui._core_link._viewer_tab.tabText(0) == "Preview"
     assert gui._core_link._viewer_tab.tabText(1) == "MDA4"
 
+    menu._close_all()
+
 
 @pytest.mark.skip(reason="Run only locally")
 def test_snap(qtbot: QtBot, global_mmcore: CMMCorePlus):
