@@ -30,6 +30,20 @@ jobs:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11']
         platform: [ubuntu-latest, macos-latest, windows-latest]
+        backend: [pyside6, pyqt6]
+        include:
+          - platform: windows-latest
+            python-version: "3.10"
+            backend: pyqt5
+          - platform: windows-latest
+            python-version: "3.10"
+            backend: pyside2
+          - platform: windows-latest
+            python-version: "3.11"
+            backend: pyqt5
+          - platform: windows-latest
+            python-version: "3.11"
+            backend: pyside2
 
     steps:
       - uses: actions/checkout@v4
