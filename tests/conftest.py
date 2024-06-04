@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import patch
@@ -23,7 +25,7 @@ def global_mmcore():
 
 
 @pytest.fixture()
-def _run_after_each_test(request: "FixtureRequest", qapp: "QApplication"):
+def _run_after_each_test(request: FixtureRequest, qapp: QApplication):
     """Run after each test to ensure no widgets have been left around.
 
     When this test fails, it means that a widget being tested has an issue closing
