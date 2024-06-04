@@ -139,6 +139,7 @@ class _MenuBar(QMenuBar):
         """Enable or disable the actions."""
         self._configurations_menu.setEnabled(enable)
         self._widgets_menu.setEnabled(enable)
+        self._viewer_menu.setEnabled(enable)
 
     def _save_cfg(self) -> None:
         (filename, _) = QFileDialog.getSaveFileName(
