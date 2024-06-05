@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 # from pymmcore_plus.mda.handlers import TensorStoreHandler
-# from pymmcore_widgets._stack_viewer_v2._mda_viewer import MDAViewer
-from micromanager_gui import MicroManagerGUI
+from pymmcore_widgets._stack_viewer_v2._mda_viewer import MDAViewer
 
-# from micromanager_gui._menubar._menubar import DOCKWIDGETS, WIDGETS
+from micromanager_gui import MicroManagerGUI
+from micromanager_gui._menubar._menubar import DOCKWIDGETS, WIDGETS
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
@@ -25,71 +25,41 @@ def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test
     assert gui._core_link._mda_running is False
 
 
-# def test_menu_wdg(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
-#     gui = MicroManagerGUI(mmcore=global_mmcore)
-#     qtbot.addWidget(gui)
-#     menu = gui._menu_bar
+def test_menu_wdg(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
+    gui = MicroManagerGUI(mmcore=global_mmcore)
+    qtbot.addWidget(gui)
+    menu = gui._menu_bar
 
-#     assert len(menu._widgets.keys()) == 2  # MDA and GroupPreset widgets
-#     for action in menu._widgets_menu.actions():
-#         action.trigger()
-#     assert len(menu._widgets.keys()) == len(WIDGETS) + len(DOCKWIDGETS)
-
-
-# def test_menu_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
-#     gui = MicroManagerGUI(mmcore=global_mmcore)
-#     qtbot.addWidget(gui)
-#     menu = gui._menu_bar
-#     assert gui._core_link._viewer_tab.tabText(0) == "Preview"
-#     # add a viewer
-#     gui._core_link._viewer_tab.addTab(MDAViewer(), "MDA1")
-#     gui._core_link._viewer_tab.addTab(MDAViewer(), "MDA2")
-#     assert gui._core_link._viewer_tab.count() == 3
-
-#     menu._close_all()
-#     assert gui._core_link._viewer_tab.count() == 1
-
-#     gui._core_link._viewer_tab.addTab(MDAViewer(), "MDA3")
-#     gui._core_link._viewer_tab.addTab(MDAViewer(), "MDA4")
-#     gui._core_link._viewer_tab.setCurrentIndex(2)
-#     assert gui._core_link._viewer_tab.count() == 3
-
-#     menu._close_all_but_current()
-#     assert gui._core_link._viewer_tab.count() == 2
-#     assert gui._core_link._viewer_tab.tabText(0) == "Preview"
-#     assert gui._core_link._viewer_tab.tabText(1) == "MDA4"
-
-#     menu._close_all()
+    assert len(menu._widgets.keys()) == 2  # MDA and GroupPreset widgets
+    for action in menu._widgets_menu.actions():
+        action.trigger()
+    assert len(menu._widgets.keys()) == len(WIDGETS) + len(DOCKWIDGETS)
 
 
-# def test_snap(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
-#     gui = MicroManagerGUI(mmcore=global_mmcore)
-#     qtbot.addWidget(gui)
+def test_menu_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
+    gui = MicroManagerGUI(mmcore=global_mmcore)
+    qtbot.addWidget(gui)
+    menu = gui._menu_bar
+    assert gui._core_link._viewer_tab.tabText(0) == "Preview"
+    # add a viewer
+    gui._core_link._viewer_tab.addTab(MDAViewer(), "MDA1")
+    gui._core_link._viewer_tab.addTab(MDAViewer(), "MDA2")
+    assert gui._core_link._viewer_tab.count() == 3
 
-#     assert gui._core_link._preview
-#     assert gui._core_link._preview._image_preview.image is None
-#     assert not gui._core_link._preview.isHidden()
+    menu._close_all()
+    assert gui._core_link._viewer_tab.count() == 1
 
-#     with qtbot.waitSignal(global_mmcore.events.imageSnapped):
-#         gui._core_link._preview._snap._snap()
-#     assert gui._core_link._preview._image_preview.image
-#     assert gui._core_link._preview._image_preview.image._data.shape
+    gui._core_link._viewer_tab.addTab(MDAViewer(), "MDA3")
+    gui._core_link._viewer_tab.addTab(MDAViewer(), "MDA4")
+    gui._core_link._viewer_tab.setCurrentIndex(2)
+    assert gui._core_link._viewer_tab.count() == 3
 
+    menu._close_all_but_current()
+    assert gui._core_link._viewer_tab.count() == 2
+    assert gui._core_link._viewer_tab.tabText(0) == "Preview"
+    assert gui._core_link._viewer_tab.tabText(1) == "MDA4"
 
-# def test_live(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
-#     gui = MicroManagerGUI(mmcore=global_mmcore)
-#     qtbot.addWidget(gui)
-
-#     assert gui._core_link._preview
-#     assert gui._core_link._preview._image_preview.image is None
-#     assert not gui._core_link._preview.isHidden()
-
-#     with qtbot.waitSignal(global_mmcore.events.continuousSequenceAcquisitionStarted):
-#         gui._core_link._preview._live._toggle_live_mode()
-#     assert global_mmcore.isSequenceRunning()
-#     with qtbot.waitSignal(global_mmcore.events.sequenceAcquisitionStopped):
-#         gui._core_link._preview._live._toggle_live_mode()
-#     assert not global_mmcore.isSequenceRunning()
+    menu._close_all()
 
 
 # def test_mda_viewer(
