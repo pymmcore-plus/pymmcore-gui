@@ -31,7 +31,7 @@ def test_mda_viewer_no_saving(
     with qtbot.waitSignal(global_mmcore.mda.events.sequenceFinished):
         global_mmcore.mda.run(mda)
     assert gui._core_link._viewer_tab.count() == 3
-    assert gui._core_link._viewer_tab.tabText(1) == "MDA Viewer 2"
+    assert gui._core_link._viewer_tab.tabText(2) == "MDA Viewer 2"
     assert gui._core_link._viewer_tab.currentIndex() == 2
 
 
