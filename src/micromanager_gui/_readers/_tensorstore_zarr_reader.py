@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Mapping
+from typing import Any, Mapping
 
 import numpy as np
 import tensorstore as ts
@@ -69,18 +69,38 @@ class TensorstoreZarrReader:
     # ___________________________Public Methods___________________________
 
     def isel(
-        self, indexers: Mapping[str, int], metadata: bool = False
+        self,
+        indexers: Mapping[str, int] | None = None,
+        metadata: bool = False,
+        **kwargs: Any,
     ) -> np.ndarray | tuple[np.ndarray, dict]:
         """Select data from the array.
 
         Parameters
         ----------
-        indexers : Mapping[str, int]
-            The indexers to select the data.
+        indexers : Mapping[str, int] | None
+            The indexers to select the data (e.g. {"p": 0, "t": 1}). If None, return
+            the entire data.
         metadata : bool
             If True, return the metadata as well as a list of dictionaries. By default,
             False.
+        **kwargs : Any
+            Additional way to pass the indexers. You can pass the indexers as kwargs
+            (e.g. p=0, t=1). NOTE: kwargs will overwrite the indexers if already present
+            in the indexers mapping.
         """
+        if indexers is None:
+            indexers = {}
+        if kwargs:
+            if all(
+                isinstance(k, str) and isinstance(v, int) for k, v in kwargs.items()
+            ):
+                indexers = {**indexers, **kwargs}
+            else:
+                raise TypeError(
+                    "kwargs must be a mapping from strings to integers (e.g. p=0, t=1)!"
+                )
+
         index = self._get_axis_index(indexers)
         data = self.store[index].read().result().squeeze()
         if metadata:
@@ -91,7 +111,8 @@ class TensorstoreZarrReader:
     def write_tiff(
         self,
         path: str | Path,
-        indexers: Mapping[str, int] | list[Mapping[str, int]] | None = None,
+        indexers: Mapping[str, int] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Write the data to a tiff file.
 
@@ -101,14 +122,37 @@ class TensorstoreZarrReader:
             The path to the tiff file. If `indexers` is a Mapping of axis and index,
             the path should be a file path (e.g. 'path/to/file.tif'). Otherwise, it
             should be a directory path (e.g. 'path/to/directory').
-        indexers : Mapping[str, int] | list[Mapping[str, int]] | None
+        indexers : Mapping[str, int] | None
             The indexers to select the data. If None, write all the data per position
-            to a tiff file. If a list of Mapping of axis and index
-            (e.g. [{"p": 0, "t": 1}, {"p": 1, "t": 0}]), write the data for the given
-            indexes to a tiff file. If a Mapping of axis and index (e.g.
-            {"p": 0, "t": 1}), write the data for the given index to a tiff file.
+            to a tiff file. If a Mapping of axis and index (e.g. {"p": 0, "t": 1}),
+            write the data for the given index to a tiff file.
+        **kwargs : Any
+            Additional way to pass the indexers. You can pass the indexers as kwargs
+            (e.g. p=0, t=1). NOTE: kwargs will overwrite the indexers if already present
+            in the indexers mapping.
         """
-        if indexers is None:
+        if kwargs:
+            indexers = indexers or {}
+            if all(
+                isinstance(k, str) and isinstance(v, int) for k, v in kwargs.items()
+            ):
+                indexers = {**indexers, **kwargs}
+            else:
+                raise TypeError("kwargs must be a mapping from strings to integers")
+
+        if indexers:
+            data, metadata = self.isel(indexers, metadata=True)
+            imj = len(data.shape) <= 5
+            if Path(path).suffix not in {".tif", ".tiff"}:
+                path = Path(path).with_suffix(".tiff")
+            if not Path(path).parent.exists():
+                Path(path).parent.mkdir(parents=True, exist_ok=True)
+            imwrite(path, data, imagej=imj)
+            # save metadata as json
+            dest = Path(path).with_suffix(".json")
+            dest.write_text(json.dumps(metadata))
+
+        else:
             if pos := len(self.sequence.stage_positions):
                 if not Path(path).exists():
                     Path(path).mkdir(parents=True, exist_ok=False)
@@ -120,27 +164,6 @@ class TensorstoreZarrReader:
                         dest = Path(path) / f"p{i}.json"
                         dest.write_text(json.dumps(metadata))
                         pbar.update(1)
-
-        elif isinstance(indexers, list):
-            if not Path(path).exists():
-                Path(path).mkdir(parents=True, exist_ok=False)
-            for index in indexers:
-                data, metadata = self.isel(index, metadata=True)
-                name = "_".join(f"{k}{v}" for k, v in index.items())
-                imwrite(Path(path) / f"{name}.tif", data, imagej=True)
-                # save metadata as json
-                dest = Path(path) / f"{name}.json"
-                dest.write_text(json.dumps(metadata))
-
-        else:
-            data, metadata = self.isel(indexers, metadata=True)
-            imj = len(data.shape) <= 5
-            if Path(path).suffix not in {".tif", ".tiff"}:
-                path = Path(path).with_suffix(".tiff")
-            imwrite(path, data, imagej=imj)
-            # save metadata as json
-            dest = Path(path).with_suffix(".json")
-            dest.write_text(json.dumps(metadata))
 
     # ___________________________Private Methods___________________________
 
