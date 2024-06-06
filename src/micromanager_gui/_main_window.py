@@ -35,9 +35,6 @@ class MicroManagerGUI(QMainWindow):
 
         self.setWindowTitle("Micro-Manager")
 
-        # extend size to fill the screen
-        self.showMaximized()
-
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
 
@@ -58,6 +55,9 @@ class MicroManagerGUI(QMainWindow):
 
         # link the MDA viewers
         self._core_link = CoreViewersLink(self, mmcore=self._mmc)
+
+        # extend size to fill the screen
+        self.showMaximized()
 
         if config is not None:
             try:
