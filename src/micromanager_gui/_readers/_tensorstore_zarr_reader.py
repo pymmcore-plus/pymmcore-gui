@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, cast
 
 import numpy as np
 import tensorstore as ts
@@ -45,11 +45,20 @@ class TensorstoreZarrReader:
             "kvstore": {"driver": "file", "path": str(self._path)},
         }
 
-        self._store = ts.open(spec)
+        _store = ts.open(spec).result()
 
         self._metadata: dict = {}
-        if metadata_json := self.store.kvstore.read(".zattrs").result().value:
+        if metadata_json := _store.kvstore.read(".zattrs").result().value:
             self._metadata = json.loads(metadata_json)
+
+        # set the axis labels
+        if self.sequence is not None:
+            # not sure if is x, y or y, x
+            axis_order = [*self.sequence.axis_order, "y", "x"]
+            if len(axis_order) > 2:
+                _store = _store[ts.d[:].label[*axis_order]]
+
+        self._store = _store
 
     @property
     def path(self) -> Path:
@@ -59,10 +68,10 @@ class TensorstoreZarrReader:
     @property
     def store(self) -> ts.TensorStore:
         """Return the tensorstore."""
-        return self._store.result()
+        return self._store
 
     @property
-    def sequence(self) -> useq.MDASequence:
+    def sequence(self) -> useq.MDASequence | None:
         seq = self._metadata.get("useq_MDASequence")
         return useq.MDASequence(**json.loads(seq)) if seq is not None else None
 
@@ -73,7 +82,7 @@ class TensorstoreZarrReader:
         indexers: Mapping[str, int] | None = None,
         metadata: bool = False,
         **kwargs: Any,
-    ) -> np.ndarray | tuple[np.ndarray, dict]:
+    ) -> np.ndarray | tuple[np.ndarray, list[dict]]:
         """Select data from the array.
 
         Parameters
@@ -102,7 +111,7 @@ class TensorstoreZarrReader:
                 )
 
         index = self._get_axis_index(indexers)
-        data = self.store[index].read().result().squeeze()
+        data = cast(np.ndarray, self.store[index].read().result().squeeze())
         if metadata:
             meta = self._get_metadata_from_index(indexers)
             return data, meta
@@ -153,6 +162,8 @@ class TensorstoreZarrReader:
             dest.write_text(json.dumps(metadata))
 
         else:
+            if self.sequence is None:
+                raise ValueError("No 'useq.MDASequence' found in the metadata!")
             if pos := len(self.sequence.stage_positions):
                 if not Path(path).exists():
                     Path(path).mkdir(parents=True, exist_ok=False)

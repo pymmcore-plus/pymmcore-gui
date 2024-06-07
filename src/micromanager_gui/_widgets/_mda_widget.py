@@ -44,7 +44,7 @@ class _MDAWidget(MDAWidget):
         # writer for saving the MDA sequence. This is used by the MDAViewer to set its
         # internal datastore. If _writer is None, the MDAViewer will use its default
         # internal datastore.
-        self.writer: OMETiffWriter | OMETiffWriter | TensorStoreHandler | None = None
+        self.writer: OMETiffWriter | OMEZarrWriter | TensorStoreHandler | None = None
 
         # setContentsMargins
         pos_layout = cast("QVBoxLayout", self.stage_positions.layout())
