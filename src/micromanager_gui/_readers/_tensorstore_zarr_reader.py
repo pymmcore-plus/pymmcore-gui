@@ -1,4 +1,5 @@
 import json
+import warnings
 from pathlib import Path
 from typing import Any, Mapping, cast
 
@@ -56,7 +57,14 @@ class TensorstoreZarrReader:
             # not sure if is x, y or y, x
             axis_order = [*self.sequence.axis_order, "y", "x"]
             if len(axis_order) > 2:
-                _store = _store[ts.d[:].label[*axis_order]]
+                try:
+                    _store = _store[ts.d[:].label[*axis_order]]
+                except IndexError as e:
+                    warnings.warn(
+                        f"Error setting the axis labels: {e}."
+                        "`axis_order`: {axis_order}, `shape`: {_store.shape}.",
+                        stacklevel=2,
+                    )
 
         self._store = _store
 

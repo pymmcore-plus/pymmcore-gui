@@ -34,6 +34,7 @@ files = [
 ]
 
 MDA = useq.MDASequence(
+    axis_order=["p", "t", "c"],
     channels=["FITC", "DAPI"],
     stage_positions=[(0, 0), (0, 1)],
     time_plan={"loops": 3, "interval": 0.1},
