@@ -57,7 +57,7 @@ class TensorstoreZarrReader:
         # set the axis labels
         if self.sequence is not None:
             # not sure if is x, y or y, x
-            axis_order = [*self.sequence.axis_order, "y", "x"]
+            axis_order = (*self.sequence.axis_order, "y", "x")
             if len(axis_order) > 2:
                 try:
                     _store = _store[ts.d[:].label[*axis_order]]
