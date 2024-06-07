@@ -4,13 +4,13 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, cast
 
+import numpy as np
 import useq
 import zarr
 from tifffile import imwrite
 from tqdm import tqdm
 
 if TYPE_CHECKING:
-    import numpy as np
     from zarr.hierarchy import Group
 
 EVENT = "Event"
@@ -82,7 +82,7 @@ class OMEZarrReader:
         indexers: Mapping[str, int] | None = None,
         metadata: bool = False,
         **kwargs: Any,
-    ) -> np.ndarray | tuple[np.ndarray, dict]:
+    ) -> np.ndarray | tuple[np.ndarray, list[dict]]:
         """Select data from the array.
 
         Parameters
@@ -117,7 +117,7 @@ class OMEZarrReader:
 
         pos_key = f"p{indexers.get('p', 0)}"
         index = self._get_axis_index(indexers, pos_key)
-        data = self.store[pos_key][index].squeeze()
+        data = cast(np.ndarray, self.store[pos_key][index].squeeze())
         if metadata:
             meta = self._get_metadata_from_index(indexers, pos_key)
             return data, meta
