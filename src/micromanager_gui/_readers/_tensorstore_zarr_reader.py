@@ -60,7 +60,7 @@ class TensorstoreZarrReader:
             axis_order = (*self.sequence.axis_order, "y", "x")
             if len(axis_order) > 2:
                 try:
-                    _store = _store[ts.d[:].label[*axis_order]]
+                    _store = _store[ts.d[:].label[axis_order]]
                 except IndexError as e:
                     warnings.warn(
                         f"Error setting the axis labels: {e}."
