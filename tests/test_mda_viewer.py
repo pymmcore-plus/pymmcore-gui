@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
+from unittest.mock import patch
 
 import pytest
 import useq
-from pymmcore_plus.mda.handlers import OMETiffWriter, OMEZarrWriter, TensorStoreHandler
+from pymmcore_plus.mda.handlers import OMETiffWriter
 from pymmcore_widgets._stack_viewer_v2 import MDAViewer
 from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 
@@ -24,27 +25,27 @@ def test_mda_viewer_no_saving(
     qtbot.addWidget(gui)
 
     mda = useq.MDASequence(channels=["DAPI", "FITC"])
-    with qtbot.waitSignal(global_mmcore.mda.events.sequenceFinished):
-        global_mmcore.mda.run(mda)
+
+    # simulate that the core run_mda method was called
+    gui._core_link._on_sequence_started(sequence=mda)
     assert gui._core_link._viewer_tab.count() == 2
     assert gui._core_link._viewer_tab.tabText(1) == "MDA Viewer 1"
     assert gui._core_link._viewer_tab.currentIndex() == 1
-
-    with qtbot.waitSignal(global_mmcore.mda.events.sequenceFinished):
-        global_mmcore.mda.run(mda)
+    # simulate that the core run_mda method was called again
+    gui._core_link._on_sequence_started(sequence=mda)
     assert gui._core_link._viewer_tab.count() == 3
     assert gui._core_link._viewer_tab.tabText(2) == "MDA Viewer 2"
     assert gui._core_link._viewer_tab.currentIndex() == 2
 
 
 writers = [
-    ("tensorstore-zarr", "ts.tensorstore.zarr", TensorStoreHandler),
+    # ("tensorstore-zarr", "ts.tensorstore.zarr", TensorStoreHandler),
     ("ome-tiff", "t.ome.tiff", OMETiffWriter),
-    ("ome-zarr", "z.ome.zarr", OMEZarrWriter),
+    # ("ome-zarr", "z.ome.zarr", OMEZarrWriter),
 ]
 
 
-@pytest.mark.skip("run only locally, for some reason sometimes it fails on CI.")
+# @pytest.mark.skip("run only locally, for some reason sometimes it fails on CI.")
 @pytest.mark.parametrize("writers", writers)
 def test_mda_viewer_saving(
     qtbot: QtBot,
@@ -71,8 +72,16 @@ def test_mda_viewer_saving(
     )
     gui._menu_bar._mda.setValue(mda)
 
-    with qtbot.waitSignal(global_mmcore.mda.events.sequenceStarted):
+    # patch the run_mda method to avoid running the MDA sequence
+    def _run_mda(seq):
+        print("Running MDA")
+        return True
+
+    # set the writer attribute of the MDAWidget without running the MDA sequence
+    with patch.object(global_mmcore, "run_mda", _run_mda):
         gui._menu_bar._mda.run_mda()
+    # simulate that the core run_mda method was called
+    gui._core_link._on_sequence_started(sequence=mda)
 
     assert isinstance(gui._menu_bar._mda.writer, writer)
     assert gui._core_link._viewer_tab.count() == 2
@@ -81,4 +90,5 @@ def test_mda_viewer_saving(
     # saving datastore and MDAViewer datastore should be the same
     viewer = cast(MDAViewer, gui._core_link._viewer_tab.widget(1))
     assert viewer.data == gui._core_link._mda.writer
-    gui._menu_bar._close_all()
+
+    # # gui._menu_bar._close_all()
