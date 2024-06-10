@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 import useq
-from pymmcore_plus.mda.handlers import OMETiffWriter
+from pymmcore_plus.mda.handlers import OMETiffWriter, OMEZarrWriter, TensorStoreHandler
 from pymmcore_widgets._stack_viewer_v2 import MDAViewer
 from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 
@@ -39,13 +39,12 @@ def test_mda_viewer_no_saving(
 
 
 writers = [
-    # ("tensorstore-zarr", "ts.tensorstore.zarr", TensorStoreHandler),
+    ("tensorstore-zarr", "ts.tensorstore.zarr", TensorStoreHandler),
     ("ome-tiff", "t.ome.tiff", OMETiffWriter),
-    # ("ome-zarr", "z.ome.zarr", OMEZarrWriter),
+    ("ome-zarr", "z.ome.zarr", OMEZarrWriter),
 ]
 
 
-# @pytest.mark.skip("run only locally, for some reason sometimes it fails on CI.")
 @pytest.mark.parametrize("writers", writers)
 def test_mda_viewer_saving(
     qtbot: QtBot,
@@ -90,5 +89,3 @@ def test_mda_viewer_saving(
     # saving datastore and MDAViewer datastore should be the same
     viewer = cast(MDAViewer, gui._core_link._viewer_tab.widget(1))
     assert viewer.data == gui._core_link._mda.writer
-
-    # # gui._menu_bar._close_all()
