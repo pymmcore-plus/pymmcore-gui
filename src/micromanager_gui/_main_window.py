@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING
 from warnings import warn
 
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets._stack_viewer_v2._mda_viewer import StackViewer
-from qtpy.QtGui import QCloseEvent, QDragEnterEvent, QDropEvent
 from qtpy.QtWidgets import (
     QGridLayout,
     QMainWindow,
@@ -18,6 +20,9 @@ from ._core_link import CoreViewersLink
 from ._menubar._menubar import _MenuBar
 from ._toolbar._shutters_toolbar import _ShuttersToolbar
 from ._toolbar._snap_live import _SnapLive
+
+if TYPE_CHECKING:
+    from qtpy.QtGui import QCloseEvent, QDragEnterEvent, QDropEvent
 
 
 class MicroManagerGUI(QMainWindow):

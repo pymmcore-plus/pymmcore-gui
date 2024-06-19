@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import warnings
 from typing import TYPE_CHECKING, cast
 
@@ -75,7 +77,7 @@ class _MenuBar(QMenuBar):
     """
 
     def __init__(
-        self, parent: "MicroManagerGUI", *, mmcore: CMMCorePlus | None = None
+        self, parent: MicroManagerGUI, *, mmcore: CMMCorePlus | None = None
     ) -> None:
         super().__init__(parent)
         self._main_window = parent
