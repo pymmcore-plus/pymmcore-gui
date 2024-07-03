@@ -23,6 +23,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from micromanager_gui._widgets._install_widget import _InstallWidget
 from micromanager_gui._widgets._mda_widget import _MDAWidget
 from micromanager_gui._widgets._stage_control import _StagesControlWidget
 
@@ -33,6 +34,7 @@ FLAGS = Qt.WindowType.Dialog
 WIDGETS = {
     "Property Browser": PropertyBrowser,
     "Pixel Configuration": PixelConfigurationWidget,
+    "Install Devices": _InstallWidget,
 }
 DOCKWIDGETS = {
     "MDA Widget": _MDAWidget,
