@@ -61,8 +61,8 @@ homepage = "https://github.com/fdrgsp/micromanager-gui"
 repository = "https://github.com/fdrgsp/micromanager-gui"
 
 # same as console_scripts entry point
-# [project.scripts]
-# spam-cli = "spam:main_cli"
+[project.scripts]
+mmgui = "micromanager_gui.__main__:main"
 
 # Entry points
 # https://peps.python.org/pep-0621/#entry-points
