@@ -8,6 +8,7 @@ from typing import Any, Mapping, cast
 import numpy as np
 import tensorstore as ts
 import useq
+from pymmcore_plus.metadata.serialize import json_loads
 from tifffile import imwrite
 from tqdm import tqdm
 
@@ -50,9 +51,10 @@ class TensorstoreZarrReader:
 
         _store = ts.open(spec).result()
 
-        self._metadata: dict = {}
+        self._metadata: list = []
         if metadata_json := _store.kvstore.read(".zattrs").result().value:
-            self._metadata = json.loads(metadata_json)
+            metadata_dict = json_loads(metadata_json)
+            self._metadata = metadata_dict.get("frame_metadatas", [])
 
         # set the axis labels
         if self.sequence is not None:
@@ -82,8 +84,9 @@ class TensorstoreZarrReader:
 
     @property
     def sequence(self) -> useq.MDASequence | None:
-        seq = self._metadata.get("useq_MDASequence")
-        return useq.MDASequence(**json.loads(seq)) if seq is not None else None
+        # getting the sequence from the first frame metadata within the "mda_event" key
+        seq = self._metadata[0].get("mda_event", {}).get("sequence")
+        return useq.MDASequence(**seq) if seq is not None else None
 
     # ___________________________Public Methods___________________________
 
@@ -208,8 +211,8 @@ class TensorstoreZarrReader:
     def _get_metadata_from_index(self, indexers: Mapping[str, int]) -> list[dict]:
         """Return the metadata for the given indexers."""
         metadata = []
-        for meta in self._metadata.get("frame_metadatas", []):
-            event_index = meta["Event"]["index"]  # e.g. {"p": 0, "t": 1}
+        for meta in self._metadata:
+            event_index = meta["mda_event"]["index"]  # e.g. {"p": 0, "t": 1}
             if indexers.items() <= event_index.items():
                 metadata.append(meta)
         return metadata

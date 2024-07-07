@@ -17,6 +17,7 @@ NO_L_BTN = (0, QTabBar.ButtonPosition.LeftSide, None)
 
 if TYPE_CHECKING:
     import useq
+    from pymmcore_plus.metadata import SummaryMetaV1
 
     from ._main_window import MicroManagerGUI
     from ._widgets._mda_widget import _MDAWidget
@@ -71,7 +72,9 @@ class CoreViewersLink(QObject):
         del self._current_viewer
         self._current_viewer = None
 
-    def _on_sequence_started(self, sequence: useq.MDASequence) -> None:
+    def _on_sequence_started(
+        self, sequence: useq.MDASequence, meta: SummaryMetaV1
+    ) -> None:
         """Show the MDAViewer when the MDA sequence starts."""
         self._mda_running = True
 
@@ -81,25 +84,25 @@ class CoreViewersLink(QObject):
         # pause until the viewer is ready
         self._mmc.mda.toggle_pause()
         # setup the viewer
-        self._setup_viewer(sequence)
+        self._setup_viewer(sequence, meta)
         # resume the sequence
         self._mmc.mda.toggle_pause()
 
-    def _setup_viewer(self, sequence: useq.MDASequence) -> None:
+    def _setup_viewer(self, sequence: useq.MDASequence, meta: SummaryMetaV1) -> None:
         """Setup the MDAViewer."""
         # get the MDAWidget writer
         datastore = self._mda.writer if self._mda is not None else None
         self._current_viewer = MDAViewer(parent=self._main_window, datastore=datastore)
 
         # rename the viewer if there is a save_name' in the metadata or add a digit
-        meta = cast(dict, sequence.metadata.get(PYMMCW_METADATA_KEY, {}))
-        viewer_name = self._get_viewer_name(meta.get("save_name"))
+        pmmcw_meta = cast(dict, sequence.metadata.get(PYMMCW_METADATA_KEY, {}))
+        viewer_name = self._get_viewer_name(pmmcw_meta.get("save_name"))
         self._viewer_tab.addTab(self._current_viewer, viewer_name)
         self._viewer_tab.setCurrentWidget(self._current_viewer)
 
         # call it manually instead in _connect_viewer because this signal has been
         # emitted already
-        self._current_viewer.data.sequenceStarted(sequence)
+        self._current_viewer.data.sequenceStarted(sequence, meta)
 
         # disable the LUT drop down and the mono/composite button (temporary)
         self._enable_gui(False)
