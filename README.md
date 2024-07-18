@@ -36,14 +36,15 @@ Note: tests are running on [PyQt6](https://pypi.org/project/PyQt6/) and [PyQt5](
 
 You also need to install the `Micro-Manager` device adapters and C++ core provided by [mmCoreAndDevices](https://github.com/micro-manager/mmCoreAndDevices#mmcoreanddevices). This can be done by following the steps described in the `pymmcore-plus` [documentation page](https://pymmcore-plus.github.io/pymmcore-plus/install/#installing-micro-manager-device-adapters).
 
-## To run the GUI
+## To run the Micro-Manger GUI
 
 ```bash
-python -m micromanager_gui
+mmgui
 ```
 
 By passing the `-c` or `-config` flag, you can specify the path of a micromanager configuration file you want to load. For example:
 
 ```bash
-python -m micromanager_gui -c path/to/config.cfg
+mmgui -c path/to/config.cfg
 ```
+
