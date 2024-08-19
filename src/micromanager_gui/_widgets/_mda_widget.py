@@ -90,7 +90,7 @@ class _MDAWidget(MDAWidget):
                 # set the writer to use for saving the MDA sequence.
                 # NOTE: 'self._writer' is used by the 'MDAViewer' to set its datastore
                 self.writer = self._create_mda_viewer_writer(save_format, save_path)
-                # at this point, if self.writer is None, it means thet a
+                # at this point, if self.writer is None, it means that a
                 # ImageSequenceWriter should be used to save the sequence.
                 if self.writer is None:
                     output = ImageSequenceWriter(save_path)
