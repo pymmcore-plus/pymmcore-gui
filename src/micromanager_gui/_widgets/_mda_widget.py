@@ -42,7 +42,7 @@ class _MDAWidget(MDAWidget):
         super().__init__(parent=parent, mmcore=mmcore)
 
         # writer for saving the MDA sequence. This is used by the MDAViewer to set its
-        # internal datastore. If _writer is None, the MDAViewer will use its default
+        # internal datastore. If writer is None, the MDAViewer will use its default
         # internal datastore.
         self.writer: OMETiffWriter | OMEZarrWriter | TensorStoreHandler | None = None
 
@@ -88,7 +88,7 @@ class _MDAWidget(MDAWidget):
                 save_meta = sequence.metadata.get(PYMMCW_METADATA_KEY, {})
                 save_format = save_meta.get("format")
                 # set the writer to use for saving the MDA sequence.
-                # NOTE: 'self._writer' is used by the 'MDAViewer' to set its datastore
+                # NOTE: 'self.writer' is used by the 'MDAViewer' to set its datastore
                 self.writer = self._create_mda_viewer_writer(save_format, save_path)
                 # at this point, if self.writer is None, it means that a
                 # ImageSequenceWriter should be used to save the sequence.
