@@ -26,14 +26,16 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "pymmcore-widgets@git+https://github.com/fdrgsp/pymmcore-widgets.git@viewer_v2_and_tensorstore",
+    "pymmcore-widgets >=0.8.0",
     "pymmcore-plus >=0.11.0",
     "qtpy",
     "vispy",
     "zarr",
     "tifffile",
     "tqdm",
-    "pyyaml"
+    "pyyaml",
+    "cmap",
+    "pyconify"
 ]
 
 # extras
@@ -132,6 +134,7 @@ disallow_any_generics = false
 disallow_subclassing_any = false
 show_error_codes = true
 pretty = true
+plugins = ["pydantic.mypy"]
 
 # # module specific overrides
 # [[tool.mypy.overrides]]

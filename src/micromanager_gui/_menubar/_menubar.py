@@ -24,7 +24,7 @@ from qtpy.QtWidgets import (
 )
 
 from micromanager_gui._widgets._install_widget import _InstallWidget
-from micromanager_gui._widgets._mda_widget import _MDAWidget
+from micromanager_gui._widgets._mda_widget import MDAWidget
 from micromanager_gui._widgets._stage_control import _StagesControlWidget
 
 if TYPE_CHECKING:
@@ -37,7 +37,7 @@ WIDGETS = {
     "Install Devices": _InstallWidget,
 }
 DOCKWIDGETS = {
-    "MDA Widget": _MDAWidget,
+    "MDA Widget": MDAWidget,
     "Groups and Presets": GroupPresetTableWidget,
     "Stage Control": _StagesControlWidget,
     "Camera ROI": CameraRoiWidget,
@@ -96,7 +96,7 @@ class _MenuBar(QMenuBar):
 
         # widgets
         self._wizard: ConfigWizard | None = None  # is in a different menu
-        self._mda: _MDAWidget | None = None
+        self._mda: MDAWidget | None = None
 
         # configurations_menu
         self._configurations_menu = self.addMenu("System Configurations")
@@ -137,7 +137,7 @@ class _MenuBar(QMenuBar):
         # create 'Group and Presets' and 'MDA' widgets at the startup
         self._create_dock_widget("Groups and Presets", dock_area=LEFT)
         mda = self._create_dock_widget("MDA Widget")
-        self._mda = cast(_MDAWidget, mda.main_widget)
+        self._mda = cast(MDAWidget, mda.main_widget)
 
     def _enable(self, enable: bool) -> None:
         """Enable or disable the actions."""

@@ -3,10 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from pymmcore_plus import CMMCorePlus
-from pymmcore_widgets._stack_viewer_v2 import MDAViewer
 from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 from qtpy.QtCore import QObject, Qt
 from qtpy.QtWidgets import QTabBar, QTabWidget
+
+from micromanager_gui._widgets._stack_viewer import MDAViewer
 
 from ._widgets._preview import Preview
 
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
     from pymmcore_plus.metadata import SummaryMetaV1
 
     from ._main_window import MicroManagerGUI
-    from ._widgets._mda_widget import _MDAWidget
+    from ._widgets._mda_widget import MDAWidget
 
 
 class CoreViewersLink(QObject):
@@ -49,8 +50,8 @@ class CoreViewersLink(QObject):
 
         self._mda_running: bool = False
 
-        # the _MDAWidget. It should have been set in the _MenuBar at startup
-        self._mda = cast("_MDAWidget", self._main_window._menu_bar._mda)
+        # the MDAWidget. It should have been set in the _MenuBar at startup
+        self._mda = cast("MDAWidget", self._main_window._menu_bar._mda)
 
         ev = self._mmc.events
         ev.continuousSequenceAcquisitionStarted.connect(self._set_preview_tab)
