@@ -24,8 +24,8 @@ from qtpy.QtWidgets import (
 )
 
 from micromanager_gui._widgets._install_widget import _InstallWidget
+from micromanager_gui._widgets._mda_widget import MDAWidget
 from micromanager_gui._widgets._stage_control import _StagesControlWidget
-from micromanager_gui._widgets.mda_widget import MDAWidget
 
 if TYPE_CHECKING:
     from micromanager_gui._main_window import MicroManagerGUI
