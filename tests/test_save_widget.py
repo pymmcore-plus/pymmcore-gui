@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from pytestqt.qtbot import QtBot
 
-from micromanager_gui._widgets._mda_widget._save_widget import (
+from micromanager_gui._widgets.mda_widget._save_widget import (
     DIRECTORY_WRITERS,
     FILE_NAME,
     OME_TIFF,

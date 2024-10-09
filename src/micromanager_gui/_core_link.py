@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from pymmcore_plus.metadata import SummaryMetaV1
 
     from ._main_window import MicroManagerGUI
-    from ._widgets._mda_widget import MDAWidget
+    from ._widgets.mda_widget import MDAWidget
 
 
 class CoreViewersLink(QObject):
