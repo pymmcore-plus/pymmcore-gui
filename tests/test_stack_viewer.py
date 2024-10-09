@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 import dask.array as da
 import numpy as np
+import pytest
 
 from micromanager_gui._widgets._stack_viewer import StackViewer
 
@@ -27,7 +28,7 @@ def make_lazy_array(shape: tuple[int, ...]) -> da.Array:
 
 # this test is still leaking widgets and it's hard to track down... I think
 # it might have to do with the cmapComboBox
-# @pytest.mark.allow_leaks
+@pytest.mark.allow_leaks
 def test_stack_viewer(qtbot: QtBot) -> None:
     dask_arr = make_lazy_array((1000, 64, 3, 256, 256))
     v = StackViewer(dask_arr)
