@@ -24,7 +24,7 @@ One candidate to replace the viewing functionality provided by napari is [`ndv`]
 
 ### LEB-EPFL
 
-[@wl-stepp](https://github.com/wl-stepp) has been an active contributor to pymmcore-widgets and uses some of these widgets in his event-driven microscopy controllers.
+Willi Stepp ([@wl-stepp](https://github.com/wl-stepp)) has been an active contributor to pymmcore-widgets and uses some of these widgets in his event-driven microscopy controllers.
 
 ## Goals (and non-goals) of unification:
 
