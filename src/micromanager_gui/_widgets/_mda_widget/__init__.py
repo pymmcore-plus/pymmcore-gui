@@ -1,5 +1,5 @@
 """MDA widgets."""
 
-from ._core_mda import MDAWidget
+from ._mda_widget import MDAWidget_ as MDAWidget
 
 __all__ = ["MDAWidget"]
