@@ -1,6 +1,6 @@
 # pymmcore-gui
 
-This is a stub repo for discussing a unified effort towards a GUI application for `pymmcore-plus` & `pymmcore-widgets`
+This is a stub repo for discussing a unified effort towards a GUI application for [`pymmcore-plus`](https://github.com/pymmcore-plus/pymmcore-plus) & [`pymmcore-widgets`](https://github.com/pymmcore-plus/pymmcore-widgets)
 
 ## Goals (and non-goals) of unification:
 
@@ -12,7 +12,7 @@ This is a stub repo for discussing a unified effort towards a GUI application fo
 
 **Non-Goals**
 
-- Working on a shared application is *not* meant to discourage independent experimentation and repositories.  One possible pattern would be forks & branches off of a main central repository.
+- Working on a shared application is *not* meant to discourage independent experimentation and repositories.  (One of the real strengths in doing this all in python is the ease of creating custom widgets and GUIs!).  One possible pattern would be forks & branches off of a main central repository.
 
 ## Purpose of this repo
 
