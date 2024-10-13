@@ -2,6 +2,23 @@
 
 This is a stub repo for discussing a unified effort towards a GUI application for `pymmcore-plus` & `pymmcore-widgets`
 
+## Goals (and non-goals) of unification:
+
+**Goals**
+
+- Provide a napari-independent GUI for controlling micro-manager via pymmcore-plus (i.e. pure python micro-manager control).  We'd like to have a primary application that we can point interested parties to (rather than having to describe all the related efforts and explain how to compose pymmcore-widgets directly).
+- Avoid duplicate efforts.  While independent related projects are excellent in that they allow rapid exploration and experimentation, we'd like to be able to share the results of these efforts.  In some ways that is done via pymmcore-widgets, but all of the application level stuff (persistence of settings, complex layouts, coordination of data saving, viewing & processing) is explicitly not part of pymmcore widgets.
+- Establish patterns for persistence and application state.
+
+**Non-Goals**
+
+- Working on a shared application is *not* meant to discourage independent experimentation and repositories.  One possible pattern would be forks & branches off of a main central repository.
+
+## Purpose of this repo
+
+For now, this serves as place to store TODO issues and discussion items.  Please open an issue if you are interested, (even just to say hi! 🙂)
+
+
 ## Existing Efforts
 
 ### napari-micromanager
@@ -26,19 +43,4 @@ One candidate to replace the viewing functionality provided by napari is [`ndv`]
 
 Willi Stepp ([@wl-stepp](https://github.com/wl-stepp)) has been an active contributor to pymmcore-widgets and uses some of these widgets in his event-driven microscopy controllers.
 
-## Goals (and non-goals) of unification:
-
-**Goals**
-
-- Provide a napari-independent GUI for controlling micro-manager via pymmcore-plus (i.e. pure python micro-manager control).  We'd like to have a primary application that we can point interested parties to (rather than having to describe all the related efforts and explain how to compose pymmcore-widgets directly).
-- Avoid duplicate efforts.  While independent related projects are excellent in that they allow rapid exploration and experimentation, we'd like to be able to share the results of these efforts.  In some ways that is done via pymmcore-widgets, but all of the application level stuff (persistence of settings, complex layouts, coordination of data saving, viewing & processing) is explicitly not part of pymmcore widgets.
-- Establish patterns for persistence and application state.
-
-**Non-Goals**
-
-- Working on a shared application is *not* meant to discourage independent experimentation and repositories.  One possible pattern would be forks & branches off of a main central repository.
-
-## Purpose of this repo
-
-For now, this serves as place to store TODO issues and discussion items.  Please open an issue if you are interested, (even just to say hi! 🙂)
 
