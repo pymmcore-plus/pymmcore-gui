@@ -37,6 +37,9 @@ One candidate to replace the viewing functionality provided by napari is [`ndv`]
 
 ### pymmcore-plus-sandbox
 
+<img width="1190" alt="Screenshot 2024-10-13 at 2 50 57 PM" src="https://github.com/user-attachments/assets/cd1d81aa-1bab-48ca-ad31-420dc08e72a5">
+
+
 [`pymmcore-plus-sandbox`](https://github.com/gselzer/pymmcore-plus-sandbox) is another experimental standalone GUI written by Gabe Selzer ([@gselzer](https://github.com/gselzer) with input from [@marktsuchida](https://github.com/marktsuchida).  One initial goal here is to create a main window that looks very similar to the java based MMStudio (which would make it familiar to existing users of the java ecosystem).
 
 ### LEB-EPFL
