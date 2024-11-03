@@ -33,6 +33,8 @@ def _data_type(mmc: CMMCorePlus) -> ts.dtype:
 class Preview(NDViewer):
     """An NDViewer subclass tailored to active data viewing."""
 
+    # based on: https://github.com/gselzer/pymmcore-plus-sandbox/blob/53ac7e8ca3b4874816583b8b74024a75432b8fc9/src/pymmcore_plus_sandbox/_viewfinder.py#L154-L211
+
     def __init__(
         self, mmcore: CMMCorePlus | None = None, parent: QWidget | None = None
     ):
