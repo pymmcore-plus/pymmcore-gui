@@ -35,7 +35,8 @@ dependencies = [
     "tqdm",
     "pyyaml",
     "cmap",
-    "pyconify"
+    "pyconify",
+    "ndv"
 ]
 
 # extras
