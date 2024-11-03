@@ -22,7 +22,7 @@ from micromanager_gui._widgets._mda_widget._save_widget import (
     TIFF_SEQ,
     ZARR_TESNSORSTORE,
 )
-from micromanager_gui._widgets._stack_viewer import MDAViewer
+from micromanager_gui._widgets._viewers import MDAViewer
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
