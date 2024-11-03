@@ -7,9 +7,10 @@ from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 from qtpy.QtCore import QObject, Qt
 from qtpy.QtWidgets import QTabBar, QTabWidget
 
-from micromanager_gui._widgets._stack_viewer import MDAViewer
+from micromanager_gui._widgets._viewers import MDAViewer
 
-from ._widgets._preview import Preview
+# from ._widgets._preview import Preview
+from ._widgets._viewers import Preview
 
 DIALOG = Qt.WindowType.Dialog
 VIEWER_TEMP_DIR = None
@@ -39,7 +40,7 @@ class CoreViewersLink(QObject):
         self._main_window._central_wdg_layout.addWidget(self._viewer_tab, 0, 0)
 
         # preview tab
-        self._preview = Preview(self._main_window, mmcore=self._mmc)
+        self._preview = Preview(parent=self._main_window, mmcore=self._mmc)
         self._viewer_tab.addTab(self._preview, "Preview")
         # remove the preview tab close button
         self._viewer_tab.tabBar().setTabButton(*NO_R_BTN)
@@ -93,7 +94,7 @@ class CoreViewersLink(QObject):
         """Setup the MDAViewer."""
         # get the MDAWidget writer
         datastore = self._mda.writer if self._mda is not None else None
-        self._current_viewer = MDAViewer(parent=self._main_window, datastore=datastore)
+        self._current_viewer = MDAViewer(parent=self._main_window, data=datastore)
 
         # rename the viewer if there is a save_name' in the metadata or add a digit
         pmmcw_meta = cast(dict, sequence.metadata.get(PYMMCW_METADATA_KEY, {}))

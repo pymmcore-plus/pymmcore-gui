@@ -4,15 +4,18 @@ from typing import TYPE_CHECKING, Any, Hashable, Mapping
 
 import tensorstore as ts
 from ndv import DataWrapper, NDViewer
-from pymmcore_plus import CMMCorePlus
+from pymmcore_plus import CMMCorePlus, Metadata
 from qtpy import QtCore
 from superqt.utils import ensure_main_thread
 
-from ._snap_live_buttons import BTN_SIZE, ICON_SIZE, Live, SaveButton, Snap
+from micromanager_gui._widgets._snap_live_buttons import Live, Snap
+
+from ._preview_save_button import SaveButton
 
 if TYPE_CHECKING:
     import numpy as np
     from qtpy.QtGui import QCloseEvent
+    from qtpy.QtWidgets import QWidget
 
 
 def _data_type(mmc: CMMCorePlus) -> ts.dtype:
@@ -30,35 +33,53 @@ def _data_type(mmc: CMMCorePlus) -> ts.dtype:
 class Preview(NDViewer):
     """An NDViewer subclass tailored to active data viewing."""
 
-    def __init__(self, mmc: CMMCorePlus | None = None) -> None:
-        super().__init__(data=None)
+    def __init__(
+        self, mmcore: CMMCorePlus | None = None, parent: QWidget | None = None
+    ):
+        super().__init__(data=None, parent=parent)
         self.setWindowTitle("Preview")
         self.live_view: bool = False
-        self._mmc = mmc if mmc is not None else CMMCorePlus.instance()
+        self._meta: Metadata | dict = {}
+        self._mmc = mmcore if mmcore is not None else CMMCorePlus.instance()
 
-        # BUTTONS
-        self._btns.setSpacing(5)
+        # custom buttons
+        # hide the channel mode and ndims buttons
         self._channel_mode_btn.hide()
         self._ndims_btn.hide()
-        self._set_range_btn.setIconSize(ICON_SIZE)
-        self._set_range_btn.setFixedWidth(BTN_SIZE)
-        self._btns.insertWidget(2, Snap(mmcore=self._mmc))
-        self._btns.insertWidget(3, Live(mmcore=self._mmc))
-        self.save_btn = SaveButton(mmcore=self._mmc, viewer=self)
-        self._btns.insertWidget(4, self.save_btn)
 
-        # Create initial buffer
+        # snap and live buttons
+        snap_btn = Snap(mmcore=self._mmc)
+        live_btn = Live(mmcore=self._mmc)
+        icon_size = self._set_range_btn.iconSize()
+        btn_size = self._set_range_btn.sizeHint().width()
+        snap_btn.setIconSize(icon_size)
+        snap_btn.setFixedWidth(btn_size)
+        live_btn.setIconSize(icon_size)
+        live_btn.setFixedWidth(btn_size)
+
+        # save button
+        self.save_btn = SaveButton(mmcore=self._mmc, viewer=self)
+
+        self._btns.insertWidget(1, snap_btn)
+        self._btns.insertWidget(2, live_btn)
+        self._btns.insertWidget(3, self.save_btn)
+
+        # create initial buffer
         self.ts_array = None
         self.ts_shape = (0, 0)
         self.bytes_per_pixel = 0
 
-        # Connections
+        # connections
         ev = self._mmc.events
         ev.imageSnapped.connect(self._handle_snap)
         ev.continuousSequenceAcquisitionStarted.connect(self._start_live_viewer)
         ev.sequenceAcquisitionStopped.connect(self._stop_live_viewer)
 
-    # # Begin TODO: Remove once https://github.com/pyapp-kit/ndv/issues/39 solved
+    def closeEvent(self, event: QCloseEvent | None) -> None:
+        self._mmc.stopSequenceAcquisition()
+        super().closeEvent(event)
+
+    # Begin TODO: Remove once https://github.com/pyapp-kit/ndv/issues/39 solved
 
     def _update_datastore(self) -> Any:
         if (
@@ -90,18 +111,20 @@ class Preview(NDViewer):
         array[:] = data
         self.set_current_index(initial_index)
 
-    # # End TODO: Remove once https://github.com/pyapp-kit/ndv/issues/39 solved
+    # End TODO: Remove once https://github.com/pyapp-kit/ndv/issues/39 solved
 
-    # -- SNAP VIEWER -- #
-
+    # Snap -------------------------------------------------------------
     @ensure_main_thread  # type: ignore
     def _handle_snap(self) -> None:
         if self._mmc.mda.is_running():
             # This signal is emitted during MDAs as well - we want to ignore those.
             return
-        self.set_data(self._mmc.getImage())
+        # self.set_data(self._mmc.getImage())
+        img, meta = self._mmc.getTaggedImage()
+        self.set_data(img)
+        self._meta = meta
 
-    # -- LIVE VIEWER -- #
+    # Live -------------------------------------------------------
 
     @ensure_main_thread  # type: ignore
     def _start_live_viewer(self) -> None:
@@ -119,6 +142,7 @@ class Preview(NDViewer):
             self.live_view = False
             self.killTimer(self._live_timer_id)
             self._live_timer_id = None
+            self._meta = self._mmc.getTags()
 
     def _update_viewer(self, data: np.ndarray | None = None) -> None:
         """Update viewer with the latest image from the circular buffer."""
@@ -135,9 +159,3 @@ class Preview(NDViewer):
         """Handles TimerEvents."""
         # Handle the timer event by updating the viewer (on gui thread)
         self._update_viewer()
-
-    # -- HELPERS -- #
-
-    def closeEvent(self, event: QCloseEvent | None) -> None:
-        self._mmc.stopSequenceAcquisition()
-        super().closeEvent(event)

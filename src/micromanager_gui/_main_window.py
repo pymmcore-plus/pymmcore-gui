@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from warnings import warn
 
+from ndv import NDViewer
 from pymmcore_plus import CMMCorePlus
 from qtpy.QtWidgets import (
     QGridLayout,
@@ -11,10 +12,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from micromanager_gui._readers._tensorstore_zarr_reader import (
-    TensorstoreZarrReader,
-)
-from micromanager_gui._widgets._stack_viewer import StackViewer
+from micromanager_gui._readers import TensorstoreZarrReader
 
 from ._core_link import CoreViewersLink
 from ._menubar._menubar import _MenuBar
@@ -91,14 +89,22 @@ class MicroManagerGUI(QMainWindow):
 
         super().dropEvent(event)
 
-    def _open_datastore(self, idx: int, path: Path) -> StackViewer | None:
+    def _open_datastore(self, idx: int, path: Path) -> NDViewer | None:
         if path.name.endswith(".tensorstore.zarr"):
             try:
                 reader = TensorstoreZarrReader(path)
-                return StackViewer(reader.store, parent=self)
+                return NDViewer(reader.store, parent=self)
             except Exception as e:
                 warn(f"Error opening tensorstore-zarr: {e}!", stacklevel=2)
                 return None
+        # TODO: implement with OMEZarrReader
+        # elif path.name.endswith(".ome.zarr"):
+        #     try:
+        #         reader = OMEZarrReader(path)
+        #         return NDViewer(reader.store, parent=self)
+        #     except Exception as e:
+        #             warn(f"Error opening OME-zarr: {e}!", stacklevel=2)
+        #             return None
         else:
             warn(f"Not yet supported format: {path.name}!", stacklevel=2)
             return None
