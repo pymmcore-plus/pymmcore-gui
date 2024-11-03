@@ -77,6 +77,9 @@ class Preview(NDViewer):
         ev.continuousSequenceAcquisitionStarted.connect(self._start_live_viewer)
         ev.sequenceAcquisitionStopped.connect(self._stop_live_viewer)
 
+        self._mmc.events.exposureChanged.connect(self._restart_live)
+        self._mmc.events.configSet.connect(self._restart_live)
+
     def closeEvent(self, event: QCloseEvent | None) -> None:
         self._mmc.stopSequenceAcquisition()
         super().closeEvent(event)
@@ -156,6 +159,12 @@ class Preview(NDViewer):
             except (RuntimeError, IndexError):
                 # circular buffer empty
                 return
+
+    def _restart_live(self, exposure: float) -> None:
+        if not self.live_view:
+            return
+        self._mmc.stopSequenceAcquisition()
+        self._mmc.startContinuousSequenceAcquisition()
 
     def timerEvent(self, a0: QtCore.QTimerEvent | None) -> None:
         """Handles TimerEvents."""
