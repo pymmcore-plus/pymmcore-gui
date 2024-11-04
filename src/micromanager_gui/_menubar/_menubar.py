@@ -23,6 +23,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from micromanager_gui._widgets._console import MMConsole
 from micromanager_gui._widgets._install_widget import _InstallWidget
 from micromanager_gui._widgets._mda_widget import MDAWidget
 from micromanager_gui._widgets._stage_control import StagesControlWidget
@@ -97,6 +98,7 @@ class _MenuBar(QMenuBar):
         # widgets
         self._wizard: ConfigWizard | None = None  # is in a different menu
         self._mda: MDAWidget | None = None
+        self._console: MMConsole | None = None
 
         # configurations_menu
         self._configurations_menu = self.addMenu("System Configurations")
@@ -126,6 +128,11 @@ class _MenuBar(QMenuBar):
         )
         self._act_close_all_but_current.triggered.connect(self._close_all_but_current)
         self._viewer_menu.addAction(self._act_close_all_but_current)
+
+        # add console action to widgets menu
+        self._act_console = QAction("Console", self)
+        self._act_console.triggered.connect(self._launch_console)
+        self._widgets_menu.addAction(self._act_console)
 
         # create actions from WIDGETS and DOCKWIDGETS
         keys = {*WIDGETS.keys(), *DOCKWIDGETS.keys()}
@@ -174,6 +181,20 @@ class _MenuBar(QMenuBar):
             current_cfg = self._mmc.systemConfigurationFile() or ""
             self._wizard.setField(SRC_CONFIG, current_cfg)
             self._wizard.show()
+
+    def _launch_console(self) -> None:
+        """Launch the console."""
+        if self._console is None:
+            # All values in the dictionary below can be accessed from the console using
+            # the associated string key
+            user_vars = {
+                "mmc": self._mmc,  # CMMCorePlus instance
+                "wdgs": self._widgets,  # dictionary of all the widgets
+                "mda": self._mda,  # quick access to the MDA widget
+            }
+            self._console = MMConsole(user_vars)
+        self._console.show()
+        self._console.raise_()
 
     def _close_all(self, skip: bool | list[int] | None = None) -> None:
         """Close all viewers."""

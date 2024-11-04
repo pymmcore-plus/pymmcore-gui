@@ -36,7 +36,8 @@ dependencies = [
     "pyyaml",
     "cmap",
     "pyconify",
-    "ndv"
+    "ndv",
+    "qtconsole",
 ]
 
 # extras
