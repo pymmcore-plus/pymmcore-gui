@@ -43,9 +43,9 @@ class TensorstoreZarrReader:
     data, metadata = reader.isel({"p": 0, "t": 1, "z": 0}, metadata=True)
     """
 
-    def __init__(self, data: str | Path | ts.Tensorstore):
-        if isinstance(data, ts.Tensorstore):
-            self._path = data.kvstore.path.result().value
+    def __init__(self, data: str | Path | ts.TensorStore):
+        if isinstance(data, ts.TensorStore):
+            self._path = data.kvstore.path
             _store = data
         else:
             self._path = data
