@@ -12,7 +12,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from micromanager_gui._readers import TensorstoreZarrReader
+from micromanager_gui.readers import TensorstoreZarrReader
 
 from ._core_link import CoreViewersLink
 from ._menubar._menubar import _MenuBar

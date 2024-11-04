@@ -23,7 +23,7 @@ class OMEZarrReader:
 
     Parameters
     ----------
-    path : str | Path
+    data : str | Path
         The path to the ome-zarr file.
 
     Attributes
@@ -36,6 +36,11 @@ class OMEZarrReader:
         The acquired useq.MDASequence. It is loaded from the metadata using the
         `useq.MDASequence` key.
 
+    Methods
+    -------
+    metadata()
+        Return the unstructured full metadata.
+
     Usage
     -----
     reader = OMEZarrReader("path/to/file")
@@ -46,8 +51,8 @@ class OMEZarrReader:
     data, metadata = reader.isel({"p": 0, "t": 1, "z": 0}, metadata=True)
     """
 
-    def __init__(self, path: str | Path):
-        self._path = path
+    def __init__(self, data: str | Path):
+        self._path = data
 
         # open the zarr file
         self._store: Group = zarr.open(self._path)
@@ -76,6 +81,16 @@ class OMEZarrReader:
         except KeyError:
             self._sequence = None
         return self._sequence
+
+    def metadata(self) -> list[dict]:
+        """Return the unstructured full metadata."""
+        # concatenate the metadata for all the positions
+        return [
+            meta
+            for key in self.store.keys()
+            if key.startswith("p") and key[1:].isdigit()
+            for meta in self.store[key].attrs.get(FRAME_META, [])
+        ]
 
     def isel(
         self,

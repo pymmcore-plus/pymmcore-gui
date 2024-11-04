@@ -18,8 +18,8 @@ class TensorstoreZarrReader:
 
     Parameters
     ----------
-    path : str | Path
-        The path to the tensorstore zarr file.
+    data : str | Path | ts.Tensorstore
+        The path to the tensorstore zarr file or the tensorstore zarr file itself.
 
     Attributes
     ----------
@@ -27,6 +27,8 @@ class TensorstoreZarrReader:
         The path to the tensorstore zarr file.
     store : ts.TensorStore
         The tensorstore.
+    metadata : list[dict]
+        The unstructured full metadata.
     sequence : useq.MDASequence
         The acquired useq.MDASequence. It is loaded from the metadata using the
         `useq.MDASequence` key.
@@ -41,15 +43,17 @@ class TensorstoreZarrReader:
     data, metadata = reader.isel({"p": 0, "t": 1, "z": 0}, metadata=True)
     """
 
-    def __init__(self, path: str | Path):
-        self._path = path
-
-        spec = {
-            "driver": "zarr",
-            "kvstore": {"driver": "file", "path": str(self._path)},
-        }
-
-        _store = ts.open(spec).result()
+    def __init__(self, data: str | Path | ts.Tensorstore):
+        if isinstance(data, ts.Tensorstore):
+            self._path = data.kvstore.path.result().value
+            _store = data
+        else:
+            self._path = data
+            spec = {
+                "driver": "zarr",
+                "kvstore": {"driver": "file", "path": str(self._path)},
+            }
+            _store = ts.open(spec).result()
 
         self._metadata: list = []
         if metadata_json := _store.kvstore.read(".zattrs").result().value:
@@ -81,6 +85,11 @@ class TensorstoreZarrReader:
     def store(self) -> ts.TensorStore:
         """Return the tensorstore."""
         return self._store
+
+    @property
+    def metadata(self) -> list[dict]:
+        """Return the unstructured full metadata."""
+        return self._metadata
 
     @property
     def sequence(self) -> useq.MDASequence | None:
