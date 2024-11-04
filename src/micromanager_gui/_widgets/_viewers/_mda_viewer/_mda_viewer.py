@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class MDAViewer(NDViewer):
     """NDViewer specialized for pymmcore-plus MDA acquisitions."""
 
-    from ._data_wrappers import _MM5DWriterWrapper, _MMTensorstoreWrapper
+    from ._data_wrappers import MM5DWriterWrapper, MMTensorstoreWrapper
 
     def __init__(
         self,

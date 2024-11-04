@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Hashable, Mapping, TypeGuard
 
 from ndv import DataWrapper
 from pymmcore_plus.mda.handlers import TensorStoreHandler
+from micromanager_gui.readers import TensorstoreZarrReader
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -12,7 +13,7 @@ if TYPE_CHECKING:
     from pymmcore_plus.mda.handlers._5d_writer_base import _5DWriterBase
 
 
-class _MMTensorstoreWrapper(DataWrapper["TensorStoreHandler"]):
+class MMTensorstoreWrapper(DataWrapper["TensorStoreHandler"]):
     """Wrapper for pymmcore_plus.mda.handlers.TensorStoreHandler objects."""
 
     def __init__(self, data: Any) -> None:
@@ -36,6 +37,8 @@ class _MMTensorstoreWrapper(DataWrapper["TensorStoreHandler"]):
         return self._data.isel(indexers)
 
     def save_as_zarr(self, save_loc: str | Path) -> None:
+        # to have access to the metadata, the generated zarr file should be opened with
+        # the micromanager_gui.readers.TensorstoreZarrReader
         import tensorstore as ts
 
         if (store := self._data.store) is None:
@@ -44,9 +47,17 @@ class _MMTensorstoreWrapper(DataWrapper["TensorStoreHandler"]):
         new_spec["kvstore"] = {"driver": "file", "path": str(save_loc)}
         new_ts = ts.open(new_spec, create=True).result()
         new_ts[:] = store.read().result()
+        if meta_json := store.kvstore.read(".zattrs").result().value:
+            new_ts.kvstore.write(".zattrs", meta_json).result()
+
+    def save_as_tiff(self, save_loc: str | Path) -> None:
+        if (store := self._data.store) is None:
+            return
+        reader = TensorstoreZarrReader(store)
+        reader.write_tiff(save_loc)
 
 
-class _MM5DWriterWrapper(DataWrapper["_5DWriterBase"]):
+class MM5DWriterWrapper(DataWrapper["_5DWriterBase"]):
     """Wrapper for pymmcore_plus.mda.handlers._5DWriterBase objects."""
 
     @classmethod
@@ -73,9 +84,7 @@ class _MM5DWriterWrapper(DataWrapper["_5DWriterBase"]):
         return self._data.isel(indexers)
 
     def save_as_zarr(self, save_loc: str | Path) -> None:
-        import zarr
-        from pymmcore_plus.mda.handlers import OMEZarrWriter
+        raise NotImplementedError
 
-        if isinstance(self._data, OMEZarrWriter):
-            zarr.copy_store(self._data.group.store, zarr.DirectoryStore(save_loc))
-        raise NotImplementedError(f"Cannot save {type(self._data)} data to Zarr.")
+    def save_as_tiff(self, save_loc: str | Path) -> None:
+        raise NotImplementedError
