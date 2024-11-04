@@ -50,7 +50,6 @@ class OMEZarrReader:
     """
 
     def __init__(self, data: str | Path | Group):
-
         self._path = data.path if isinstance(data, Group) else data
         self._store: Group = data if isinstance(data, Group) else zarr.open(self._path)
 

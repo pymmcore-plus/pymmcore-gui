@@ -13,7 +13,6 @@ from micromanager_gui.readers._ome_zarr_reader import OMEZarrReader
 from micromanager_gui.readers._tensorstore_zarr_reader import TensorstoreZarrReader
 
 if TYPE_CHECKING:
-
     from pymmcore_plus import CMMCorePlus
     from pytestqt.qtbot import QtBot
 
