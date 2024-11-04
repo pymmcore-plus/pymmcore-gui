@@ -4,7 +4,7 @@ import warnings
 from typing import TYPE_CHECKING, Any
 
 from ndv import NDViewer
-from pymmcore_plus.mda.handlers import TensorStoreHandler
+from pymmcore_plus.mda.handlers import OMEZarrWriter, TensorStoreHandler
 from superqt import ensure_main_thread
 from useq import MDAEvent
 
@@ -45,9 +45,10 @@ class MDAViewer(NDViewer):
         super().__init__(data, parent=parent, channel_axis="c", **kwargs)
 
         # add the save button only if using a TensorStoreHandler (and thus the
-        # MMTensorstoreWrapper) since we didn't yet implement the save_as_zarr and
-        # save_as_tiff methods in the MM5DWriterWrapper.
-        if isinstance(data, TensorStoreHandler):
+        # MMTensorstoreWrapper) or OMEZarrWriter (and thus the MM5DWriterWrapper)
+        # since we didn't yet implement the save_as_zarr and save_as_tiff methods
+        # for OMETiffWriter in the MM5DWriterWrapper.
+        if isinstance(data, (TensorStoreHandler, OMEZarrWriter)):
             self._save_btn = MDASaveButton(self._data_wrapper)
             self._btns.insertWidget(3, self._save_btn)
 

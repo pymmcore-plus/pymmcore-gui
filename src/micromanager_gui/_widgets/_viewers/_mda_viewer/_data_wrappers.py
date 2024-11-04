@@ -4,9 +4,9 @@ from contextlib import suppress
 from typing import TYPE_CHECKING, Any, Hashable, Mapping, TypeGuard
 
 from ndv import DataWrapper
-from pymmcore_plus.mda.handlers import TensorStoreHandler
+from pymmcore_plus.mda.handlers import OMEZarrWriter, TensorStoreHandler
 
-from micromanager_gui.readers import TensorstoreZarrReader
+from micromanager_gui.readers import OMEZarrReader, TensorstoreZarrReader
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -88,7 +88,27 @@ class MM5DWriterWrapper(DataWrapper["_5DWriterBase"]):
         return self._data.isel(indexers)
 
     def save_as_zarr(self, save_loc: str | Path) -> None:
-        raise NotImplementedError
+        # TODO: implement logic for OMETiffWriter
+        if isinstance(self._data, OMEZarrWriter):
+            import zarr
+
+            # save a copy of the ome-zarr file
+            new_store = zarr.DirectoryStore(str(save_loc))
+            new_group = zarr.group(store=new_store, overwrite=True)
+            # the group property returns a zarr.hierarchy.Group object
+            zarr.copy_all(self._data.group, new_group)
+        else:  #  OMETiffWriter
+            raise NotImplementedError(
+                "Saving as Zarr is not yet implemented for OMETiffWriter."
+            )
 
     def save_as_tiff(self, save_loc: str | Path) -> None:
-        raise NotImplementedError
+        # TODO: implement logic for OMETiffWriter
+        if isinstance(self._data, OMEZarrWriter):
+            # the group property returns a zarr.hierarchy.Group object
+            reader = OMEZarrReader(self._data.group)
+            reader.write_tiff(save_loc)
+        else:  #  OMETiffWriter
+            raise NotImplementedError(
+                "Saving as TIFF is not yet implemented for OMETiffWriter."
+            )

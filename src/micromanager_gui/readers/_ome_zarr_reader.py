@@ -2,16 +2,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping, cast
+from typing import Any, Mapping, cast
 
 import numpy as np
 import useq
 import zarr
 from tifffile import imwrite
 from tqdm import tqdm
-
-if TYPE_CHECKING:
-    from zarr.hierarchy import Group
+from zarr.hierarchy import Group
 
 EVENT = "Event"
 FRAME_META = "frame_meta"
@@ -23,8 +21,8 @@ class OMEZarrReader:
 
     Parameters
     ----------
-    data : str | Path
-        The path to the ome-zarr file.
+    data : str | Path | Group
+        The path to the ome-zarr file or the zarr group itself.
 
     Attributes
     ----------
@@ -51,11 +49,14 @@ class OMEZarrReader:
     data, metadata = reader.isel({"p": 0, "t": 1, "z": 0}, metadata=True)
     """
 
-    def __init__(self, data: str | Path):
+    def __init__(self, data: str | Path | Group):
         self._path = data
 
-        # open the zarr file
-        self._store: Group = zarr.open(self._path)
+        if isinstance(data, Group):
+            self._store = data
+        else:
+            # open the zarr file
+            self._store: Group = zarr.open(self._path)
 
         # the useq.MDASequence if it exists
         self._sequence: useq.MDASequence | None = None
