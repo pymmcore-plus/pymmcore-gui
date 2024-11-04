@@ -81,9 +81,14 @@ def test_readers(
 
     assert dest.exists()
 
-    w = reader(path=dest)
+    w = reader(data=dest)
     assert w.store
     assert w.sequence
+
+    # test that the reader can accept the actual store as input on top of the path
+    w1 = reader(data=w.store)
+    assert isinstance(w1, type(w))
+    assert w1.sequence == w.sequence
 
     assert w.isel({"p": 0}).shape == (3, 2, 512, 512)
     assert w.isel({"p": 0, "t": 0}).shape == (2, 512, 512)
