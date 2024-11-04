@@ -162,6 +162,7 @@ class TensorstoreZarrReader:
             (e.g. p=0, t=1). NOTE: kwargs will overwrite the indexers if already present
             in the indexers mapping.
         """
+        # TODO: add support for ome-tiff
         if kwargs:
             indexers = indexers or {}
             if all(

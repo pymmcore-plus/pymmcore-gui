@@ -40,6 +40,9 @@ class MMTensorstoreWrapper(DataWrapper["TensorStoreHandler"]):
     def save_as_zarr(self, save_loc: str | Path) -> None:
         # to have access to the metadata, the generated zarr file should be opened with
         # the micromanager_gui.readers.TensorstoreZarrReader
+
+        # TODO: find a way to save as ome-zarr
+
         import tensorstore as ts
 
         if (store := self._data.store) is None:

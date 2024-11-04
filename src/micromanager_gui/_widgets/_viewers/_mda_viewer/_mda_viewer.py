@@ -44,8 +44,13 @@ class MDAViewer(NDViewer):
 
         super().__init__(data, parent=parent, channel_axis="c", **kwargs)
 
-        self._save_btn = MDASaveButton(self._data_wrapper)
-        self._btns.insertWidget(3, self._save_btn)
+        # add the save button only if using a TensorStoreHandler (and thus the
+        # MMTensorstoreWrapper) since we didn't yet implement the save_as_zarr and
+        # save_as_tiff methods in the MM5DWriterWrapper.
+        if isinstance(data, TensorStoreHandler):
+            self._save_btn = MDASaveButton(self._data_wrapper)
+            self._btns.insertWidget(3, self._save_btn)
+
         self.dims_sliders.set_locks_visible(True)
 
     def _patched_frame_ready(self, *args: Any) -> None:
