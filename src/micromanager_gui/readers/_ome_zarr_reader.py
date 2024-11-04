@@ -50,13 +50,9 @@ class OMEZarrReader:
     """
 
     def __init__(self, data: str | Path | Group):
-        self._path = data
 
-        if isinstance(data, Group):
-            self._store = data
-        else:
-            # open the zarr file
-            self._store: Group = zarr.open(self._path)
+        self._path = data.path if isinstance(data, Group) else data
+        self._store: Group = data if isinstance(data, Group) else zarr.open(self._path)
 
         # the useq.MDASequence if it exists
         self._sequence: useq.MDASequence | None = None
