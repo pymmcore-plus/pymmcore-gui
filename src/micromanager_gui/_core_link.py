@@ -16,6 +16,7 @@ DIALOG = Qt.WindowType.Dialog
 VIEWER_TEMP_DIR = None
 NO_R_BTN = (0, QTabBar.ButtonPosition.RightSide, None)
 NO_L_BTN = (0, QTabBar.ButtonPosition.LeftSide, None)
+MDA_VIEWER = "MDA Viewer"
 
 if TYPE_CHECKING:
     import useq
@@ -41,8 +42,8 @@ class CoreViewersLink(QObject):
         self._main_window._central_wdg_layout.addWidget(self._viewer_tab, 0, 0)
 
         # preview tab
-        self._preview = Preview(parent=self._main_window, mmcore=self._mmc)
-        self._viewer_tab.addTab(self._preview, "Preview")
+        self._preview: Preview = Preview(parent=self._main_window, mmcore=self._mmc)
+        self._viewer_tab.addTab(self._preview, PREVIEW.capitalize())
         # remove the preview tab close button
         self._viewer_tab.tabBar().setTabButton(*NO_R_BTN)
         self._viewer_tab.tabBar().setTabButton(*NO_L_BTN)
@@ -118,16 +119,7 @@ class CoreViewersLink(QObject):
         self._connect_viewer(self._current_viewer)
 
         # update the viewers variable in the console with the new viewer
-        return self._update_viewers_in_mm_console(viewer_name, self._current_viewer)
-
-    def _update_viewers_in_mm_console(
-        self, viewer_name: str, mda_viewer: MDAViewer
-    ) -> None:
-        """Update the viewers variable in the MMConsole."""
-        if console := self._get_mm_console():
-            if VIEWERS not in console.get_user_variables():
-                return
-            console.shell.user_ns[VIEWERS].update({viewer_name: mda_viewer})
+        self._add_viewer_to_mm_console(viewer_name, self._current_viewer)
 
     def _get_viewer_name(self, viewer_name: str | None) -> str:
         """Get the viewer name from the metadata.
@@ -142,11 +134,11 @@ class CoreViewersLink(QObject):
         index = 0
         for v in range(self._viewer_tab.count()):
             tab_name = self._viewer_tab.tabText(v)
-            if tab_name.startswith("MDA Viewer"):
-                idx = tab_name.replace("MDA Viewer ", "")
+            if tab_name.startswith(MDA_VIEWER):
+                idx = tab_name.replace(f"{MDA_VIEWER} ", "")
                 if idx.isdigit():
                     index = max(index, int(idx))
-        return f"MDA Viewer {index + 1}"
+        return f"{MDA_VIEWER} {index + 1}"
 
     def _on_sequence_finished(self, sequence: useq.MDASequence) -> None:
         """Hide the MDAViewer when the MDA sequence finishes."""
@@ -182,25 +174,24 @@ class CoreViewersLink(QObject):
         if self._current_viewer is None:
             return
 
-        # self._current_viewer._lut_drop.setEnabled(state)
-        self._current_viewer._channel_mode_btn.setEnabled(state)
-
     def _set_preview_tab(self) -> None:
         """Set the preview tab."""
         if self._mda_running:
             return
         self._viewer_tab.setCurrentWidget(self._preview)
 
-        # add the preview to the console if it is not there already
-        if console := self._get_mm_console():
-            if PREVIEW not in console.get_user_variables():
-                return
-            if console.shell.user_ns[PREVIEW] is None:
-                console.shell.user_ns[PREVIEW] = self._preview
-
     def _get_mm_console(self) -> MMConsole | None:
         """Rertun the MMConsole if it exists."""
         return self._main_window._menu_bar._mm_console
+
+    def _add_viewer_to_mm_console(
+        self, viewer_name: str, mda_viewer: MDAViewer
+    ) -> None:
+        """Update the viewers variable in the MMConsole."""
+        if console := self._get_mm_console():
+            if VIEWERS not in console.get_user_variables():
+                return
+            console.shell.user_ns[VIEWERS].update({viewer_name: mda_viewer})
 
     def _remove_closed_mda_viewer_from_console(self, index: int) -> None:
         if index == 0:  #  preview tab

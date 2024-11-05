@@ -234,7 +234,7 @@ class _MenuBar(QMenuBar):
 
         # create dock widget
         if action_name in DOCKWIDGETS:
-            if action_name == "Console":
+            if action_name == CONSOLE:
                 self._launch_mm_console()
             else:
                 self._create_dock_widget(action_name)
@@ -274,8 +274,8 @@ class _MenuBar(QMenuBar):
             MMC: self._mmc,  # CMMCorePlus instance
             WDGS: self._widgets,  # dictionary of all the widgets
             MDA: self._mda,  # quick access to the MDA widget
-            VIEWERS: {},  # dictionary of all the viewers, empty for now
-            PREVIEW: None,  # quick access to the preview widget
+            VIEWERS: self._get_current_mda_viewers(),  # dictionary of all the viewers
+            PREVIEW: self._main_window._core_link._preview,  # access to preview widget
         }
 
         self._mm_console = MMConsole(user_vars)
@@ -286,3 +286,15 @@ class _MenuBar(QMenuBar):
         self._widgets[CONSOLE] = dock
 
         self._main_window.addDockWidget(RIGHT, dock)
+
+    def _get_current_mda_viewers(self) -> dict[str, QWidget]:
+        """Update the viewers variable in the MMConsole."""
+        viewers_dict = {}
+        tab = self._main_window._core_link._viewer_tab
+        for viewers in range(tab.count()):
+            if viewers == 0:  # skip the preview tab
+                continue
+            tab_name = tab.tabText(viewers)
+            wdg = tab.widget(viewers)
+            viewers_dict[tab_name] = wdg
+        return viewers_dict
