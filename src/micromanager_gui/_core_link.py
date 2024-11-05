@@ -63,6 +63,10 @@ class CoreViewersLink(QObject):
         self._mmc.mda.events.sequenceFinished.connect(self._on_sequence_finished)
         self._mmc.mda.events.sequencePauseToggled.connect(self._enable_gui)
 
+        self._viewer_tab.tabCloseRequested.connect(
+            self._remove_closed_mda_viewer_from_console
+        )
+
     def _close_tab(self, index: int) -> None:
         """Close the tab at the given index."""
         if index == 0:
@@ -197,3 +201,13 @@ class CoreViewersLink(QObject):
     def _get_mm_console(self) -> MMConsole | None:
         """Rertun the MMConsole if it exists."""
         return self._main_window._menu_bar._mm_console
+
+    def _remove_closed_mda_viewer_from_console(self, index: int) -> None:
+        if index == 0:  #  preview tab
+            return
+        if console := self._get_mm_console():
+            if VIEWERS not in console.get_user_variables():
+                return
+            # remove the item at pos index from the viewers variable in the console
+            viewer_name = list(console.shell.user_ns[VIEWERS].keys())[index - 1]
+            console.shell.user_ns[VIEWERS].pop(viewer_name, None)
