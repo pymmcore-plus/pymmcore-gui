@@ -1,9 +1,67 @@
+from typing import Any
+
+import pyqtconsole.highlighter as hl
+from pyqtconsole.console import PythonConsole
 from qtconsole.inprocess import QtInProcessKernelManager
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from qtpy.QtGui import QCloseEvent
+from qtpy.QtWidgets import QDialog, QVBoxLayout, QWidget
+
+# override the default formats to change blue and red colors
+FORMATS = {
+    "keyword": hl.format("green", "bold"),
+    "operator": hl.format("magenta"),
+    "inprompt": hl.format("green", "bold"),
+    "outprompt": hl.format("magenta", "bold"),
+}
 
 
-class MMConsole(RichJupyterWidget):
+class MMConsole(QDialog):
+    """A Qt widget for an IPython console, providing access to UI components."""
+
+    def __init__(
+        self, parent: QWidget | None = None, user_variables: dict | None = None
+    ) -> None:
+        super().__init__(parent=parent)
+        self.setWindowTitle("micromanager-gui console")
+
+        self._console = PythonConsole(parent=self, formats=FORMATS)
+        self._console.eval_in_thread()
+
+        layput = QVBoxLayout(self)
+        layput.addWidget(self._console)
+
+        # Add user variables if provided
+        if user_variables is not None:
+            self.push(user_variables)
+
+    def push(self, user_variables: dict[str, Any]) -> None:
+        """Push a dictionary of variables to the console.
+
+        This is an alternative to using the native `push_local_ns` method.
+        """
+        for key, value in user_variables.items():
+            self._console.push_local_ns(key, value)
+
+
+class MMConsoleJupyter(QDialog):
+    """A Qt widget for an IPython console, providing access to UI components."""
+
+    def __init__(
+        self, parent: QWidget | None = None, user_variables: dict | None = None
+    ) -> None:
+        super().__init__(parent=parent)
+        self.setWindowTitle("micromanager-gui console")
+
+        self._console = _JupyterConsole(user_variables=user_variables)
+
+        layput = QVBoxLayout(self)
+        layput.addWidget(self._console)
+
+        self._console.push(user_variables)
+
+
+class _JupyterConsole(RichJupyterWidget):
     """A Qt widget for an IPython console, providing access to UI components.
 
     Copied from gselzer: https://github.com/gselzer/pymmcore-plus-sandbox/blob/53ac7e8ca3b4874816583b8b74024a75432b8fc9/src/pymmcore_plus_sandbox/_console_widget.py#L5
@@ -13,7 +71,6 @@ class MMConsole(RichJupyterWidget):
         if user_variables is None:
             user_variables = {}
         super().__init__()
-        self.setWindowTitle("micromanager-gui console")
 
         # this makes calling `setFocus()` on a QtConsole give keyboard focus to
         # the underlying `QTextEdit` widget

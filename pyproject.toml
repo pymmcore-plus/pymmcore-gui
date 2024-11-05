@@ -37,7 +37,8 @@ dependencies = [
     "cmap",
     "pyconify",
     "ndv",
-    "qtconsole",
+    "qtconsole",  # NOTE: remove if deciding to use pyqtconsole
+    "pyqtconsole", # NOTE: remove if deciding to use qtconsole
 ]
 
 # extras

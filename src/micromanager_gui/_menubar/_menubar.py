@@ -23,7 +23,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from micromanager_gui._widgets._console import MMConsole
+from micromanager_gui._widgets._console import MMConsole, MMConsoleJupyter
 from micromanager_gui._widgets._install_widget import _InstallWidget
 from micromanager_gui._widgets._mda_widget import MDAWidget
 from micromanager_gui._widgets._stage_control import StagesControlWidget
@@ -98,7 +98,10 @@ class _MenuBar(QMenuBar):
         # widgets
         self._wizard: ConfigWizard | None = None  # is in a different menu
         self._mda: MDAWidget | None = None
+
+        # TODO: remove one or the other
         self._console: MMConsole | None = None
+        self._console_jupyter: MMConsoleJupyter | None = None
 
         # configurations_menu
         self._configurations_menu = self.addMenu("System Configurations")
@@ -130,9 +133,13 @@ class _MenuBar(QMenuBar):
         self._viewer_menu.addAction(self._act_close_all_but_current)
 
         # add console action to widgets menu
+        # TODO: remove one or the other
         self._act_console = QAction("Console", self)
         self._act_console.triggered.connect(self._launch_console)
         self._widgets_menu.addAction(self._act_console)
+        self._act_console_jupyter = QAction("Console JupYter", self)
+        self._act_console_jupyter.triggered.connect(self._launch_console_jupyter)
+        self._widgets_menu.addAction(self._act_console_jupyter)
 
         # create actions from WIDGETS and DOCKWIDGETS
         keys = {*WIDGETS.keys(), *DOCKWIDGETS.keys()}
@@ -182,6 +189,8 @@ class _MenuBar(QMenuBar):
             self._wizard.setField(SRC_CONFIG, current_cfg)
             self._wizard.show()
 
+    # TODO START--------------------------------------------------------------
+    # ***REMOVE ONE OF THE TWO CONSOLE METHODS DEPENDING ON THE CONSOLE WE KEEP***
     def _launch_console(self) -> None:
         """Launch the console."""
         if self._console is None:
@@ -192,9 +201,25 @@ class _MenuBar(QMenuBar):
                 "wdgs": self._widgets,  # dictionary of all the widgets
                 "mda": self._mda,  # quick access to the MDA widget
             }
-            self._console = MMConsole(user_vars)
+            self._console = MMConsole(self, user_vars)
         self._console.show()
         self._console.raise_()
+
+    def _launch_console_jupyter(self) -> None:
+        """Launch the console."""
+        if self._console_jupyter is None:
+            # All values in the dictionary below can be accessed from the console using
+            # the associated string key
+            user_vars = {
+                "mmc": self._mmc,  # CMMCorePlus instance
+                "wdgs": self._widgets,  # dictionary of all the widgets
+                "mda": self._mda,  # quick access to the MDA widget
+            }
+            self._console_jupyter = MMConsoleJupyter(self, user_vars)
+        self._console_jupyter.show()
+        self._console_jupyter.raise_()
+
+    # TODO END-------------------------------------------------------------------
 
     def _close_all(self, skip: bool | list[int] | None = None) -> None:
         """Close all viewers."""
