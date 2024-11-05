@@ -8,6 +8,9 @@ from pymmcore_plus.mda.handlers import OMEZarrWriter, TensorStoreHandler
 from superqt import ensure_main_thread
 from useq import MDAEvent
 
+from micromanager_gui.readers import OMEZarrReader, TensorstoreZarrReader
+
+from ._data_wrappers import MM5DWriterWrapper, MMTensorstoreWrapper
 from ._mda_save_button import MDASaveButton
 
 if TYPE_CHECKING:
@@ -53,6 +56,17 @@ class MDAViewer(NDViewer):
             self._btns.insertWidget(3, self._save_btn)
 
         self.dims_sliders.set_locks_visible(True)
+
+    def reader(self) -> Any:
+        """Return the reader for the data or the data if no reader is available."""
+        if isinstance(self._data_wrapper, MMTensorstoreWrapper):
+            return TensorstoreZarrReader(self.data.store)
+        elif isinstance(self._data_wrapper, MM5DWriterWrapper):
+            if isinstance(self._data_wrapper.data, OMEZarrWriter):
+                return OMEZarrReader(self.data.group)
+            # TODO: implement logic for OMETiffWriter
+        else:
+            return self.data
 
     def _patched_frame_ready(self, *args: Any) -> None:
         self._superframeReady(*args)  # type: ignore

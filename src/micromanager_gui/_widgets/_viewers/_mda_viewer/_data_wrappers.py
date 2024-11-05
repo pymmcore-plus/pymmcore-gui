@@ -28,14 +28,14 @@ class MMTensorstoreWrapper(DataWrapper["TensorStoreHandler"]):
 
     def sizes(self) -> Mapping[str, int]:
         with suppress(Exception):
-            return self._data.current_sequence.sizes
+            return self.data.current_sequence.sizes  # type: ignore
         return {}
 
     def guess_channel_axis(self) -> Hashable | None:
         return "c"
 
     def isel(self, indexers: Mapping[str, int]) -> Any:
-        return self._data.isel(indexers)
+        return self.data.isel(indexers)
 
     def save_as_zarr(self, save_loc: str | Path) -> None:
         # to have access to the metadata, the generated zarr file should be opened with
@@ -45,7 +45,7 @@ class MMTensorstoreWrapper(DataWrapper["TensorStoreHandler"]):
 
         import tensorstore as ts
 
-        if (store := self._data.store) is None:
+        if (store := self.data.store) is None:
             return
         new_spec = store.spec().to_json()
         new_spec["kvstore"] = {"driver": "file", "path": str(save_loc)}
@@ -55,7 +55,7 @@ class MMTensorstoreWrapper(DataWrapper["TensorStoreHandler"]):
             new_ts.kvstore.write(".zattrs", meta_json).result()
 
     def save_as_tiff(self, save_loc: str | Path) -> None:
-        if (store := self._data.store) is None:
+        if (store := self.data.store) is None:
             return
         reader = TensorstoreZarrReader(store)
         reader.write_tiff(save_loc)
@@ -85,18 +85,18 @@ class MM5DWriterWrapper(DataWrapper["_5DWriterBase"]):
         return "c"
 
     def isel(self, indexers: Mapping[str, int]) -> Any:
-        return self._data.isel(indexers)
+        return self.data.isel(indexers)
 
     def save_as_zarr(self, save_loc: str | Path) -> None:
         # TODO: implement logic for OMETiffWriter
-        if isinstance(self._data, OMEZarrWriter):
+        if isinstance(self.data, OMEZarrWriter):
             import zarr
 
             # save a copy of the ome-zarr file
             new_store = zarr.DirectoryStore(str(save_loc))
             new_group = zarr.group(store=new_store, overwrite=True)
             # the group property returns a zarr.hierarchy.Group object
-            zarr.copy_all(self._data.group, new_group)
+            zarr.copy_all(self.data.group, new_group)
         else:  #  OMETiffWriter
             raise NotImplementedError(
                 "Saving as Zarr is not yet implemented for OMETiffWriter."
@@ -104,9 +104,9 @@ class MM5DWriterWrapper(DataWrapper["_5DWriterBase"]):
 
     def save_as_tiff(self, save_loc: str | Path) -> None:
         # TODO: implement logic for OMETiffWriter
-        if isinstance(self._data, OMEZarrWriter):
+        if isinstance(self.data, OMEZarrWriter):
             # the group property returns a zarr.hierarchy.Group object
-            reader = OMEZarrReader(self._data.group)
+            reader = OMEZarrReader(self.data.group)
             reader.write_tiff(save_loc)
         else:  #  OMETiffWriter
             raise NotImplementedError(
