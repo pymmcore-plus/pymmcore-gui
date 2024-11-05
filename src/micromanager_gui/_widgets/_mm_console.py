@@ -1,48 +1,6 @@
-from typing import Any
-
-import pyqtconsole.highlighter as hl
-from pyqtconsole.console import PythonConsole
 from qtconsole.inprocess import QtInProcessKernelManager
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from qtpy.QtGui import QCloseEvent
-from qtpy.QtWidgets import QDialog, QVBoxLayout, QWidget
-
-# override the default formats to change blue and red colors
-FORMATS = {
-    "keyword": hl.format("green", "bold"),
-    "operator": hl.format("magenta"),
-    "inprompt": hl.format("green", "bold"),
-    "outprompt": hl.format("magenta", "bold"),
-}
-
-
-class MMPyQtConsole(QDialog):
-    """A Qt widget for an IPython console, providing access to UI components."""
-
-    def __init__(
-        self, parent: QWidget | None = None, user_variables: dict | None = None
-    ) -> None:
-        super().__init__(parent=parent)
-        self.setWindowTitle("micromanager-gui console")
-
-        self._console = PythonConsole(parent=self, formats=FORMATS)
-        self._console.eval_in_thread()
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(self._console)
-
-        # Add user variables if provided
-        self.push(user_variables)
-
-    def push(self, user_variables: dict[str, Any] | None) -> None:
-        """Push a dictionary of variables to the console.
-
-        This is an alternative to using the native `push_local_ns` method.
-        """
-        if user_variables is None:
-            return
-        for key, value in user_variables.items():
-            self._console.push_local_ns(key, value)
 
 
 class MMConsole(RichJupyterWidget):
@@ -75,6 +33,10 @@ class MMConsole(RichJupyterWidget):
 
         # Add any user variables
         self.push(user_variables)
+
+    def get_user_variables(self) -> dict:
+        """Return the variables pushed to the console."""
+        return {k: v for k, v in self.shell.user_ns.items() if k != "__builtins__"}
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """Clean up the integrated console in napari."""

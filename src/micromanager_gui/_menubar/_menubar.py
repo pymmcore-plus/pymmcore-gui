@@ -23,9 +23,9 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from micromanager_gui._widgets._console import MMConsole, MMPyQtConsole
 from micromanager_gui._widgets._install_widget import _InstallWidget
 from micromanager_gui._widgets._mda_widget import MDAWidget
+from micromanager_gui._widgets._mm_console import MMConsole
 from micromanager_gui._widgets._stage_control import StagesControlWidget
 
 if TYPE_CHECKING:
@@ -45,6 +45,12 @@ DOCKWIDGETS = {
 }
 RIGHT = Qt.DockWidgetArea.RightDockWidgetArea
 LEFT = Qt.DockWidgetArea.LeftDockWidgetArea
+
+MMC = "mmc"
+MDA = "mda"
+WDGS = "wdgs"
+VIEWERS = "viewers"
+PREVIEW = "preview"
 
 
 class ScrollableDockWidget(QDockWidget):
@@ -98,11 +104,7 @@ class _MenuBar(QMenuBar):
         # widgets
         self._wizard: ConfigWizard | None = None  # is in a different menu
         self._mda: MDAWidget | None = None
-
-        # TODO: remove one or the other ------------------------------------
-        self._pyqt_console: MMPyQtConsole | None = None
         self._mm_console: MMConsole | None = None
-        # -------------------------------------------------------------------
 
         # configurations_menu
         self._configurations_menu = self.addMenu("System Configurations")
@@ -133,15 +135,10 @@ class _MenuBar(QMenuBar):
         self._act_close_all_but_current.triggered.connect(self._close_all_but_current)
         self._viewer_menu.addAction(self._act_close_all_but_current)
 
-        # TODO: remove one or the other -------------------------------------------
         # add console action to widgets menu
-        self._act_pyqt_console = QAction("Console PyQt", self)
-        self._act_pyqt_console.triggered.connect(self._launch_pyqt_console)
-        self._widgets_menu.addAction(self._act_pyqt_console)
         self._act_mm_console = QAction("Console", self)
         self._act_mm_console.triggered.connect(self._launch_mm_console)
         self._widgets_menu.addAction(self._act_mm_console)
-        # --------------------------------------------------------------------------
 
         # create actions from WIDGETS and DOCKWIDGETS
         keys = {*WIDGETS.keys(), *DOCKWIDGETS.keys()}
@@ -191,37 +188,21 @@ class _MenuBar(QMenuBar):
             self._wizard.setField(SRC_CONFIG, current_cfg)
             self._wizard.show()
 
-    # TODO START--------------------------------------------------------------
-    # ***REMOVE ONE OF THE TWO CONSOLE METHODS DEPENDING ON THE CONSOLE WE KEEP***
-    def _launch_pyqt_console(self) -> None:
-        """Launch the console."""
-        if self._pyqt_console is None:
-            # All values in the dictionary below can be accessed from the console using
-            # the associated string key
-            user_vars = {
-                "mmc": self._mmc,  # CMMCorePlus instance
-                "wdgs": self._widgets,  # dictionary of all the widgets
-                "mda": self._mda,  # quick access to the MDA widget
-            }
-            self._pyqt_console = MMPyQtConsole(self, user_vars)
-        self._pyqt_console.show()
-        self._pyqt_console.raise_()
-
     def _launch_mm_console(self) -> None:
         """Launch the console."""
         if self._mm_console is None:
             # All values in the dictionary below can be accessed from the console using
             # the associated string key
             user_vars = {
-                "mmc": self._mmc,  # CMMCorePlus instance
-                "wdgs": self._widgets,  # dictionary of all the widgets
-                "mda": self._mda,  # quick access to the MDA widget
+                MMC: self._mmc,  # CMMCorePlus instance
+                WDGS: self._widgets,  # dictionary of all the widgets
+                MDA: self._mda,  # quick access to the MDA widget
+                VIEWERS: {},  # dictionary of all the viewers, empty for now
+                PREVIEW: None,  # quick access to the preview widget
             }
             self._mm_console = MMConsole(user_vars)
         self._mm_console.show()
         self._mm_console.raise_()
-
-    # TODO END-------------------------------------------------------------------
 
     def _close_all(self, skip: bool | list[int] | None = None) -> None:
         """Close all viewers."""
@@ -233,9 +214,14 @@ class _MenuBar(QMenuBar):
         for index in reversed(range(viewer_tab.count())):
             if index in skip or index == 0:  # 0 to skip the prewiew tab
                 continue
+            tab_name = viewer_tab.tabText(index)
             widget = viewer_tab.widget(index)
             viewer_tab.removeTab(index)
             widget.deleteLater()
+
+            # update the viewers variable in the console
+            if self._mm_console is not None:
+                self._mm_console.shell.user_ns["viewers"].pop(tab_name, None)
 
     def _close_all_but_current(self) -> None:
         """Close all viewers except the current one."""

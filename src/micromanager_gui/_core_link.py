@@ -9,7 +9,7 @@ from qtpy.QtWidgets import QTabBar, QTabWidget
 
 from micromanager_gui._widgets._viewers import MDAViewer
 
-# from ._widgets._preview import Preview
+from ._menubar._menubar import PREVIEW, VIEWERS
 from ._widgets._viewers import Preview
 
 DIALOG = Qt.WindowType.Dialog
@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
     from ._main_window import MicroManagerGUI
     from ._widgets._mda_widget import MDAWidget
+    from ._widgets._mm_console import MMConsole
 
 
 class CoreViewersLink(QObject):
@@ -112,6 +113,18 @@ class CoreViewersLink(QObject):
         # connect the signals
         self._connect_viewer(self._current_viewer)
 
+        # update the viewers variable in the console with the new viewer
+        return self._update_viewers_in_mm_console(viewer_name, self._current_viewer)
+
+    def _update_viewers_in_mm_console(
+        self, viewer_name: str, mda_viewer: MDAViewer
+    ) -> None:
+        """Update the viewers variable in the MMConsole."""
+        if console := self._get_mm_console():
+            if VIEWERS not in console.get_user_variables():
+                return
+            console.shell.user_ns[VIEWERS].update({viewer_name: mda_viewer})
+
     def _get_viewer_name(self, viewer_name: str | None) -> str:
         """Get the viewer name from the metadata.
 
@@ -173,3 +186,14 @@ class CoreViewersLink(QObject):
         if self._mda_running:
             return
         self._viewer_tab.setCurrentWidget(self._preview)
+
+        # add the preview to the console if it is not there already
+        if console := self._get_mm_console():
+            if PREVIEW not in console.get_user_variables():
+                return
+            if console.shell.user_ns[PREVIEW] is None:
+                console.shell.user_ns[PREVIEW] = self._preview
+
+    def _get_mm_console(self) -> MMConsole | None:
+        """Rertun the MMConsole if it exists."""
+        return self._main_window._menu_bar._mm_console
