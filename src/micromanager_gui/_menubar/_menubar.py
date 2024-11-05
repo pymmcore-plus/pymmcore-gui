@@ -99,9 +99,10 @@ class _MenuBar(QMenuBar):
         self._wizard: ConfigWizard | None = None  # is in a different menu
         self._mda: MDAWidget | None = None
 
-        # TODO: remove one or the other
+        # TODO: remove one or the other ------------------------------------
         self._console: MMConsole | None = None
         self._console_jupyter: MMConsoleJupyter | None = None
+        # -------------------------------------------------------------------
 
         # configurations_menu
         self._configurations_menu = self.addMenu("System Configurations")
@@ -132,14 +133,15 @@ class _MenuBar(QMenuBar):
         self._act_close_all_but_current.triggered.connect(self._close_all_but_current)
         self._viewer_menu.addAction(self._act_close_all_but_current)
 
+        # TODO: remove one or the other -------------------------------------------
         # add console action to widgets menu
-        # TODO: remove one or the other
         self._act_console = QAction("Console", self)
         self._act_console.triggered.connect(self._launch_console)
         self._widgets_menu.addAction(self._act_console)
-        self._act_console_jupyter = QAction("Console JupYter", self)
+        self._act_console_jupyter = QAction("Console Jupyter", self)
         self._act_console_jupyter.triggered.connect(self._launch_console_jupyter)
         self._widgets_menu.addAction(self._act_console_jupyter)
+        # --------------------------------------------------------------------------
 
         # create actions from WIDGETS and DOCKWIDGETS
         keys = {*WIDGETS.keys(), *DOCKWIDGETS.keys()}

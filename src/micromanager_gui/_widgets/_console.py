@@ -32,14 +32,15 @@ class MMConsole(QDialog):
         layput.addWidget(self._console)
 
         # Add user variables if provided
-        if user_variables is not None:
-            self.push(user_variables)
+        self.push(user_variables)
 
-    def push(self, user_variables: dict[str, Any]) -> None:
+    def push(self, user_variables: dict[str, Any] | None) -> None:
         """Push a dictionary of variables to the console.
 
         This is an alternative to using the native `push_local_ns` method.
         """
+        if user_variables is None:
+            return
         for key, value in user_variables.items():
             self._console.push_local_ns(key, value)
 
