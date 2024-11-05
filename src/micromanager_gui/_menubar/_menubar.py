@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from micromanager_gui._main_window import MicroManagerGUI
 
 FLAGS = Qt.WindowType.Dialog
+CONSOLE = "Console"
 WIDGETS = {
     "Property Browser": PropertyBrowser,
     "Pixel Configuration": PixelConfigurationWidget,
@@ -42,9 +43,11 @@ DOCKWIDGETS = {
     "Groups and Presets": GroupPresetTableWidget,
     "Stage Control": StagesControlWidget,
     "Camera ROI": CameraRoiWidget,
+    CONSOLE: MMConsole,
 }
 RIGHT = Qt.DockWidgetArea.RightDockWidgetArea
 LEFT = Qt.DockWidgetArea.LeftDockWidgetArea
+BOTTOM = Qt.DockWidgetArea.BottomDockWidgetArea
 
 MMC = "mmc"
 MDA = "mda"
@@ -135,11 +138,6 @@ class _MenuBar(QMenuBar):
         self._act_close_all_but_current.triggered.connect(self._close_all_but_current)
         self._viewer_menu.addAction(self._act_close_all_but_current)
 
-        # add console action to widgets menu
-        self._act_mm_console = QAction("Console", self)
-        self._act_mm_console.triggered.connect(self._launch_mm_console)
-        self._widgets_menu.addAction(self._act_mm_console)
-
         # create actions from WIDGETS and DOCKWIDGETS
         keys = {*WIDGETS.keys(), *DOCKWIDGETS.keys()}
         for action_name in sorted(keys):
@@ -187,22 +185,6 @@ class _MenuBar(QMenuBar):
             current_cfg = self._mmc.systemConfigurationFile() or ""
             self._wizard.setField(SRC_CONFIG, current_cfg)
             self._wizard.show()
-
-    def _launch_mm_console(self) -> None:
-        """Launch the console."""
-        if self._mm_console is None:
-            # All values in the dictionary below can be accessed from the console using
-            # the associated string key
-            user_vars = {
-                MMC: self._mmc,  # CMMCorePlus instance
-                WDGS: self._widgets,  # dictionary of all the widgets
-                MDA: self._mda,  # quick access to the MDA widget
-                VIEWERS: {},  # dictionary of all the viewers, empty for now
-                PREVIEW: None,  # quick access to the preview widget
-            }
-            self._mm_console = MMConsole(user_vars)
-        self._mm_console.show()
-        self._mm_console.raise_()
 
     def _close_all(self, skip: bool | list[int] | None = None) -> None:
         """Close all viewers."""
@@ -252,7 +234,10 @@ class _MenuBar(QMenuBar):
 
         # create dock widget
         if action_name in DOCKWIDGETS:
-            self._create_dock_widget(action_name)
+            if action_name == "Console":
+                self._launch_mm_console()
+            else:
+                self._create_dock_widget(action_name)
         # create widget
         else:
             wdg = self._create_widget(action_name)
@@ -278,3 +263,26 @@ class _MenuBar(QMenuBar):
         wdg.setWindowFlags(FLAGS)
         self._widgets[action_name] = wdg
         return wdg
+
+    def _launch_mm_console(self) -> None:
+        if self._mm_console is not None:
+            return
+
+        # All values in the dictionary below can be accessed from the console using
+        # the associated string key
+        user_vars = {
+            MMC: self._mmc,  # CMMCorePlus instance
+            WDGS: self._widgets,  # dictionary of all the widgets
+            MDA: self._mda,  # quick access to the MDA widget
+            VIEWERS: {},  # dictionary of all the viewers, empty for now
+            PREVIEW: None,  # quick access to the preview widget
+        }
+
+        self._mm_console = MMConsole(user_vars)
+
+        dock = QDockWidget(CONSOLE, self)
+        dock.setAllowedAreas(LEFT | RIGHT | BOTTOM)
+        dock.setWidget(self._mm_console)
+        self._widgets[CONSOLE] = dock
+
+        self._main_window.addDockWidget(RIGHT, dock)
