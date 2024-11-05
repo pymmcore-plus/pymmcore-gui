@@ -23,7 +23,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from micromanager_gui._widgets._console import MMConsole, MMConsoleJupyter
+from micromanager_gui._widgets._console import MMConsole, MMPyQtConsole
 from micromanager_gui._widgets._install_widget import _InstallWidget
 from micromanager_gui._widgets._mda_widget import MDAWidget
 from micromanager_gui._widgets._stage_control import StagesControlWidget
@@ -100,8 +100,8 @@ class _MenuBar(QMenuBar):
         self._mda: MDAWidget | None = None
 
         # TODO: remove one or the other ------------------------------------
-        self._console: MMConsole | None = None
-        self._console_jupyter: MMConsoleJupyter | None = None
+        self._pyqt_console: MMPyQtConsole | None = None
+        self._mm_console: MMConsole | None = None
         # -------------------------------------------------------------------
 
         # configurations_menu
@@ -135,12 +135,12 @@ class _MenuBar(QMenuBar):
 
         # TODO: remove one or the other -------------------------------------------
         # add console action to widgets menu
-        self._act_console = QAction("Console", self)
-        self._act_console.triggered.connect(self._launch_console)
-        self._widgets_menu.addAction(self._act_console)
-        self._act_console_jupyter = QAction("Console Jupyter", self)
-        self._act_console_jupyter.triggered.connect(self._launch_console_jupyter)
-        self._widgets_menu.addAction(self._act_console_jupyter)
+        self._act_pyqt_console = QAction("Console PyQt", self)
+        self._act_pyqt_console.triggered.connect(self._launch_pyqt_console)
+        self._widgets_menu.addAction(self._act_pyqt_console)
+        self._act_mm_console = QAction("Console", self)
+        self._act_mm_console.triggered.connect(self._launch_mm_console)
+        self._widgets_menu.addAction(self._act_mm_console)
         # --------------------------------------------------------------------------
 
         # create actions from WIDGETS and DOCKWIDGETS
@@ -193,9 +193,9 @@ class _MenuBar(QMenuBar):
 
     # TODO START--------------------------------------------------------------
     # ***REMOVE ONE OF THE TWO CONSOLE METHODS DEPENDING ON THE CONSOLE WE KEEP***
-    def _launch_console(self) -> None:
+    def _launch_pyqt_console(self) -> None:
         """Launch the console."""
-        if self._console is None:
+        if self._pyqt_console is None:
             # All values in the dictionary below can be accessed from the console using
             # the associated string key
             user_vars = {
@@ -203,13 +203,13 @@ class _MenuBar(QMenuBar):
                 "wdgs": self._widgets,  # dictionary of all the widgets
                 "mda": self._mda,  # quick access to the MDA widget
             }
-            self._console = MMConsole(self, user_vars)
-        self._console.show()
-        self._console.raise_()
+            self._pyqt_console = MMPyQtConsole(self, user_vars)
+        self._pyqt_console.show()
+        self._pyqt_console.raise_()
 
-    def _launch_console_jupyter(self) -> None:
+    def _launch_mm_console(self) -> None:
         """Launch the console."""
-        if self._console_jupyter is None:
+        if self._mm_console is None:
             # All values in the dictionary below can be accessed from the console using
             # the associated string key
             user_vars = {
@@ -217,9 +217,9 @@ class _MenuBar(QMenuBar):
                 "wdgs": self._widgets,  # dictionary of all the widgets
                 "mda": self._mda,  # quick access to the MDA widget
             }
-            self._console_jupyter = MMConsoleJupyter(self, user_vars)
-        self._console_jupyter.show()
-        self._console_jupyter.raise_()
+            self._mm_console = MMConsole(user_vars)
+        self._mm_console.show()
+        self._mm_console.raise_()
 
     # TODO END-------------------------------------------------------------------
 
