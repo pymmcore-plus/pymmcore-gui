@@ -49,7 +49,7 @@ class OMEZarrReader:
     data, metadata = reader.isel({"p": 0, "t": 1, "z": 0}, metadata=True)
     """
 
-    def __init__(self, data: str | Path | Group):
+    def __init__(self, data: str | Path | Group) -> None:
         self._path = data.path if isinstance(data, Group) else data
         self._store: Group = data if isinstance(data, Group) else zarr.open(self._path)
 
