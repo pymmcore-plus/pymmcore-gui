@@ -29,14 +29,13 @@ dependencies = [
     "pymmcore-widgets >=0.8.0",
     "pymmcore-plus >=0.11.0",
     "qtpy",
-    "vispy",
     "zarr",
     "tifffile",
     "tqdm",
     "pyyaml",
     "cmap",
     "pyconify",
-    "ndv",
+    "ndv[vispy]",
     "qtconsole",
 ]
 
