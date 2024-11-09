@@ -47,6 +47,9 @@ class MDAViewer(NDViewer):
 
         super().__init__(data, parent=parent, channel_axis="c", **kwargs)
 
+        # temporarily hide the ndims button since we don't yet support
+        self._ndims_btn.hide()
+
         # add the save button only if using a TensorStoreHandler (and thus the
         # MMTensorstoreWrapper) or OMEZarrWriter (and thus the MM5DWriterWrapper)
         # since we didn't yet implement the save_as_zarr and save_as_tiff methods
