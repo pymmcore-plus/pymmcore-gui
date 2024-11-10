@@ -80,6 +80,10 @@ class Preview(NDViewer):
         self._mmc.events.exposureChanged.connect(self._restart_live)
         self._mmc.events.configSet.connect(self._restart_live)
 
+    def image(self) -> Any:
+        """Return the current image data."""
+        return self.data.read().result()
+
     def closeEvent(self, event: QCloseEvent | None) -> None:
         self._mmc.stopSequenceAcquisition()
         super().closeEvent(event)
