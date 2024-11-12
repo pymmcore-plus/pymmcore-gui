@@ -44,16 +44,17 @@ def get_next_available_path(requested_path: Path | str, min_digits: int = 3) -> 
     """
     if isinstance(requested_path, str):  # pragma: no cover
         requested_path = Path(requested_path)
-
     directory = requested_path.parent
     extension = requested_path.suffix
     # ome files like .ome.tiff or .ome.zarr are special,treated as a single extension
     if (stem := requested_path.stem).endswith(".ome"):
         extension = f".ome{extension}"
         stem = stem[:-4]
+    # NOTE: added in micromanager_gui ---------------------------------------------
     elif (stem := requested_path.stem).endswith(".tensorstore"):
         extension = f".tensorstore{extension}"
         stem = stem[:-12]
+    # -----------------------------------------------------------------------------
 
     # look for ANY existing files in the folder that follow the pattern of
     # stem_###.extension
@@ -61,13 +62,19 @@ def get_next_available_path(requested_path: Path | str, min_digits: int = 3) -> 
     for existing in directory.glob(f"*{extension}"):
         # cannot use existing.stem because of the ome (2-part-extension) special case
         base = existing.name.replace(extension, "")
-        # if the base name ends with a number, increase the current_max
-        if (match := NUM_SPLIT.match(base)) and (num := match.group(2)):
+        # if base name ends with a number and stem is the same, increase current_max
+        if (
+            (match := NUM_SPLIT.match(base))
+            and (num := match.group(2))
+            # NOTE: added in micromanager_gui -------------------------------------
+            # this breaks pymmcore_widgets test_get_next_available_paths_special_cases
+            and match.group(1) == stem
+            # ---------------------------------------------------------------------
+        ):
             current_max = max(int(num), current_max)
             # if it has more digits than expected, update the ndigits
             if len(num) > min_digits:
                 min_digits = len(num)
-
     # if the path does not exist and there are no existing files,
     # return the requested path
     if not requested_path.exists() and current_max == 0:
