@@ -33,8 +33,8 @@ if TYPE_CHECKING:
 
 FLAGS = Qt.WindowType.Dialog
 CONSOLE = "Console"
+PROP_BROWSER = "Property Browser"
 WIDGETS = {
-    "Property Browser": PropertyBrowser,
     "Pixel Configuration": PixelConfigurationWidget,
     "Install Devices": _InstallWidget,
 }
@@ -115,6 +115,10 @@ class _MenuBar(QMenuBar):
         self._act_cfg_wizard = QAction("Hardware Configuration Wizard", self)
         self._act_cfg_wizard.triggered.connect(self._show_config_wizard)
         self._configurations_menu.addAction(self._act_cfg_wizard)
+        # property browser
+        self._act_property_browser = QAction(PROP_BROWSER, self)
+        self._act_property_browser.triggered.connect(self._show_property_browser)
+        self._configurations_menu.addAction(self._act_property_browser)
         # save cfg
         self._act_save_configuration = QAction("Save Configuration", self)
         self._act_save_configuration.triggered.connect(self._save_cfg)
@@ -286,6 +290,18 @@ class _MenuBar(QMenuBar):
         self._widgets[CONSOLE] = dock
 
         self._main_window.addDockWidget(RIGHT, dock)
+
+    def _show_property_browser(self) -> None:
+        """Show the property browser."""
+        if PROP_BROWSER in self._widgets:
+            pb = self._widgets[PROP_BROWSER]
+            pb.show()
+            pb.raise_()
+        else:
+            pb = PropertyBrowser(parent=self, mmcore=self._mmc)
+            pb.setWindowFlags(FLAGS)
+            self._widgets[PROP_BROWSER] = pb
+            pb.show()
 
     def _get_current_mda_viewers(self) -> dict[str, QWidget]:
         """Update the viewers variable in the MMConsole."""
