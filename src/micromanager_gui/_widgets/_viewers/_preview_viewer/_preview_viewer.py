@@ -128,7 +128,6 @@ class Preview(NDViewer):
         if self._mmc.mda.is_running():
             # This signal is emitted during MDAs as well - we want to ignore those.
             return
-        # self.set_data(self._mmc.getImage())
         img, meta = self._mmc.getTaggedImage()
         self.set_data(img)
         self._meta = meta
