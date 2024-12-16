@@ -35,7 +35,7 @@ dependencies = [
     "pyyaml",
     "cmap",
     "pyconify",
-    "ndv[vispy]",
+    "ndv[vispy] ==0.0.4",
     "qtconsole",
 ]
 
