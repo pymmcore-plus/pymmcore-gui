@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Hashable, Mapping
+from typing import TYPE_CHECKING, Any, Hashable, Mapping, cast
 
 import tensorstore as ts
 from ndv import DataWrapper, NDViewer
+from ndv.viewer._backends._vispy import VispyViewerCanvas
 from pymmcore_plus import CMMCorePlus, Metadata
 from qtpy import QtCore
 from superqt.utils import ensure_main_thread
@@ -113,6 +114,9 @@ class Preview(NDViewer):
                 self._canvas._current_shape = self.ts_shape
 
             super().set_data(self.ts_array)
+
+            self._canvas.set_range()
+
         return self.ts_array
 
     def set_data(
