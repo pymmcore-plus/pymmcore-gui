@@ -107,8 +107,8 @@ class Preview(NDViewer):
                 dtype=_data_type(self._mmc),
             ).result()
 
-            # this is a hack to update the canvas with the new shape or the reset
-            # button will not work
+            # this is a hack to update the canvas with the new image shape or the
+            # set_range method will not work properly
             self._canvas = cast(VispyViewerCanvas, self._canvas)  # type: ignore
             if self._canvas._current_shape:
                 self._canvas._current_shape = self.ts_shape
