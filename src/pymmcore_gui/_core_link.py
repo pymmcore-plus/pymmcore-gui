@@ -7,7 +7,7 @@ from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 from qtpy.QtCore import QObject, Qt
 from qtpy.QtWidgets import QTabBar, QTabWidget
 
-from micromanager_gui._widgets._viewers import MDAViewer
+from pymmcore_gui._widgets._viewers import MDAViewer
 
 from ._menubar._menubar import PREVIEW, VIEWERS
 from ._widgets._viewers import Preview

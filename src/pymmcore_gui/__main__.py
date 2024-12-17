@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Sequence
 
 from qtpy.QtWidgets import QApplication
 
-from micromanager_gui import MicroManagerGUI
+from pymmcore_gui import MicroManagerGUI
 
 if TYPE_CHECKING:
     from types import TracebackType

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from micromanager_gui import MicroManagerGUI
-from micromanager_gui._menubar._menubar import DOCKWIDGETS, WIDGETS
-from micromanager_gui._widgets._viewers import MDAViewer
+from pymmcore_gui import MicroManagerGUI
+from pymmcore_gui._menubar._menubar import DOCKWIDGETS, WIDGETS
+from pymmcore_gui._widgets._viewers import MDAViewer
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus

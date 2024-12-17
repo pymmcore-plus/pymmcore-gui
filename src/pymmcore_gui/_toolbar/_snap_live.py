@@ -5,7 +5,7 @@ from pymmcore_widgets import DefaultCameraExposureWidget
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QToolBar, QWidget
 
-from micromanager_gui._widgets._snap_live_buttons import Live, Snap
+from pymmcore_gui._widgets._snap_live_buttons import Live, Snap
 
 
 class _SnapLive(QToolBar):

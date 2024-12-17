@@ -14,7 +14,7 @@ from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 from qtpy.QtWidgets import QBoxLayout, QWidget
 from useq import MDASequence
 
-from micromanager_gui._writers._tensorstore_zarr import _TensorStoreHandler
+from pymmcore_gui._writers._tensorstore_zarr import _TensorStoreHandler
 
 from ._save_widget import (
     OME_TIFF,

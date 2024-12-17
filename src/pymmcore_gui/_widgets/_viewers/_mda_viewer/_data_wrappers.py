@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Hashable, Mapping, TypeGuard
 from ndv import DataWrapper
 from pymmcore_plus.mda.handlers import OMEZarrWriter, TensorStoreHandler
 
-from micromanager_gui.readers import OMEZarrReader, TensorstoreZarrReader
+from pymmcore_gui.readers import OMEZarrReader, TensorstoreZarrReader
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -13,7 +13,7 @@ from superqt.fonticon import icon
 if TYPE_CHECKING:
     from qtpy.QtWidgets import QWidget
 
-    from micromanager_gui._widgets._viewers import Preview
+    from pymmcore_gui._widgets._viewers import Preview
 
 
 class SaveButton(QPushButton):

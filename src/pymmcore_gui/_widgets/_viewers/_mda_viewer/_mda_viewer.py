@@ -8,7 +8,7 @@ from pymmcore_plus.mda.handlers import OMEZarrWriter, TensorStoreHandler
 from superqt import ensure_main_thread
 from useq import MDAEvent
 
-from micromanager_gui.readers import OMEZarrReader, TensorstoreZarrReader
+from pymmcore_gui.readers import OMEZarrReader, TensorstoreZarrReader
 
 from ._data_wrappers import MM5DWriterWrapper, MMTensorstoreWrapper
 from ._mda_save_button import MDASaveButton

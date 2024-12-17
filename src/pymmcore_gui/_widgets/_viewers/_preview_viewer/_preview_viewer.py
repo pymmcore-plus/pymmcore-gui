@@ -9,7 +9,7 @@ from pymmcore_plus import CMMCorePlus, Metadata
 from qtpy import QtCore
 from superqt.utils import ensure_main_thread
 
-from micromanager_gui._widgets._snap_live_buttons import Live, Snap
+from pymmcore_gui._widgets._snap_live_buttons import Live, Snap
 
 from ._preview_save_button import SaveButton
 

@@ -1,4 +1,4 @@
-* micromanager-gui version:
+* pymmcore-gui version:
 * Python version:
 * Operating System:
 
