@@ -23,10 +23,10 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from pymmcore_gui._widgets._install_widget import _InstallWidget
-from pymmcore_gui._widgets._mda_widget import MDAWidget
-from pymmcore_gui._widgets._mm_console import MMConsole
-from pymmcore_gui._widgets._stage_control import StagesControlWidget
+from pymmcore_gui.widgets._install_widget import _InstallWidget
+from pymmcore_gui.widgets._mda_widget import MDAWidget
+from pymmcore_gui.widgets._mm_console import MMConsole
+from pymmcore_gui.widgets._stage_control import StagesControlWidget
 
 if TYPE_CHECKING:
     from pymmcore_gui._main_window import MicroManagerGUI

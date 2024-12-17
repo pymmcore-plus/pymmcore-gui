@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from pymmcore_gui._widgets._stage_control import StagesControlWidget
+from pymmcore_gui.widgets._stage_control import StagesControlWidget
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus

@@ -97,6 +97,7 @@ select = [
 ]
 ignore = [
     "D100", # Missing docstring in public module
+    "D104", # Missing docstring in public package
     "D401", # First line should be in imperative mood (remove to opt in)
 ]
 

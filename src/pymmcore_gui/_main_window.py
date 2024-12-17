@@ -8,12 +8,12 @@ from ndv import NDViewer
 from pymmcore_plus import CMMCorePlus
 from qtpy.QtWidgets import QGridLayout, QMainWindow, QWidget
 
-from pymmcore_gui.readers import TensorstoreZarrReader
+from pymmcore_gui.io import TensorstoreZarrReader
 
 from ._core_link import CoreViewersLink
-from ._widgets._menubar import MenuBar
-from ._widgets._shutters_toolbar import ShuttersToolbar
-from ._widgets._snap_live import SnapLive
+from .widgets._menubar import MenuBar
+from .widgets._shutters_toolbar import ShuttersToolbar
+from .widgets._snap_live import SnapLive
 
 if TYPE_CHECKING:
     from qtpy.QtGui import QCloseEvent, QDragEnterEvent, QDropEvent

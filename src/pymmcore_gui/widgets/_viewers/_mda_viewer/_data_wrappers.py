@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, TypeGuard
 from ndv import DataWrapper
 from pymmcore_plus.mda.handlers import OMEZarrWriter, TensorStoreHandler
 
-from pymmcore_gui.readers import OMEZarrReader, TensorstoreZarrReader
+from pymmcore_gui.io import OMEZarrReader, TensorstoreZarrReader
 
 if TYPE_CHECKING:
     from collections.abc import Hashable, Mapping
@@ -40,7 +40,7 @@ class MMTensorstoreWrapper(DataWrapper["TensorStoreHandler"]):
 
     def save_as_zarr(self, save_loc: str | Path) -> None:
         # to have access to the metadata, the generated zarr file should be opened with
-        # the micromanager_gui.readers.TensorstoreZarrReader
+        # the micromanager_gui.io.TensorstoreZarrReader
 
         # TODO: find a way to save as ome-zarr
 

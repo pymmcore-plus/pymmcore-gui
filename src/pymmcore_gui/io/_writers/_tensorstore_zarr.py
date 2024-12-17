@@ -4,7 +4,7 @@ import time
 from typing import TYPE_CHECKING, Literal, TypeAlias
 
 from pymmcore_plus._logger import logger
-from pymmcore_plus.mda.handlers import TensorStoreHandler
+from pymmcore_plus.mda import handlers
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -16,7 +16,7 @@ TsDriver: TypeAlias = Literal["zarr", "zarr3", "n5", "neuroglancer_precomputed"]
 WAIT_TIME = 10  # seconds
 
 
-class _TensorStoreHandler(TensorStoreHandler):
+class TensorStoreHandler(handlers.TensorStoreHandler):
     def __init__(
         self,
         *,

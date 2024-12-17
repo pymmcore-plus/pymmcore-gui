@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from pymmcore_gui._widgets._mda_widget._save_widget import (
+from pymmcore_gui.widgets._mda_widget._save_widget import (
     DIRECTORY_WRITERS,
     FILE_NAME,
     OME_TIFF,

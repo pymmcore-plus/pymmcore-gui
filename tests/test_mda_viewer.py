@@ -10,14 +10,14 @@ from pymmcore_plus.metadata import SummaryMetaV1
 from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 
 from pymmcore_gui import MicroManagerGUI
-from pymmcore_gui._widgets._mda_widget import MDAWidget
-from pymmcore_gui._widgets._mda_widget._save_widget import (
+from pymmcore_gui.widgets._mda_widget import MDAWidget
+from pymmcore_gui.widgets._mda_widget._save_widget import (
     OME_TIFF,
     OME_ZARR,
     TIFF_SEQ,
     ZARR_TESNSORSTORE,
 )
-from pymmcore_gui._widgets._viewers import MDAViewer
+from pymmcore_gui.widgets._viewers import MDAViewer
 
 if TYPE_CHECKING:
     from pathlib import Path

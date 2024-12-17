@@ -8,9 +8,7 @@ import tifffile
 import useq
 from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 
-from pymmcore_gui._writers._tensorstore_zarr import _TensorStoreHandler
-from pymmcore_gui.readers._ome_zarr_reader import OMEZarrReader
-from pymmcore_gui.readers._tensorstore_zarr_reader import TensorstoreZarrReader
+from pymmcore_gui.io import OMEZarrReader, TensorStoreHandler, TensorstoreZarrReader
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
@@ -42,12 +40,12 @@ TENSOR_META = {
 
 writers = [
     (ZARR_META, "z.ome.zarr", "", OMEZarrReader),
-    (TENSOR_META, "ts.tensorstore.zarr", _TensorStoreHandler, TensorstoreZarrReader),
+    (TENSOR_META, "ts.tensorstore.zarr", TensorStoreHandler, TensorstoreZarrReader),
 ]
 # fmt: on
 
 
-# NOTE: the tensorstore reader works only if we use the internal _TensorStoreHandler
+# NOTE: the tensorstore reader works only if we use the internal TensorStoreHandler
 # TODO: fix the main TensorStoreHandler because it does not write the ".zattrs"
 @pytest.mark.parametrize("writers", writers)
 @pytest.mark.parametrize("kwargs", [True, False])

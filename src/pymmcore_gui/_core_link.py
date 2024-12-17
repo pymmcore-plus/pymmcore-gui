@@ -7,18 +7,18 @@ from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 from qtpy.QtCore import QObject, Qt
 from qtpy.QtWidgets import QTabBar, QTabWidget
 
-from pymmcore_gui._widgets._viewers import MDAViewer
+from pymmcore_gui.widgets._viewers import MDAViewer
 
-from ._widgets._menubar import PREVIEW, VIEWERS
-from ._widgets._viewers import Preview
+from .widgets._menubar import PREVIEW, VIEWERS
+from .widgets._viewers import Preview
 
 if TYPE_CHECKING:
     import useq
     from pymmcore_plus.metadata import SummaryMetaV1
 
     from ._main_window import MicroManagerGUI
-    from ._widgets._mda_widget import MDAWidget
-    from ._widgets._mm_console import MMConsole
+    from .widgets._mda_widget import MDAWidget
+    from .widgets._mm_console import MMConsole
 
 DIALOG = Qt.WindowType.Dialog
 VIEWER_TEMP_DIR = None

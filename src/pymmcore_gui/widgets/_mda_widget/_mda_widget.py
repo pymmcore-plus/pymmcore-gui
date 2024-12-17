@@ -14,7 +14,7 @@ from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 from qtpy.QtWidgets import QBoxLayout, QWidget
 from useq import MDASequence
 
-from pymmcore_gui._writers._tensorstore_zarr import _TensorStoreHandler
+from pymmcore_gui.io import TensorStoreHandler
 
 from ._save_widget import OME_TIFF, OME_ZARR, WRITERS, ZARR_TESNSORSTORE, SaveGroupBox
 
@@ -208,9 +208,9 @@ class MDAWidget_(MDAWidget):
         # able to handle it.
         return None
 
-    def _create_zarr_tensorstore(self, save_path: Path) -> _TensorStoreHandler:
+    def _create_zarr_tensorstore(self, save_path: Path) -> TensorStoreHandler:
         """Create a Zarr TensorStore writer."""
-        return _TensorStoreHandler(
+        return TensorStoreHandler(
             driver="zarr",
             path=save_path,
             delete_existing=True,

@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from pymmcore_gui import MicroManagerGUI
-from pymmcore_gui._widgets._menubar import DOCKWIDGETS, WIDGETS
-from pymmcore_gui._widgets._viewers import MDAViewer
+from pymmcore_gui.widgets._menubar import DOCKWIDGETS, WIDGETS
+from pymmcore_gui.widgets._viewers import MDAViewer
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
