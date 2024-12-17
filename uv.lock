@@ -1176,7 +1176,7 @@ wheels = [
 
 [[package]]
 name = "pymmcore-gui"
-version = "0.1.dev184+ga75a97e.d20241217"
+version = "0.1.dev185+g8426271.d20241217"
 source = { editable = "." }
 dependencies = [
     { name = "ndv", extra = ["vispy"] },
@@ -1196,7 +1196,7 @@ dependencies = [
 dev = [
     { name = "ipython" },
     { name = "mypy" },
-    { name = "pdbpp", marker = "sys_platform != 'Windows'" },
+    { name = "pdbpp", marker = "sys_platform != 'win32'" },
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -1224,7 +1224,7 @@ requires-dist = [
 dev = [
     { name = "ipython", specifier = ">=8.30.0" },
     { name = "mypy", specifier = ">=1.13.0" },
-    { name = "pdbpp", marker = "sys_platform != 'Windows'", specifier = ">=0.10.3" },
+    { name = "pdbpp", marker = "sys_platform != 'win32'", specifier = ">=0.10.3" },
     { name = "pre-commit", specifier = ">=4.0.1" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-cov", specifier = ">=6.0.0" },
