@@ -43,7 +43,7 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Install Micro-Manager
-        run: mmcore install
+        run: uv run mmcore install
 
       - name: Test
         run: uv run pytest -v --cov=pymmcore_widgets --cov-report=xml --color=yes
