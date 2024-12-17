@@ -6,14 +6,10 @@ concurrency:
 
 on:
   push:
-    branches:
-      - main
-    tags:
-      - "v*"
+    branches: [main]
+    tags: [v*]
   pull_request:
   workflow_dispatch:
-  schedule:
-    - cron: "0 0 * * 0" # every week (for --pre release tests)
 
 jobs:
   check-manifest:
@@ -23,50 +19,34 @@ jobs:
       - run: pipx run check-manifest
 
   test:
-    name: ${{ matrix.platform }} py${{ matrix.python-version }} ${{ matrix.backend }}
+    name: ${{ matrix.platform }}
     runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10', '3.11']
         platform: [macos-13, windows-latest]
-        backend: [pyqt6]
-        include:
-          - platform: windows-latest
-            python-version: "3.10"
-            backend: pyqt5
-          - platform: windows-latest
-            python-version: "3.11"
-            backend: pyqt5
-          # NOTE: pyside 2 and pyqt6 fails for some reason. maybe try to fix it at some point
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
         with:
-          python-version: ${{ matrix.python-version }}
-          cache-dependency-path: "pyproject.toml"
-          cache: "pip"
+          version: "0.5.9"
+          enable-cache: true
 
-      - name: Install dependencies
-        run: |
-          python -m pip install -U pip
-          python -m pip install -e .[test,${{ matrix.backend }}]
+      - uses: pyvista/setup-headless-display-action@v3
+        with:
+          qt: true
 
-      - name: Install Windows OpenGL
-        if: runner.os == 'Windows'
-        run: |
-          git clone --depth 1 https://github.com/pyvista/gl-ci-helpers.git
-          powershell gl-ci-helpers/appveyor/install_opengl.ps1
-          if (Test-Path -Path "C:\Windows\system32\opengl32.dll" -PathType Leaf) {Exit 0} else {Exit 1}
+      - name: Install the project
+        run: uv sync --all-extras --dev
 
       - name: Install Micro-Manager
         run: mmcore install
 
       - name: Test
-        run: pytest -v --cov=pymmcore_widgets --cov-report=xml --color=yes
+        run: uv run pytest -v --cov=pymmcore_widgets --cov-report=xml --color=yes
 
       - name: Coverage
         uses: codecov/codecov-action@v5
@@ -104,4 +84,4 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-          files: './dist/*'
+          files: "./dist/*"
