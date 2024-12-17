@@ -6,7 +6,7 @@ from warnings import warn
 
 from ndv import NDViewer
 from pymmcore_plus import CMMCorePlus
-from qtpy.QtWidgets import QGridLayout, QMainWindow, QWidget
+from qtpy.QtWidgets import QApplication, QGridLayout, QMainWindow, QWidget
 
 from pymmcore_gui.io import TensorstoreZarrReader
 
@@ -23,15 +23,10 @@ class MicroManagerGUI(QMainWindow):
     """Micro-Manager minimal GUI."""
 
     def __init__(
-        self,
-        parent: QWidget | None = None,
-        *,
-        mmcore: CMMCorePlus | None = None,
-        config: str | None = None,
+        self, *, mmcore: CMMCorePlus | None = None, config: str | None = None
     ) -> None:
-        super().__init__(parent)
+        super().__init__()
         self.setAcceptDrops(True)
-
         self.setWindowTitle("Micro-Manager")
 
         # get global CMMCorePlus instance
@@ -66,15 +61,19 @@ class MicroManagerGUI(QMainWindow):
                 # don't crash if the user passed an invalid config
                 warn(f"Config file {config} not found. Nothing loaded.", stacklevel=2)
 
-    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
-        if event.mimeData().hasUrls():
+    def dragEnterEvent(self, event: QDragEnterEvent | None) -> None:
+        if event and (data := event.mimeData()) and data.hasUrls():
             event.acceptProposedAction()
         else:
             super().dragEnterEvent(event)
 
-    def dropEvent(self, event: QDropEvent) -> None:
+    def dropEvent(self, event: QDropEvent | None) -> None:
         """Open a tensorstore from a directory dropped in the window."""
-        for idx, url in enumerate(event.mimeData().urls()):
+        if not event or not (data := event.mimeData()) or not data.hasUrls():
+            super().dropEvent(event)
+            return
+
+        for idx, url in enumerate(data.urls()):
             path = Path(url.toLocalFile())
 
             sw = self._open_datastore(idx, path)
@@ -105,14 +104,13 @@ class MicroManagerGUI(QMainWindow):
             warn(f"Not yet supported format: {path.name}!", stacklevel=2)
             return None
 
-    def closeEvent(self, event: QCloseEvent) -> None:
+    def closeEvent(self, event: QCloseEvent | None) -> None:
         """Close all widgets before closing."""
+        if not event:
+            return
         self.deleteLater()
         # delete any remaining widgets
-        from qtpy.QtWidgets import QApplication
-
-        if qapp := QApplication.instance():
-            if remaining := qapp.topLevelWidgets():
-                for w in remaining:
-                    w.deleteLater()
+        if remaining := QApplication.topLevelWidgets():
+            for w in remaining:
+                w.deleteLater()
         super().closeEvent(event)
