@@ -8,7 +8,7 @@ from qtpy.QtWidgets import QHBoxLayout, QLabel, QToolBar, QWidget
 from pymmcore_gui._widgets._snap_live_buttons import Live, Snap
 
 
-class _SnapLive(QToolBar):
+class SnapLive(QToolBar):
     """A QToolBar for the Snap and Live buttons."""
 
     def __init__(

@@ -6,18 +6,14 @@ from warnings import warn
 
 from ndv import NDViewer
 from pymmcore_plus import CMMCorePlus
-from qtpy.QtWidgets import (
-    QGridLayout,
-    QMainWindow,
-    QWidget,
-)
+from qtpy.QtWidgets import QGridLayout, QMainWindow, QWidget
 
 from pymmcore_gui.readers import TensorstoreZarrReader
 
 from ._core_link import CoreViewersLink
-from ._menubar._menubar import _MenuBar
-from ._toolbar._shutters_toolbar import _ShuttersToolbar
-from ._toolbar._snap_live import _SnapLive
+from ._widgets._menubar import MenuBar
+from ._widgets._shutters_toolbar import ShuttersToolbar
+from ._widgets._snap_live import SnapLive
 
 if TYPE_CHECKING:
     from qtpy.QtGui import QCloseEvent, QDragEnterEvent, QDropEvent
@@ -47,13 +43,13 @@ class MicroManagerGUI(QMainWindow):
         self.setCentralWidget(central_wdg)
 
         # add the menu bar (and the logic to create/show widgets)
-        self._menu_bar = _MenuBar(parent=self, mmcore=self._mmc)
+        self._menu_bar = MenuBar(parent=self, mmcore=self._mmc)
         self.setMenuBar(self._menu_bar)
 
         # add toolbar
-        self._snap_live_toolbar = _SnapLive(parent=self, mmcore=self._mmc)
+        self._snap_live_toolbar = SnapLive(parent=self, mmcore=self._mmc)
         self.addToolBar(self._snap_live_toolbar)
-        self._shutters_toolbar = _ShuttersToolbar(parent=self, mmcore=self._mmc)
+        self._shutters_toolbar = ShuttersToolbar(parent=self, mmcore=self._mmc)
         self.addToolBar(self._shutters_toolbar)
 
         # link the MDA viewers

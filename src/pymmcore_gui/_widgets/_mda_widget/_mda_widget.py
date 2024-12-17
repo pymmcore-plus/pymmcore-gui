@@ -16,13 +16,7 @@ from useq import MDASequence
 
 from pymmcore_gui._writers._tensorstore_zarr import _TensorStoreHandler
 
-from ._save_widget import (
-    OME_TIFF,
-    OME_ZARR,
-    WRITERS,
-    ZARR_TESNSORSTORE,
-    SaveGroupBox,
-)
+from ._save_widget import OME_TIFF, OME_ZARR, WRITERS, ZARR_TESNSORSTORE, SaveGroupBox
 
 NUM_SPLIT = re.compile(r"(.*?)(?:_(\d{3,}))?$")
 OME_TIFFS = tuple(WRITERS[OME_TIFF])

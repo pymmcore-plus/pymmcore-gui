@@ -1,16 +1,11 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING, cast
 from unittest.mock import patch
 
 import pytest
 import useq
-from pymmcore_plus.mda.handlers import (
-    OMETiffWriter,
-    OMEZarrWriter,
-    TensorStoreHandler,
-)
+from pymmcore_plus.mda.handlers import OMETiffWriter, OMEZarrWriter, TensorStoreHandler
 from pymmcore_plus.metadata import SummaryMetaV1
 from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 
@@ -25,13 +20,16 @@ from pymmcore_gui._widgets._mda_widget._save_widget import (
 from pymmcore_gui._widgets._viewers import MDAViewer
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from pymmcore_plus import CMMCorePlus
     from pytestqt.qtbot import QtBot
 
 
+@pytest.mark.usefixtures("check_leaks")
 def test_mda_viewer_no_saving(
-    qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path, _run_after_each_test
-):
+    qtbot: QtBot, global_mmcore: CMMCorePlus, tmp_path: Path
+) -> None:
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
 
@@ -56,14 +54,14 @@ writers = [
 ]
 
 
+@pytest.mark.usefixtures("check_leaks")
 @pytest.mark.parametrize("writers", writers)
 def test_mda_viewer_saving(
     qtbot: QtBot,
     global_mmcore: CMMCorePlus,
     tmp_path: Path,
     writers: tuple[str, str, type],
-    _run_after_each_test,
-):
+) -> None:
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
 
@@ -115,5 +113,5 @@ def test_mda_writer(qtbot: QtBot, tmp_path: Path, data: tuple) -> None:
     qtbot.addWidget(wdg)
     wdg.show()
     path, save_format, cls = data
-    writer = wdg._create_writer(save_format, Path(path))
+    writer = wdg._create_writer(save_format, tmp_path / path)
     assert isinstance(writer, cls) if writer is not None else writer is None

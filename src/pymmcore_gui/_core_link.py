@@ -9,7 +9,7 @@ from qtpy.QtWidgets import QTabBar, QTabWidget
 
 from pymmcore_gui._widgets._viewers import MDAViewer
 
-from ._menubar._menubar import PREVIEW, VIEWERS
+from ._widgets._menubar import PREVIEW, VIEWERS
 from ._widgets._viewers import Preview
 
 if TYPE_CHECKING:

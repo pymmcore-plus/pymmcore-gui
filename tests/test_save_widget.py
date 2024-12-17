@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
-from pytestqt.qtbot import QtBot
 
 from pymmcore_gui._widgets._mda_widget._save_widget import (
     DIRECTORY_WRITERS,
@@ -14,6 +16,9 @@ from pymmcore_gui._widgets._mda_widget._save_widget import (
     ZARR_TESNSORSTORE,
     SaveGroupBox,
 )
+
+if TYPE_CHECKING:
+    from pytestqt.qtbot import QtBot
 
 
 def test_set_get_value(qtbot: QtBot) -> None:

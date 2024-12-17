@@ -15,19 +15,23 @@ from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
-from pymmcore_plus import CMMCorePlus
+from pymmcore_plus import CMMCorePlus, configure_logging
 from pymmcore_plus.core import _mmcore_plus
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from pytest import FixtureRequest
     from qtpy.QtWidgets import QApplication
 
 TEST_CONFIG = str(Path(__file__).parent / "test_config.cfg")
 
+configure_logging(stderr_level="CRITICAL")
+
 
 # to create a new CMMCorePlus() for every test
 @pytest.fixture(autouse=True)
-def global_mmcore():
+def global_mmcore() -> Iterator[CMMCorePlus]:
     mmc = CMMCorePlus()
     mmc.loadSystemConfiguration(TEST_CONFIG)
     with patch.object(_mmcore_plus, "_instance", mmc):
@@ -35,7 +39,7 @@ def global_mmcore():
 
 
 @pytest.fixture()
-def _run_after_each_test(request: FixtureRequest, qapp: QApplication):
+def check_leaks(request: FixtureRequest, qapp: QApplication) -> Iterator[None]:
     """Run after each test to ensure no widgets have been left around.
 
     When this test fails, it means that a widget being tested has an issue closing
@@ -49,12 +53,12 @@ def _run_after_each_test(request: FixtureRequest, qapp: QApplication):
     # if the test failed, don't worry about checking widgets
     if request.session.testsfailed - failures_before:
         return
+
     remaining = qapp.topLevelWidgets()
 
-    print()
-    for r in remaining:
-        print(r, r.parent())
-
     if len(remaining) > nbefore:
+        print()
+        for r in remaining:
+            print(r, r.parent())
         test = f"{request.node.path.name}::{request.node.originalname}"
         raise AssertionError(f"topLevelWidgets remaining after {test!r}: {remaining}")

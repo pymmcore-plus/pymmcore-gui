@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Mapping, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import useq
@@ -10,6 +10,9 @@ import zarr
 from tifffile import imwrite
 from tqdm import tqdm
 from zarr.hierarchy import Group
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 EVENT = "Event"
 FRAME_META = "frame_meta"
@@ -135,10 +138,7 @@ class OMEZarrReader:
         return data
 
     def write_tiff(
-        self,
-        path: str | Path,
-        indexers: Mapping[str, int] | None = None,
-        **kwargs: Any,
+        self, path: str | Path, indexers: Mapping[str, int] | None = None, **kwargs: Any
     ) -> None:
         """Write the data to a tiff file.
 

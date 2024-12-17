@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import warnings
 from pathlib import Path
-from typing import Any, Mapping, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import tensorstore as ts
@@ -11,6 +11,9 @@ import useq
 from pymmcore_plus.metadata.serialize import json_loads
 from tifffile import imwrite
 from tqdm import tqdm
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 class TensorstoreZarrReader:
@@ -140,10 +143,7 @@ class TensorstoreZarrReader:
         return data
 
     def write_tiff(
-        self,
-        path: str | Path,
-        indexers: Mapping[str, int] | None = None,
-        **kwargs: Any,
+        self, path: str | Path, indexers: Mapping[str, int] | None = None, **kwargs: Any
     ) -> None:
         """Write the data to a tiff file.
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from typing import TYPE_CHECKING, Any, Hashable, Mapping, TypeGuard
+from typing import TYPE_CHECKING, Any, TypeGuard
 
 from ndv import DataWrapper
 from pymmcore_plus.mda.handlers import OMEZarrWriter, TensorStoreHandler
@@ -9,6 +9,7 @@ from pymmcore_plus.mda.handlers import OMEZarrWriter, TensorStoreHandler
 from pymmcore_gui.readers import OMEZarrReader, TensorstoreZarrReader
 
 if TYPE_CHECKING:
+    from collections.abc import Hashable, Mapping
     from pathlib import Path
 
     from pymmcore_plus.mda.handlers._5d_writer_base import _5DWriterBase

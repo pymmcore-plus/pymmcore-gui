@@ -54,7 +54,7 @@ class MDAViewer(NDViewer):
         # MMTensorstoreWrapper) or OMEZarrWriter (and thus the MM5DWriterWrapper)
         # since we didn't yet implement the save_as_zarr and save_as_tiff methods
         # for OMETiffWriter in the MM5DWriterWrapper.
-        if isinstance(data, (TensorStoreHandler, OMEZarrWriter)):
+        if isinstance(data, TensorStoreHandler | OMEZarrWriter):
             self._save_btn = MDASaveButton(self._data_wrapper)
             self._btns.insertWidget(3, self._save_btn)
 

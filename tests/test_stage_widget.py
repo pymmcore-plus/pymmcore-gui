@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
+
 from pymmcore_gui._widgets._stage_control import StagesControlWidget
 
 if TYPE_CHECKING:
@@ -9,7 +11,8 @@ if TYPE_CHECKING:
     from pytestqt.qtbot import QtBot
 
 
-def test_stage_widget(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
+@pytest.mark.usefixtures("check_leaks")
+def test_stage_widget(qtbot: QtBot, global_mmcore: CMMCorePlus) -> None:
     s = StagesControlWidget(mmcore=global_mmcore)
     qtbot.addWidget(s)
     group1 = s._layout.takeAt(0).widget()

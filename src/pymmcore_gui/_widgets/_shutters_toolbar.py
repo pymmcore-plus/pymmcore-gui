@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pymmcore_plus import CMMCorePlus, DeviceType
 from pymmcore_widgets import ShuttersWidget
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QToolBar, QWidget
+
+if TYPE_CHECKING:
+    from PyQt6.QtWidgets import QToolBar, QWidget
+else:
+    from qtpy.QtWidgets import QToolBar, QWidget
 
 
-class _ShuttersToolbar(QToolBar):
+class ShuttersToolbar(QToolBar):
     """A QToolBar for the loased Shutters."""
 
     def __init__(

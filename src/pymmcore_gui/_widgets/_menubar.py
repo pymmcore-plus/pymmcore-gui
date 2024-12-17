@@ -82,7 +82,7 @@ class ScrollableDockWidget(QDockWidget):
         self.resize(widget.minimumSizeHint())
 
 
-class _MenuBar(QMenuBar):
+class MenuBar(QMenuBar):
     """Menu Bar for the Micro-Manager GUI.
 
     It contains the actions to create and show widgets and dockwidgets.

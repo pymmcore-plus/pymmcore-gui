@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
+
 from pymmcore_gui import MicroManagerGUI
-from pymmcore_gui._menubar._menubar import DOCKWIDGETS, WIDGETS
+from pymmcore_gui._widgets._menubar import DOCKWIDGETS, WIDGETS
 from pymmcore_gui._widgets._viewers import MDAViewer
 
 if TYPE_CHECKING:
@@ -11,7 +13,8 @@ if TYPE_CHECKING:
     from pytestqt.qtbot import QtBot
 
 
-def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
+@pytest.mark.usefixtures("check_leaks")
+def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus) -> None:
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
     assert gui._menu_bar._mda
@@ -23,7 +26,8 @@ def test_load_gui(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test
     assert gui._core_link._mda_running is False
 
 
-def test_menu_wdg(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
+@pytest.mark.usefixtures("check_leaks")
+def test_menu_wdg(qtbot: QtBot, global_mmcore: CMMCorePlus) -> None:
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
     menu = gui._menu_bar
@@ -34,7 +38,8 @@ def test_menu_wdg(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test
     assert len(menu._widgets.keys()) == len(WIDGETS) + len(DOCKWIDGETS)
 
 
-def test_menu_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus, _run_after_each_test):
+@pytest.mark.usefixtures("check_leaks")
+def test_menu_viewer(qtbot: QtBot, global_mmcore: CMMCorePlus) -> None:
     gui = MicroManagerGUI(mmcore=global_mmcore)
     qtbot.addWidget(gui)
     menu = gui._menu_bar

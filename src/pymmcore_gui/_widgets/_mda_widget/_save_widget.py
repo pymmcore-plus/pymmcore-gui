@@ -153,7 +153,7 @@ class SaveGroupBox(QGroupBox):
         - format: str - Set the combo box to the writer with this name.
         - should_save: bool - Set the checked state of the checkbox.
         """
-        if isinstance(value, (str, Path)):
+        if isinstance(value, str | Path):
             self.setCurrentPath(value)
             self.setChecked(True)
             return

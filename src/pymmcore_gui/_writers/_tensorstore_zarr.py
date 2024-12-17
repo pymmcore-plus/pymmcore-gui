@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING, Literal, Mapping, TypeAlias
+from typing import TYPE_CHECKING, Literal, TypeAlias
 
 from pymmcore_plus._logger import logger
 from pymmcore_plus.mda.handlers import TensorStoreHandler
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
     from os import PathLike
 from pymmcore_plus.metadata.serialize import json_dumps, json_loads
 
