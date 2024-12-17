@@ -53,7 +53,7 @@ dependencies = [
 dev = [
     "ipython>=8.30.0",
     "mypy>=1.13.0",
-    "pdbpp>=0.10.3 ; sys_platform != 'windows'",
+    "pdbpp>=0.10.3 ; sys_platform != 'Windows'",
     "pre-commit>=4.0.1",
     "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
