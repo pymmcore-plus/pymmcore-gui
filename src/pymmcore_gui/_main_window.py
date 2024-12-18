@@ -16,3 +16,5 @@ class MicroManagerGUI(QMainWindow):
 
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
+        self._mmc.loadSystemConfiguration()
+        print(self._mmc.getLoadedDevices())
