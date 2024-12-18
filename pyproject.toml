@@ -64,7 +64,7 @@ dev = [
 
 # same as console_scripts entry point
 [project.scripts]
-mmgui = "pymmcore_gui.__main__:main"
+mmgui = "pymmcore_gui._app:main"
 
 [project.urls]
 homepage = "https://github.com/tlambert03/pymmcore-gui"

@@ -1,22 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import TYPE_CHECKING
-from warnings import warn
-
-from ndv import NDViewer
 from pymmcore_plus import CMMCorePlus
-from qtpy.QtWidgets import QApplication, QGridLayout, QMainWindow, QWidget
-
-from pymmcore_gui.io import TensorstoreZarrReader
-
-from ._core_link import CoreViewersLink
-from .widgets._menubar import MenuBar
-from .widgets._shutters_toolbar import ShuttersToolbar
-from .widgets._snap_live import SnapLive
-
-if TYPE_CHECKING:
-    from qtpy.QtGui import QCloseEvent, QDragEnterEvent, QDropEvent
+from qtpy.QtWidgets import QMainWindow
 
 
 class MicroManagerGUI(QMainWindow):
@@ -31,86 +16,3 @@ class MicroManagerGUI(QMainWindow):
 
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
-
-        # central widget
-        central_wdg = QWidget(self)
-        self._central_wdg_layout = QGridLayout(central_wdg)
-        self.setCentralWidget(central_wdg)
-
-        # add the menu bar (and the logic to create/show widgets)
-        self._menu_bar = MenuBar(parent=self, mmcore=self._mmc)
-        self.setMenuBar(self._menu_bar)
-
-        # add toolbar
-        self._snap_live_toolbar = SnapLive(parent=self, mmcore=self._mmc)
-        self.addToolBar(self._snap_live_toolbar)
-        self._shutters_toolbar = ShuttersToolbar(parent=self, mmcore=self._mmc)
-        self.addToolBar(self._shutters_toolbar)
-
-        # link the MDA viewers
-        self._core_link = CoreViewersLink(self, mmcore=self._mmc)
-
-        # extend size to fill the screen
-        self.showMaximized()
-
-        if config is not None:
-            try:
-                self._mmc.unloadAllDevices()
-                self._mmc.loadSystemConfiguration(config)
-            except FileNotFoundError:
-                # don't crash if the user passed an invalid config
-                warn(f"Config file {config} not found. Nothing loaded.", stacklevel=2)
-
-    def dragEnterEvent(self, event: QDragEnterEvent | None) -> None:
-        if event and (data := event.mimeData()) and data.hasUrls():
-            event.acceptProposedAction()
-        else:
-            super().dragEnterEvent(event)
-
-    def dropEvent(self, event: QDropEvent | None) -> None:
-        """Open a tensorstore from a directory dropped in the window."""
-        if not event or not (data := event.mimeData()) or not data.hasUrls():
-            super().dropEvent(event)
-            return
-
-        for idx, url in enumerate(data.urls()):
-            path = Path(url.toLocalFile())
-
-            sw = self._open_datastore(idx, path)
-
-            if sw is not None:
-                self._core_link._viewer_tab.addTab(sw, f"datastore_{idx}")
-                self._core_link._viewer_tab.setCurrentWidget(sw)
-
-        super().dropEvent(event)
-
-    def _open_datastore(self, idx: int, path: Path) -> NDViewer | None:
-        if path.name.endswith(".tensorstore.zarr"):
-            try:
-                reader = TensorstoreZarrReader(path)
-                return NDViewer(reader.store, parent=self)
-            except Exception as e:
-                warn(f"Error opening tensorstore-zarr: {e}!", stacklevel=2)
-                return None
-        # TODO: implement with OMEZarrReader
-        # elif path.name.endswith(".ome.zarr"):
-        #     try:
-        #         reader = OMEZarrReader(path)
-        #         return NDViewer(reader.store, parent=self)
-        #     except Exception as e:
-        #             warn(f"Error opening OME-zarr: {e}!", stacklevel=2)
-        #             return None
-        else:
-            warn(f"Not yet supported format: {path.name}!", stacklevel=2)
-            return None
-
-    def closeEvent(self, event: QCloseEvent | None) -> None:
-        """Close all widgets before closing."""
-        if not event:
-            return
-        self.deleteLater()
-        # delete any remaining widgets
-        if remaining := QApplication.topLevelWidgets():
-            for w in remaining:
-                w.deleteLater()
-        super().closeEvent(event)

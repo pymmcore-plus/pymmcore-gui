@@ -3,13 +3,9 @@
 from importlib.metadata import PackageNotFoundError, version
 
 try:
-    __version__ = version("micromanager-gui")
+    __version__ = version("pymmcore-gui")
 except PackageNotFoundError:
     __version__ = "uninstalled"
-
-__author__ = "Federico Gasparoli"
-__email__ = "federico.gasparoli@gmail.com"
-
 
 from ._main_window import MicroManagerGUI
 
