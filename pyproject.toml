@@ -39,10 +39,10 @@ dependencies = [
     "ndv[vispy]==0.0.4",
     "pymmcore-plus[cli]>=0.12.0",
     "pymmcore-widgets>=0.8.0",
-    "pyqt6==6.7.1",
+    "PyQt6==6.7.1",
     "pyyaml>=6.0.2",
     "qtconsole>=5.6.1",
-    "qtpy>=2.4.2",
+    "rich",                         # also in pymmcore-plus[cli] above
     "superqt[cmap,iconify]>=0.7.0",
     "tifffile>=2024.12.12",
     "tqdm>=4.67.1",
@@ -144,5 +144,5 @@ source = ["pymmcore_gui"]
 [tool.check-manifest]
 ignore = [".pre-commit-config.yaml", ".ruff_cache/**/*", "tests/**/*"]
 
-[tool.typos.default] 
+[tool.typos.default]
 extend-ignore-identifiers-re = ["(?i)nd2?.*", "(?i)ome"]

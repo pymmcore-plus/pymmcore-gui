@@ -21,8 +21,8 @@ from pymmcore_plus.core import _mmcore_plus
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
+    from PyQt6.QtWidgets import QApplication
     from pytest import FixtureRequest
-    from qtpy.QtWidgets import QApplication
 
 TEST_CONFIG = str(Path(__file__).parent / "test_config.cfg")
 

@@ -7,7 +7,7 @@ import traceback
 from contextlib import suppress
 from typing import TYPE_CHECKING
 
-from qtpy.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication
 
 from pymmcore_gui import MicroManagerGUI
 

@@ -2,17 +2,33 @@ import sys
 
 from PyInstaller.building.api import COLLECT, EXE, PYZ
 from PyInstaller.building.build_main import Analysis
+from PyInstaller.config import CONF
+
+if "workpath" not in CONF:
+    raise ValueError("This script must run with `pyinstaller mmgui.spec`")
+
+CONF["noconfirm"] = True
+
+sys.modules["FixTk"] = None
 
 a = Analysis(
-    ["../src/pymmcore_gui/__main__.py"],
+    ["src/pymmcore_gui/__main__.py"],
     pathex=[],
     binaries=[],
     datas=[],
-    hiddenimports=[],
-    hookspath=[],
+    hiddenimports=['pdb'],
+    hookspath=["hooks"],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=[
+        "FixTk",
+        "tcl",
+        "tk",
+        "_tkinter",
+        "tkinter",
+        "Tkinter",
+        "matplotlib",
+    ],
     noarchive=False,
     optimize=0,
 )
@@ -44,6 +60,7 @@ coll = COLLECT(
     upx_exclude=[],
     name="mmgui",
 )
+
 if sys.platform == "darwin":
     from PyInstaller.building.osx import BUNDLE
 
