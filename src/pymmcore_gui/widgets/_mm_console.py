@@ -4,8 +4,16 @@ import os
 from typing import TYPE_CHECKING, Any, cast
 
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
+
+from PyQt6.QtWidgets import QApplication
 from qtconsole.inprocess import QtInProcessKernelManager
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
+from traitlets import default
+
+try:
+    import rich
+except ImportError:
+    rich = None  # type: ignore
 
 if TYPE_CHECKING:
     from PyQt6.QtGui import QCloseEvent
@@ -27,14 +35,54 @@ class MMConsole(RichJupyterWidget):
 
         # Create an in-process kernel
         self.kernel_manager = QtInProcessKernelManager()
-        self.kernel_manager.start_kernel(show_banner=False)
+        self.kernel_manager.start_kernel()
         self.kernel_manager.kernel.gui = "qt"
+        self.shell = self.kernel_manager.kernel.shell
+        self.shell.banner1 = ""
         self.kernel_client = self.kernel_manager.client()
         self.kernel_client.start_channels()
-        self.shell = self.kernel_manager.kernel.shell
 
-        self.shell.run_cell("from rich import pretty; pretty.install()")
-        self.shell.run_cell("from rich import print")
+        if rich is not None:
+            self.shell.run_cell("from rich import pretty; pretty.install()")
+            self.shell.run_cell("from rich import print")
+
+        self._inject_core_vars()
+
+    def _inject_core_vars(self) -> None:
+        import numpy
+        import pymmcore_plus
+        import useq
+
+        default_vars = {
+            **pymmcore_plus.__dict__,
+            **useq.__dict__,
+            "useq": useq,
+            "np": numpy,
+        }
+        mmc = None
+        for wdg in QApplication.topLevelWidgets():
+            if wdg.objectName() == "MicroManagerGUI":
+                default_vars["window"] = wdg
+                mmc = getattr(wdg, "mmc", None)
+                break
+
+        mmc = mmc or pymmcore_plus.CMMCorePlus.instance()
+        default_vars.update({"mmc": mmc, "core": mmc, "mmcore": mmc, "mda": mmc.mda})
+        self.push(default_vars)
+
+    @default("banner")  # type: ignore [misc]
+    def _banner_default(self) -> str:
+        # Set the banner displayed at the top of the console
+        lines = [
+            "Welcome to the pymmcore-plus console!",
+            "All top level pymmcore_plus and useq names are available.",
+            "",
+            "Use \033[1;33mmmc\033[0m (or \033[1;33mcore\033[0m) to interact with the CMMCorePlus instance.\n"  # noqa: E501
+            "Use \033[1;33mmda\033[0m to access the pymmcore_plus.MDARunner.",
+        ]
+        if "window" in self.shell.user_ns:
+            lines.append("Use \033[1;33mwindow\033[0m to interact with the MainWindow.")
+        return "\n".join(lines)
 
     def push(self, variables: dict[str, Any]) -> None:
         self.shell.push(variables)
