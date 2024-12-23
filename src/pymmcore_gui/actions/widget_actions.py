@@ -79,7 +79,9 @@ def create_camera_roi(parent: QWidget) -> pmmw.CameraRoiWidget:
     """Create the Camera ROI widget."""
     from pymmcore_widgets import CameraRoiWidget
 
-    return CameraRoiWidget(parent=parent, mmcore=_get_core(parent))
+    wdg = CameraRoiWidget(parent=parent, mmcore=_get_core(parent))
+    wdg.setMaximumHeight(140)
+    return wdg
 
 
 def create_config_groups(parent: QWidget) -> pmmw.GroupPresetTableWidget:
@@ -106,6 +108,13 @@ def create_exception_log(parent: QWidget) -> pmmw.ExceptionLog:
     return wdg
 
 
+def create_stage_widget(parent: QWidget) -> pmmw.StageWidget:
+    """Create the Stage Control widget."""
+    from pymmcore_gui.widgets._stage_control import StagesControlWidget
+
+    return StagesControlWidget(parent=parent, mmcore=_get_core(parent))
+
+
 # ######################## WidgetAction Enum #########################
 
 
@@ -120,6 +129,7 @@ class WidgetAction(ActionKey):
     CAMERA_ROI = "Camera ROI"
     CONSOLE = "Console"
     EXCEPTION_LOG = "Exception Log"
+    STAGE_CONTROL = "Stage Control"
 
     def create_widget(self, parent: QWidget) -> QWidget:
         """Create the widget associated with this action."""
@@ -182,8 +192,9 @@ show_mda_widget = WidgetActionInfo(
 show_camera_roi = WidgetActionInfo(
     key=WidgetAction.CAMERA_ROI,
     shortcut="Ctrl+Shift+R",
-    icon="mdi-light:camera",
+    icon="material-symbols-light:screenshot-region-rounded",
     create_widget=create_camera_roi,
+    dock_area=Qt.DockWidgetArea.LeftDockWidgetArea,
 )
 
 show_config_groups = WidgetActionInfo(
@@ -206,4 +217,12 @@ show_exception_log = WidgetActionInfo(
     icon="mdi-light:alert",
     create_widget=create_exception_log,
     dock_area=None,
+)
+
+show_stage_control = WidgetActionInfo(
+    key=WidgetAction.STAGE_CONTROL,
+    shortcut="Ctrl+Shift+S",
+    icon="fa:arrows",
+    create_widget=create_stage_widget,
+    dock_area=Qt.DockWidgetArea.LeftDockWidgetArea,
 )

@@ -53,6 +53,8 @@ class Toolbar(str, Enum):
 class MicroManagerGUI(QMainWindow):
     """Micro-Manager minimal GUI."""
 
+    # Toolbars are a mapping of strings to either a list of ActionKeys or a callable
+    # that takes a CMMCorePlus instance and QMainWindow and returns a QToolBar.
     TOOLBARS: Mapping[
         str, list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QToolBar]
     ] = {
@@ -65,8 +67,12 @@ class MicroManagerGUI(QMainWindow):
             WidgetAction.CONSOLE,
             WidgetAction.PROP_BROWSER,
             WidgetAction.MDA_WIDGET,
+            WidgetAction.STAGE_CONTROL,
+            WidgetAction.CAMERA_ROI,
         ],
     }
+    # Menus are a mapping of strings to either a list of ActionKeys or a callable
+    # that takes a CMMCorePlus instance and QMainWindow and returns a QMenu.
     MENUS: Mapping[
         str, list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QMenu]
     ] = {
@@ -75,6 +81,7 @@ class MicroManagerGUI(QMainWindow):
             WidgetAction.PROP_BROWSER,
             WidgetAction.INSTALL_DEVICES,
             WidgetAction.MDA_WIDGET,
+            WidgetAction.STAGE_CONTROL,
             WidgetAction.CAMERA_ROI,
             WidgetAction.CONFIG_GROUPS,
             WidgetAction.EXCEPTION_LOG,
