@@ -38,6 +38,6 @@ class OCToolBar(QToolBar):
             action.setCheckable(True)
             action.setChecked(preset_name == current)
 
-            @action.triggered.connect
+            @action.triggered.connect  # type: ignore [misc]
             def _(checked: bool, pname: str = preset_name) -> None:
                 mmc.setConfig(ch_group, pname)
