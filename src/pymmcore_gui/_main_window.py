@@ -136,6 +136,15 @@ class MicroManagerGUI(QMainWindow):
                 for action in tb_entry:
                     tb.addAction(self.get_action(action))
 
+        # populate with default widgets ...
+        # eventually this should be configurable and restored from a config file
+        for key in (
+            WidgetAction.CONFIG_GROUPS,
+            WidgetAction.STAGE_CONTROL,
+            WidgetAction.MDA_WIDGET,
+        ):
+            self.get_widget(key)
+
         # LAYOUT ======================================
 
         central_wdg = QWidget(self)
@@ -143,7 +152,7 @@ class MicroManagerGUI(QMainWindow):
 
         layout = QVBoxLayout(central_wdg)
         layout.addWidget(ImagePreview(mmcore=self._mmc))
-        self.resize(1200, 800)
+        self.showMaximized()
 
     @property
     def mmc(self) -> CMMCorePlus:
@@ -206,6 +215,11 @@ class MicroManagerGUI(QMainWindow):
                 self._dock_widgets[key] = dw = QDockWidget(key.value, self)
                 dw.setWidget(widget)
                 self.addDockWidget(dock_area, dw)
+
+            # toggle checked state of QAction if it exists
+            # can this go somewhere else?
+            if action := self._qactions.get(key):
+                action.setChecked(True)
 
         return self._qwidgets[key]
 

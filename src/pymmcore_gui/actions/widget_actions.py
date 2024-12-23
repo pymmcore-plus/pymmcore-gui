@@ -202,6 +202,7 @@ show_config_groups = WidgetActionInfo(
     shortcut="Ctrl+Shift+G",
     icon="mdi-light:format-list-bulleted",
     create_widget=create_config_groups,
+    dock_area=Qt.DockWidgetArea.LeftDockWidgetArea,
 )
 
 show_pixel_config = WidgetActionInfo(
