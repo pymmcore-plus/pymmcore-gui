@@ -5,7 +5,7 @@ import os
 import sys
 import traceback
 from contextlib import suppress
-from typing import IO, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QApplication

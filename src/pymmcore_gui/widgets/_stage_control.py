@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from itertools import chain
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from pymmcore_plus import CMMCorePlus, DeviceType
 from pymmcore_widgets import StageWidget
@@ -71,7 +71,7 @@ class StagesControlWidget(QWidget):
         for idx, stage_dev in enumerate(stages):
             bx = _Group(stage_dev, self)
             stage = _Stage(device=stage_dev, parent=bx)
-            bx.layout().addWidget(stage)
+            cast(QHBoxLayout, bx.layout()).addWidget(stage)
             self._layout.addWidget(bx, idx // 2, idx % 2)
         self.resize(self.sizeHint())
 
