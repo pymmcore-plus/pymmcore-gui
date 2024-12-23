@@ -6,6 +6,8 @@ import sys
 import traceback
 from contextlib import suppress
 from typing import TYPE_CHECKING
+from weakref import ReferenceType
+import weakref
 
 from PyQt6.QtWidgets import QApplication
 
@@ -14,6 +16,8 @@ from pymmcore_gui import MicroManagerGUI
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from types import TracebackType
+
+IS_FROZEN = getattr(sys, "frozen", False)
 
 
 def main(args: Sequence[str] | None = None) -> None:
@@ -62,16 +66,26 @@ def _print_exception(
         from rich.traceback import Traceback
 
         tb = Traceback.from_exception(
-            exc_type, exc_value, exc_traceback, suppress=[psygnal], max_frames=10
+            exc_type,
+            exc_value,
+            exc_traceback,
+            suppress=[psygnal],
+            max_frames=100 if IS_FROZEN else 10,
+            show_locals=True,
         )
         Console(stderr=True).print(tb)
     except ImportError:
         traceback.print_exception(exc_type, value=exc_value, tb=exc_traceback)
 
 
+EXCEPTION_LOG: list[ReferenceType[BaseException]] = []
+
+
 def ndv_excepthook(
     exc_type: type[BaseException], exc_value: BaseException, tb: TracebackType | None
 ) -> None:
+    EXCEPTION_LOG.append(weakref.ref(exc_value))
+
     _print_exception(exc_type, exc_value, tb)
     if not tb:
         return

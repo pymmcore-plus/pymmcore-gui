@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Generic, Self, TypeVar, cast
 
 from pymmcore_plus import CMMCorePlus
 from PyQt6.QtCore import QObject
@@ -87,10 +87,11 @@ class ActionInfo(Generic[AK]):
         return self._action_cls(mmc, self, parent)
 
     @classmethod
-    def for_key(cls, key: ActionKey) -> ActionInfo:
+    def for_key(cls, key: ActionKey) -> Self:
         """Get the ActionInfo for a given key."""
         try:
-            return ActionInfo._registry[key]
+            # TODO: is this cast valid?
+            return cast("Self", ActionInfo._registry[key])
         except KeyError as e:  # pragma: no cover
             key_type = type(key).__name__
             parent_module = __name__.rsplit(".", 1)[0]

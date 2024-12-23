@@ -53,9 +53,12 @@ class MMConsole(RichJupyterWidget):
         import pymmcore_plus
         import useq
 
+        import pymmcore_gui
+
         default_vars = {
             **pymmcore_plus.__dict__,
             **useq.__dict__,
+            **pymmcore_gui.__dict__,
             "useq": useq,
             "np": numpy,
         }

@@ -26,7 +26,6 @@ class QCoreAction(QAction):
         super().__init__(parent)
         self.mmc = mmc
         self._triggered_callback: ActionTriggeredFunc | None = None
-        self.triggered.connect(self._on_triggered)
         if info is not None:
             self.apply_info(info)
 
@@ -76,6 +75,14 @@ class QCoreAction(QAction):
             self.setWhatsThis(info.whats_this)
 
         self._triggered_callback = info.on_triggered
+        if info.on_triggered is None:
+            try:
+                self.triggered.disconnect(self._on_triggered)
+            except (TypeError, RuntimeError):
+                pass
+        else:
+            self.triggered.connect(self._on_triggered)
+
         if info.on_created is not None:
             info.on_created(self)
 

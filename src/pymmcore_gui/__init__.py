@@ -8,5 +8,6 @@ except PackageNotFoundError:
     __version__ = "uninstalled"
 
 from ._main_window import MicroManagerGUI
+from .actions import ActionInfo, CoreAction, WidgetAction
 
-__all__ = ["MicroManagerGUI"]
+__all__ = ["ActionInfo", "CoreAction", "MicroManagerGUI", "WidgetAction"]

@@ -1,5 +1,7 @@
 import sys
+from pathlib import Path
 
+import rich.pretty
 from PyInstaller.building.api import COLLECT, EXE, PYZ
 from PyInstaller.building.build_main import Analysis
 from PyInstaller.config import CONF
@@ -9,14 +11,25 @@ if "workpath" not in CONF:
 
 CONF["noconfirm"] = True
 
-sys.modules["FixTk"] = None
+
+# PATCH rich:
+# https://github.com/Textualize/rich/pull/3592
+
+fpath = Path(rich.pretty.__file__)
+src = fpath.read_text().replace(
+    "        return obj.__repr__.__code__.co_filename in (\n",
+    "        return obj.__repr__.__code__.co_filename in ('dataclasses.py',\n",
+)
+fpath.write_text(src)
+
+####################################################
 
 a = Analysis(
     ["src/pymmcore_gui/__main__.py"],
     pathex=[],
     binaries=[],
     datas=[],
-    hiddenimports=['pdb'],
+    hiddenimports=["pdb"],
     hookspath=["hooks"],
     hooksconfig={},
     runtime_hooks=[],

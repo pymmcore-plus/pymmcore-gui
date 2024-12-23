@@ -6,4 +6,5 @@ hiddenimports = [
     "vispy.glsl",
     "vispy.app.backends._pyqt6",
     "vispy.app.backends._test",
+    "vispy.scene.visuals",
 ]

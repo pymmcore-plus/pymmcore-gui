@@ -1,3 +1,5 @@
+"""Define actions that act on the global CMMCore instance."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

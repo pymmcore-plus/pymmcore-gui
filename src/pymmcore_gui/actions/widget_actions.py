@@ -1,3 +1,5 @@
+"""Defines actions that toggle/create singleton widgets."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,7 +15,7 @@ from ._action_info import ActionInfo
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from pymmcore_widgets import PropertyBrowser
+    import pymmcore_widgets as pmmw
     from PyQt6.QtCore import QObject
     from PyQt6.QtWidgets import QWidget
 
@@ -41,14 +43,11 @@ def _get_core(obj: QObject) -> CMMCorePlus:
     return CMMCorePlus.instance()
 
 
-def create_property_browser(parent: QWidget) -> PropertyBrowser:
+def create_property_browser(parent: QWidget) -> pmmw.PropertyBrowser:
     """Create a Property Browser widget."""
     from pymmcore_widgets import PropertyBrowser
 
-    mmc = _get_core(parent)
-    wdg = PropertyBrowser(parent=parent, mmcore=mmc)
-    wdg.show()
-    return wdg
+    return PropertyBrowser(parent=parent, mmcore=_get_core(parent))
 
 
 def create_mm_console(parent: QWidget) -> MMConsole:
@@ -56,6 +55,55 @@ def create_mm_console(parent: QWidget) -> MMConsole:
     from pymmcore_gui.widgets._mm_console import MMConsole
 
     return MMConsole(parent=parent)
+
+
+def create_install_widgets(parent: QWidget) -> pmmw.InstallWidget:
+    """Create the Install Devices widget."""
+    from pymmcore_widgets import InstallWidget
+
+    wdg = InstallWidget(parent=parent)
+    wdg.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Window)
+    wdg.resize(800, 400)
+    return wdg
+
+
+def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
+    """Create the MDA widget."""
+    from pymmcore_widgets import MDAWidget
+
+    wdg = MDAWidget(parent=parent, mmcore=_get_core(parent))
+    return wdg
+
+
+def create_camera_roi(parent: QWidget) -> pmmw.CameraRoiWidget:
+    """Create the Camera ROI widget."""
+    from pymmcore_widgets import CameraRoiWidget
+
+    return CameraRoiWidget(parent=parent, mmcore=_get_core(parent))
+
+
+def create_config_groups(parent: QWidget) -> pmmw.GroupPresetTableWidget:
+    """Create the Config Groups widget."""
+    from pymmcore_widgets import GroupPresetTableWidget
+
+    return GroupPresetTableWidget(parent=parent, mmcore=_get_core(parent))
+
+
+def create_pixel_config(parent: QWidget) -> pmmw.PixelConfigurationWidget:
+    """Create the Pixel Configuration widget."""
+    from pymmcore_widgets import PixelConfigurationWidget
+
+    return PixelConfigurationWidget(parent=parent, mmcore=_get_core(parent))
+
+
+def create_exception_log(parent: QWidget) -> pmmw.ExceptionLog:
+    """Create the Exception Log widget."""
+    from pymmcore_gui.widgets._exception_log import ExceptionLog
+
+    wdg = ExceptionLog(parent=parent)
+    wdg.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Window)
+    wdg.resize(800, 400)
+    return wdg
 
 
 # ######################## WidgetAction Enum #########################
@@ -71,28 +119,19 @@ class WidgetAction(ActionKey):
     CONFIG_GROUPS = "Config Groups"
     CAMERA_ROI = "Camera ROI"
     CONSOLE = "Console"
+    EXCEPTION_LOG = "Exception Log"
 
     def create_widget(self, parent: QWidget) -> QWidget:
         """Create the widget associated with this action."""
-        if self not in _CREATOR_MAP:  # pragma: no cover
+        info = WidgetActionInfo.for_key(self)
+        if not info.create_widget:
             raise NotImplementedError(f"No constructor has been provided for {self!r}")
-        return _CREATOR_MAP[self](parent)
+        return info.create_widget(parent)
 
     def dock_area(self) -> Qt.DockWidgetArea | None:
         """Return the default dock area for this widget."""
-        return _DOCK_AREAS.get(self, Qt.DockWidgetArea.RightDockWidgetArea)
+        return WidgetActionInfo.for_key(self).dock_area
 
-
-_CREATOR_MAP: dict[WidgetAction, Callable[[QWidget], QWidget]] = {
-    WidgetAction.CONSOLE: create_mm_console,
-    WidgetAction.PROP_BROWSER: create_property_browser,
-}
-
-# preferred area for each widget.  If None, no dock widget is set.
-_DOCK_AREAS: dict[WidgetAction, Qt.DockWidgetArea | None] = {
-    WidgetAction.CONSOLE: Qt.DockWidgetArea.BottomDockWidgetArea,
-    WidgetAction.PROP_BROWSER: None,
-}
 
 # ######################## WidgetActionInfos #########################
 
@@ -101,17 +140,70 @@ _DOCK_AREAS: dict[WidgetAction, Qt.DockWidgetArea | None] = {
 class WidgetActionInfo(ActionInfo):
     """Subclass to set default values for WidgetAction."""
 
+    # by default, widget actions are checkable, and the check state indicates visibility
     checkable: bool = True
+    # function that can be called with (parent: QWidget) -> QWidget
+    create_widget: Callable[[QWidget], QWidget] | None = None
+    # Use None to indicate that the widget should not be docked
+    dock_area: Qt.DockWidgetArea | None = Qt.DockWidgetArea.RightDockWidgetArea
 
 
 show_console = WidgetActionInfo(
     key=WidgetAction.CONSOLE,
     shortcut="Ctrl+Shift+C",
     icon="iconoir:terminal",
+    create_widget=create_mm_console,
+    dock_area=Qt.DockWidgetArea.BottomDockWidgetArea,
 )
 
 show_property_browser = WidgetActionInfo(
     key=WidgetAction.PROP_BROWSER,
     shortcut="Ctrl+Shift+P",
     icon="mdi-light:format-list-bulleted",
+    create_widget=create_property_browser,
+    dock_area=None,
+)
+
+show_install_devices = WidgetActionInfo(
+    key=WidgetAction.INSTALL_DEVICES,
+    shortcut="Ctrl+Shift+I",
+    icon="mdi-light:download",
+    create_widget=create_install_widgets,
+    dock_area=None,
+)
+
+show_mda_widget = WidgetActionInfo(
+    key=WidgetAction.MDA_WIDGET,
+    shortcut="Ctrl+Shift+M",
+    icon="qlementine-icons:cube-16",
+    create_widget=create_mda_widget,
+)
+
+show_camera_roi = WidgetActionInfo(
+    key=WidgetAction.CAMERA_ROI,
+    shortcut="Ctrl+Shift+R",
+    icon="mdi-light:camera",
+    create_widget=create_camera_roi,
+)
+
+show_config_groups = WidgetActionInfo(
+    key=WidgetAction.CONFIG_GROUPS,
+    shortcut="Ctrl+Shift+G",
+    icon="mdi-light:format-list-bulleted",
+    create_widget=create_config_groups,
+)
+
+show_pixel_config = WidgetActionInfo(
+    key=WidgetAction.PIXEL_CONFIG,
+    shortcut="Ctrl+Shift+X",
+    icon="mdi-light:grid",
+    create_widget=create_pixel_config,
+)
+
+show_exception_log = WidgetActionInfo(
+    key=WidgetAction.EXCEPTION_LOG,
+    shortcut="Ctrl+Shift+E",
+    icon="mdi-light:alert",
+    create_widget=create_exception_log,
+    dock_area=None,
 )
