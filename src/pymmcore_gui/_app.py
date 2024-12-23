@@ -5,39 +5,79 @@ import os
 import sys
 import traceback
 from contextlib import suppress
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
+from superqt.utils import WorkerBase
 
-from pymmcore_gui import MicroManagerGUI
+from pymmcore_gui import MicroManagerGUI, __version__
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from types import TracebackType
 
+APP_NAME = "Micro-Manager GUI"
+APP_VERSION = __version__
+ORG_NAME = "pymmcore-plus"
+ORG_DOMAIN = "pymmcore-plus"
+APP_ID = f"{ORG_DOMAIN}.{ORG_NAME}.{APP_NAME}.{APP_VERSION}"
+ICON = Path(__file__).parent / "logo.png"
 IS_FROZEN = getattr(sys, "frozen", False)
 
 
 class MMQApplication(QApplication):
     exceptionRaised = pyqtSignal(BaseException)
 
+    def __init__(self, argv: list[str]) -> None:
+        if sys.platform == "darwin" and not argv[0].endswith("mmgui"):
+            # Make sure the app name in the Application menu is `mmgui`
+            # which is taken from the basename of sys.argv[0]; we use
+            # a copy so the original value is still available at sys.argv
+            argv[0] = "napari"
 
-def main(args: Sequence[str] | None = None) -> None:
-    """Run the Micro-Manager GUI."""
-    if args is None:
+        super().__init__(argv)
+        self.setApplicationName("Micro-Manager GUI")
+        self.setWindowIcon(QIcon(str(ICON)))
+
+        self.setApplicationName(APP_NAME)
+        self.setApplicationVersion(APP_VERSION)
+        self.setOrganizationName(ORG_NAME)
+        self.setOrganizationDomain(ORG_DOMAIN)
+        if os.name == "nt" and not IS_FROZEN:
+            import ctypes
+
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
+
+        self.aboutToQuit.connect(WorkerBase.await_workers)
+
+
+def parse_args(args: Sequence[str] = ()) -> argparse.Namespace:
+    if not args:
         args = sys.argv[1:]
 
     parser = argparse.ArgumentParser(description="Enter string")
     parser.add_argument(
-        "-c", "--config", type=str, default=None, help="Config file to load", nargs="?"
+        "-c",
+        "--config",
+        type=str,
+        default=None,
+        help="Config file to load",
+        nargs="?",
     )
-    parsed_args = parser.parse_args(args)
+    return parser.parse_args(args)
+
+
+def main() -> None:
+    """Run the Micro-Manager GUI."""
+    args = parse_args()
 
     app = MMQApplication(sys.argv)
     _install_excepthook()
 
-    win = MicroManagerGUI(config=parsed_args.config)
+    win = MicroManagerGUI(config=args.config)
     win.showMaximized()
     win.show()
 
