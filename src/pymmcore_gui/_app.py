@@ -38,6 +38,7 @@ def main(args: Sequence[str] | None = None) -> None:
     _install_excepthook()
 
     win = MicroManagerGUI(config=parsed_args.config)
+    win.showMaximized()
     win.show()
 
     app.exec()

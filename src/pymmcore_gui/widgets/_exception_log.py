@@ -20,9 +20,10 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from superqt.utils import CodeSyntaxHighlight
 
 from pymmcore_gui import _app
+
+from ._code_syntax_highlight import CodeSyntaxHighlight
 
 if TYPE_CHECKING:
     from types import TracebackType

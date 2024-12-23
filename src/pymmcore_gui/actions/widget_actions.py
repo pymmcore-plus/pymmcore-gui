@@ -125,7 +125,7 @@ class WidgetAction(ActionKey):
     PIXEL_CONFIG = "Pixel Configuration"
     INSTALL_DEVICES = "Install Devices"
     MDA_WIDGET = "MDA Widget"
-    CONFIG_GROUPS = "Config Groups"
+    CONFIG_GROUPS = "Configs and Preset"
     CAMERA_ROI = "Camera ROI"
     CONSOLE = "Console"
     EXCEPTION_LOG = "Exception Log"

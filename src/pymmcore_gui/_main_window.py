@@ -152,7 +152,6 @@ class MicroManagerGUI(QMainWindow):
 
         layout = QVBoxLayout(central_wdg)
         layout.addWidget(ImagePreview(mmcore=self._mmc))
-        self.showMaximized()
 
     @property
     def mmc(self) -> CMMCorePlus:

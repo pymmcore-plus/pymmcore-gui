@@ -26,6 +26,7 @@ class QCoreAction(QAction):
         super().__init__(parent)
         self.mmc = mmc
         self._triggered_callback: ActionTriggeredFunc | None = None
+        self.setMenuRole(QAction.MenuRole.NoRole)  # don't guess menu placement
         if info is not None:
             self.apply_info(info)
 
