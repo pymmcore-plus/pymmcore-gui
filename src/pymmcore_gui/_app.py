@@ -5,10 +5,9 @@ import os
 import sys
 import traceback
 from contextlib import suppress
-from typing import TYPE_CHECKING
-from weakref import ReferenceType
-import weakref
+from typing import IO, TYPE_CHECKING
 
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QApplication
 
 from pymmcore_gui import MicroManagerGUI
@@ -18,6 +17,10 @@ if TYPE_CHECKING:
     from types import TracebackType
 
 IS_FROZEN = getattr(sys, "frozen", False)
+
+
+class MMQApplication(QApplication):
+    exceptionRaised = pyqtSignal(BaseException)
 
 
 def main(args: Sequence[str] | None = None) -> None:
@@ -31,7 +34,7 @@ def main(args: Sequence[str] | None = None) -> None:
     )
     parsed_args = parser.parse_args(args)
 
-    app = QApplication([])
+    app = MMQApplication(sys.argv)
     _install_excepthook()
 
     win = MicroManagerGUI(config=parsed_args.config)
@@ -55,38 +58,49 @@ def _install_excepthook() -> None:
     sys.excepthook = ndv_excepthook
 
 
+def rich_print_exception(
+    exc_type: type[BaseException],
+    exc_value: BaseException,
+    exc_traceback: TracebackType | None,
+) -> None:
+    import psygnal
+    from rich.console import Console
+    from rich.traceback import Traceback
+
+    tb = Traceback.from_exception(
+        exc_type,
+        exc_value,
+        exc_traceback,
+        suppress=[psygnal],
+        max_frames=100 if IS_FROZEN else 10,
+        show_locals=True,
+    )
+    Console(stderr=True).print(tb)
+
+
 def _print_exception(
     exc_type: type[BaseException],
     exc_value: BaseException,
     exc_traceback: TracebackType | None,
 ) -> None:
     try:
-        import psygnal
-        from rich.console import Console
-        from rich.traceback import Traceback
-
-        tb = Traceback.from_exception(
-            exc_type,
-            exc_value,
-            exc_traceback,
-            suppress=[psygnal],
-            max_frames=100 if IS_FROZEN else 10,
-            show_locals=True,
-        )
-        Console(stderr=True).print(tb)
+        rich_print_exception(exc_type, exc_value, exc_traceback)
     except ImportError:
         traceback.print_exception(exc_type, value=exc_value, tb=exc_traceback)
 
 
-EXCEPTION_LOG: list[ReferenceType[BaseException]] = []
+EXCEPTION_LOG: list[
+    tuple[type[BaseException], BaseException, TracebackType | None]
+] = []
 
 
 def ndv_excepthook(
     exc_type: type[BaseException], exc_value: BaseException, tb: TracebackType | None
 ) -> None:
-    EXCEPTION_LOG.append(weakref.ref(exc_value))
-
+    EXCEPTION_LOG.append((exc_type, exc_value, tb))
     _print_exception(exc_type, exc_value, tb)
+    if sig := getattr(QApplication.instance(), "exceptionRaised", None):
+        sig.emit(exc_value)
     if not tb:
         return
 

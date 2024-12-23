@@ -132,8 +132,9 @@ class MicroManagerGUI(QMainWindow):
         # LAYOUT ======================================
 
         central_wdg = QWidget(self)
-        layout = QVBoxLayout(central_wdg)
         self.setCentralWidget(central_wdg)
+
+        layout = QVBoxLayout(central_wdg)
         layout.addWidget(ImagePreview(mmcore=self._mmc))
         self.resize(1200, 800)
 
