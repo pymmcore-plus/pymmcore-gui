@@ -55,6 +55,7 @@ dev = [
     "mypy>=1.13.0",
     "pdbpp>=0.10.3 ; sys_platform != 'win32'",
     "pre-commit>=4.0.1",
+    "pyinstaller>=6.11.1",
     "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
     "pytest-qt>=4.4.0",
