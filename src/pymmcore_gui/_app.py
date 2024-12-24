@@ -77,7 +77,17 @@ def main() -> None:
     app = MMQApplication(sys.argv)
     _install_excepthook()
 
-    win = MicroManagerGUI(config=args.config)
+    win = MicroManagerGUI()
+
+    # FIXME: be better...
+    try:
+        if args.config:
+            win.mmc.loadSystemConfiguration(args.config)
+        else:
+            win.mmc.loadSystemConfiguration()
+    except Exception as e:
+        print(f"Failed to load system configuration: {e}")
+
     win.showMaximized()
     win.show()
 

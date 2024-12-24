@@ -1,3 +1,5 @@
+set windows-powershell
+
 # run the main application
 run:
     uv run python -m pymmcore_gui

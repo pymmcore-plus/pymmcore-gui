@@ -88,9 +88,7 @@ class MicroManagerGUI(QMainWindow):
         ],
     }
 
-    def __init__(
-        self, *, mmcore: CMMCorePlus | None = None, config: str | None = None
-    ) -> None:
+    def __init__(self, *, mmcore: CMMCorePlus | None = None) -> None:
         super().__init__()
         self.setWindowTitle("Mike")
         self.setObjectName("MicroManagerGUI")
@@ -109,7 +107,6 @@ class MicroManagerGUI(QMainWindow):
 
         # get global CMMCorePlus instance
         self._mmc = mmc = mmcore or CMMCorePlus.instance()
-        self._mmc.loadSystemConfiguration()
 
         # MENUS ====================================
         # To add menus or menu items, add them to the MENUS dict above
