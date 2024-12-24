@@ -36,10 +36,10 @@ jobs:
         shell: bash
         run: |
           uv run pyinstaller app/mmgui.spec --noconfirm
-          ls -la dist/
+          ls -la dist/mmgui
 
       - name: Upload bundle
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform == 'macos-13' && 'pymmgui.app' || matrix.platform == 'windows-latest' && 'pymmgui.exe' || 'pymmgui' }}
-          path: ${{ matrix.platform == 'macos-13' && 'dist/pymmgui.app' || matrix.platform == 'windows-latest' && 'dist/pymmgui.exe' || 'dist/pymmgui' }}
+          path: ${{ matrix.platform == 'macos-13' && 'dist/pymmgui.app' || matrix.platform == 'windows-latest' && 'dist/mmgui/pymmgui.exe' || 'dist/pymmgui' }}
