@@ -46,6 +46,6 @@ jobs:
       - name: Upload bundle
         uses: eXhumer/upload-artifact@0b7d5f5684d3f642f978d2faad9ade64f5b4dd57
         with:
-          name: pymmgui
+          name: ${{ runner.os == 'macos' && 'pymmgui.app.zip' || runner.os == 'windows' && 'pymmgui.exe' }}
           path: ${{ runner.os == 'macos' && 'dist/pymmgui.app' || runner.os == 'windows' && 'dist/mmgui/pymmgui.exe' }}
           follow-symlinks: false
