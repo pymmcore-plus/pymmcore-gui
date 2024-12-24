@@ -41,17 +41,10 @@ jobs:
       - name: Create DMG
         if: runner.os == 'macos'
         run: |
-          ls -la dist/pymmgui.app/Contents/Resources
-          mkdir dist/dmg
-          ln -s /Applications dist/dmg
-          # Use cp -P to preserve symlinks
-          rsync -a --copy-links dist/pymmgui.app dist/dmg/
-          ls -la dist/dmg/pymmgui.app/Contents/Resources
-          hdiutil create -volname pymmgui -srcfolder dist/dmg -format UDZO dist/pymmgui.dmg
-          rm -rf dist/dmg
+          zip -r dist/pymmgui.zip dist/pymmgui.app
 
       - name: Upload bundle
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ runner.os == 'macos' && 'pymmgui.dmg' || runner.os == 'windows' && 'pymmgui.exe' }}
-          path: ${{ runner.os == 'macos' && 'dist/pymmgui.dmg' || runner.os == 'windows' && 'dist/mmgui/pymmgui.exe' }}
+          name: ${{ runner.os == 'macos' && 'pymmgui.zip' || runner.os == 'windows' && 'pymmgui.exe' }}
+          path: ${{ runner.os == 'macos' && 'dist/pymmgui.zip' || runner.os == 'windows' && 'dist/mmgui/pymmgui.exe' }}
