@@ -45,7 +45,9 @@ jobs:
           rm -rf dist/.DS_Store
 
       - name: Upload bundle
+        # upload-artifact@v2 does not preserve symlinks, this fork does
         # https://github.com/actions/upload-artifact/issues/93#issuecomment-2304775030
+        # https://github.com/actions/upload-artifact/compare/main...eXhumer:0b7d5f5684d3f642f978d2faad9ade64f5b4dd57
         uses: eXhumer/upload-artifact@0b7d5f5684d3f642f978d2faad9ade64f5b4dd57
         with:
           name: ${{ runner.os == 'macos' && 'pymmgui.zip' || runner.os == 'windows' && 'pymmgui.exe' }}
