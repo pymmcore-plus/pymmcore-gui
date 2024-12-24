@@ -35,11 +35,19 @@ jobs:
       - name: Bundle
         shell: bash
         run: |
-          uv run pyinstaller app/mmgui.spec --noconfirm
+          uv run pyinstaller app/mmgui.spec --clean --noconfirm
           ls -la dist/mmgui
+
+      - name: Create DMG
+        if: matrix.platform == 'macos-13'
+        run: mkdir dist/dmg
+          ln -s /Applications dist/dmg
+          cp -r dist/pymmgui.app dist/dmg
+          hdiutil create -volname pymmgui -srcfolder dist/dmg -format UDZO dist/pymmgui.dmg
+          rm -rf dist/dmg
 
       - name: Upload bundle
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform == 'macos-13' && 'pymmgui.app' || matrix.platform == 'windows-latest' && 'pymmgui.exe' || 'pymmgui' }}
-          path: ${{ matrix.platform == 'macos-13' && 'dist/pymmgui.app' || matrix.platform == 'windows-latest' && 'dist/mmgui/pymmgui.exe' || 'dist/pymmgui' }}
+          name: ${{ matrix.platform == 'macos-13' && 'pymmgui.dmg' || matrix.platform == 'windows-latest' && 'pymmgui.exe' }}
+          path: ${{ matrix.platform == 'macos-13' && 'dist/pymmgui.dmg' || matrix.platform == 'windows-latest' && 'dist/mmgui/pymmgui.exe' }}
