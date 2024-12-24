@@ -49,7 +49,7 @@ class MMQApplication(QApplication):
         if os.name == "nt" and not IS_FROZEN:
             import ctypes
 
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)  # type: ignore
 
         self.aboutToQuit.connect(WorkerBase.await_workers)
 
