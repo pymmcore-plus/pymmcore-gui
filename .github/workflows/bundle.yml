@@ -43,7 +43,8 @@ jobs:
         run: |
           mkdir dist/dmg
           ln -s /Applications dist/dmg
-          cp -r dist/pymmgui.app dist/dmg
+          # Use cp -P to preserve symlinks
+          cp -P -r dist/pymmgui.app dist/dmg
           hdiutil create -volname pymmgui -srcfolder dist/dmg -format UDZO dist/pymmgui.dmg
           rm -rf dist/dmg
 
