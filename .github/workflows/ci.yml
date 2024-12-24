@@ -46,7 +46,7 @@ jobs:
         run: uv run mmcore install
 
       - name: Test
-        run: uv run pytest -v --cov=pymmcore_widgets --cov-report=xml --color=yes
+        run: uv run pytest -v --cov=pymmcore_gui --cov-report=xml --color=yes
 
       - name: Coverage
         uses: codecov/codecov-action@v5
