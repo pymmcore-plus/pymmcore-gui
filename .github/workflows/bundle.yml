@@ -33,7 +33,10 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Bundle
-        run: uv run pyinstaller app/mmgui.spec --noconfirm
+        shell: bash
+        run: |
+          uv run pyinstaller app/mmgui.spec --noconfirm
+          ls -la dist/
 
       - name: Upload bundle
         uses: actions/upload-artifact@v4
