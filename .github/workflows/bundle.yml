@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-13, windows-latest]
+        platform: [macos-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +39,7 @@ jobs:
           ls -la dist/mmgui
 
       - name: Create DMG
-        if: matrix.platform == 'macos-13'
+        if: runner.os == 'macos'
         run: |
           mkdir dist/dmg
           ln -s /Applications dist/dmg
@@ -50,5 +50,5 @@ jobs:
       - name: Upload bundle
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform == 'macos-13' && 'pymmgui.dmg' || matrix.platform == 'windows-latest' && 'pymmgui.exe' }}
-          path: ${{ matrix.platform == 'macos-13' && 'dist/pymmgui.dmg' || matrix.platform == 'windows-latest' && 'dist/mmgui/pymmgui.exe' }}
+          name: ${{ runner.os == 'macos' && 'pymmgui.dmg' || runner.os == 'windows' && 'pymmgui.exe' }}
+          path: ${{ runner.os == 'macos' && 'dist/pymmgui.dmg' || runner.os == 'windows' && 'dist/mmgui/pymmgui.exe' }}
