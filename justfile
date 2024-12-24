@@ -4,7 +4,7 @@ run:
 
 # create application bundle using pyinstaller
 bundle:
-    uv run pyinstaller app/mmgui.spec --noconfirm --log-level INFO
+    uv run pyinstaller app/mmgui.spec --clean --noconfirm --log-level INFO
 
 # lint all files with pre-commit
 lint:

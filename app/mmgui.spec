@@ -80,7 +80,7 @@ a = Analysis(
     binaries=[],
     datas=[],
     # An optional list of additional (hidden) modules to include.
-    hiddenimports=[],
+    hiddenimports=['pdb'],
     # An optional list of additional paths to search for hooks.
     hookspath=[APP_ROOT / "hooks"],
     # An optional list of module or package names (their Python names, not path names) that will be
@@ -118,9 +118,7 @@ exe = EXE(
     hide_console=None,
     disable_windowed_traceback=False,
     argv_emulation=False,
-    target_arch=None,
     codesign_identity=None,
-    entitlements_file=None,
     icon=ICON,
     version=_get_win_version(),
 )
