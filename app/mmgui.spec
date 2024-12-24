@@ -40,7 +40,7 @@ DEBUG = False
 UPX = True
 
 os.environ["QT_API"] = "PyQt6"
-
+os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 
 def _get_win_version() -> "vi.VSVersionInfo":
     if sys.platform != "win32":

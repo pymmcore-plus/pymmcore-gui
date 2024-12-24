@@ -1,9 +1,18 @@
 from __future__ import annotations
 
 import os
+import sys
 from typing import TYPE_CHECKING, Any, cast
 
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
+
+
+# Redirect sys.stdout and sys.stderr to devnull if they are None
+# this is necessary for the IPython console to work properly in a windows PyInstaller
+if os.name == 'nt' and sys.stdout is None:
+    sys.stdout = open(os.devnull, 'w')
+    sys.stderr = open(os.devnull, 'w')
+
 
 from PyQt6.QtWidgets import QApplication
 from qtconsole.inprocess import QtInProcessKernelManager
