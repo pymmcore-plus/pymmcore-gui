@@ -38,5 +38,5 @@ jobs:
       - name: Upload bundle
         uses: actions/upload-artifact@v4
         with:
-            name: pymmgui
-            path: ${{ matrix.platform == 'macos-13' && 'dist/pymmgui.app' || matrix.platform == 'windows-latest' && 'dist/pymmgui.exe' || 'dist/pymmgui' }}
+          name: ${{ matrix.platform == 'macos-13' && 'pymmgui.app' || matrix.platform == 'windows-latest' && 'pymmgui.exe' || 'pymmgui' }}
+          path: ${{ matrix.platform == 'macos-13' && 'dist/pymmgui.app' || matrix.platform == 'windows-latest' && 'dist/pymmgui.exe' || 'dist/pymmgui' }}
