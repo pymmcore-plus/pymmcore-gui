@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-13, windows-latest, ubuntu-latest]
+        platform: [macos-13, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
