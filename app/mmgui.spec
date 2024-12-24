@@ -86,6 +86,7 @@ a = Analysis(
     # An optional list of module or package names (their Python names, not path names) that will be
     # ignored (as though they were not found).
     excludes=[
+        "pdbpp",
         "FixTk",
         "tcl",
         "tk",

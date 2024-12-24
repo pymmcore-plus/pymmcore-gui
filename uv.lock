@@ -50,15 +50,6 @@ wheels = [
 ]
 
 [[package]]
-name = "attrs"
-version = "24.3.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/48/c8/6260f8ccc11f0917360fc0da435c5c9c7504e3db174d5a12a1494887b045/attrs-24.3.0.tar.gz", hash = "sha256:8f5c07333d543103541ba7be0e2ce16eeee8130cb0b3f9238ab904ce1e85baff", size = 805984 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/89/aa/ab0f7891a01eeb2d2e338ae8fecbe57fcebea1a24dbb64d45801bfab481d/attrs-24.3.0-py3-none-any.whl", hash = "sha256:ac96cd038792094f438ad1f6ff80837353805ac950cd2aa0e0625ef19850c308", size = 63397 },
-]
-
-[[package]]
 name = "certifi"
 version = "2024.12.14"
 source = { registry = "https://pypi.org/simple" }
@@ -207,7 +198,7 @@ name = "click"
 version = "8.1.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b9/2e/0090cbf739cee7d23781ad4b89a9894a41538e4fcf4c31dcdd705b78eb8b/click-8.1.8.tar.gz", hash = "sha256:ed53c9d8990d83c2a27deae68e4ee337473f6330c040a31d4225c9574d16096a", size = 226593 }
 wheels = [
@@ -373,19 +364,6 @@ wheels = [
 ]
 
 [[package]]
-name = "fancycompleter"
-version = "0.9.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pyreadline", marker = "platform_system == 'Windows'" },
-    { name = "pyrepl" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a9/95/649d135442d8ecf8af5c7e235550c628056423c96c4bc6787348bdae9248/fancycompleter-0.9.1.tar.gz", hash = "sha256:09e0feb8ae242abdfd7ef2ba55069a46f011814a80fe5476be48f51b00247272", size = 10866 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/38/ef/c08926112034d017633f693d3afc8343393a035134a29dfc12dcd71b0375/fancycompleter-0.9.1-py3-none-any.whl", hash = "sha256:dd076bca7d9d524cc7f25ec8f35ef95388ffef9ef46def4d3d25e9b044ad7080", size = 9681 },
-]
-
-[[package]]
 name = "fasteners"
 version = "0.19"
 source = { registry = "https://pypi.org/simple" }
@@ -491,7 +469,7 @@ name = "ipykernel"
 version = "6.29.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "appnope", marker = "platform_system == 'Darwin'" },
+    { name = "appnope", marker = "sys_platform == 'darwin'" },
     { name = "comm" },
     { name = "debugpy" },
     { name = "ipython" },
@@ -913,20 +891,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pdbpp"
-version = "0.10.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "fancycompleter" },
-    { name = "pygments" },
-    { name = "wmctrl" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/1f/a3/c4bd048256fd4b7d28767ca669c505e156f24d16355505c62e6fce3314df/pdbpp-0.10.3.tar.gz", hash = "sha256:d9e43f4fda388eeb365f2887f4e7b66ac09dce9b6236b76f63616530e2f669f5", size = 68116 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/93/ee/491e63a57fffa78b9de1c337b06c97d0cd0753e88c00571c7b011680332a/pdbpp-0.10.3-py2.py3-none-any.whl", hash = "sha256:79580568e33eb3d6f6b462b1187f53e10cd8e4538f7d31495c9181e2cf9665d1", size = 23961 },
-]
-
-[[package]]
 name = "pefile"
 version = "2023.2.7"
 source = { registry = "https://pypi.org/simple" }
@@ -1247,7 +1211,7 @@ wheels = [
 
 [[package]]
 name = "pymmcore-gui"
-version = "0.1.dev202+g7264681.d20241223"
+version = "0.1.dev216+g2f78aba.d20241224"
 source = { editable = "." }
 dependencies = [
     { name = "ndv", extra = ["vispy"] },
@@ -1268,7 +1232,6 @@ dependencies = [
 dev = [
     { name = "ipython" },
     { name = "mypy" },
-    { name = "pdbpp", marker = "sys_platform != 'win32'" },
     { name = "pre-commit" },
     { name = "pyinstaller" },
     { name = "pytest" },
@@ -1297,7 +1260,6 @@ requires-dist = [
 dev = [
     { name = "ipython", specifier = ">=8.30.0" },
     { name = "mypy", specifier = ">=1.13.0" },
-    { name = "pdbpp", marker = "sys_platform != 'win32'", specifier = ">=0.10.3" },
     { name = "pre-commit", specifier = ">=4.0.1" },
     { name = "pyinstaller", specifier = ">=6.11.1" },
     { name = "pytest", specifier = ">=8.3.4" },
@@ -1415,18 +1377,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d8/5b/7321bb2564673bc4facfed338553bc42542f2ae05cbea1c8b57a596ab28d/PyQt6_sip-13.9.1-cp313-cp313-win_amd64.whl", hash = "sha256:3c269052c770c09b61fce2f2f9ea934a67dfc65f443d59629b4ccc8f89751890", size = 53509 },
     { url = "https://files.pythonhosted.org/packages/cf/b6/eabe1d0fdcc56c80325c5a2cc361ae3e57b3346cb7700b707481d3977a24/PyQt6_sip-13.9.1-cp313-cp313-win_arm64.whl", hash = "sha256:8b2ac36d6e04db6099614b9c1178a2f87788c7ffc3826571fb63d36ddb4c401d", size = 45358 },
 ]
-
-[[package]]
-name = "pyreadline"
-version = "2.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/bc/7c/d724ef1ec3ab2125f38a1d53285745445ec4a8f19b9bb0761b4064316679/pyreadline-2.1.zip", hash = "sha256:4530592fc2e85b25b1a9f79664433da09237c1a270e4d78ea5aa3a2c7229e2d1", size = 109189 }
-
-[[package]]
-name = "pyrepl"
-version = "0.9.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/05/1b/ea40363be0056080454cdbabe880773c3c5bd66d7b13f0c8b8b8c8da1e0c/pyrepl-0.9.0.tar.gz", hash = "sha256:292570f34b5502e871bbb966d639474f2b57fbfcd3373c2d6a2f3d56e681a775", size = 48744 }
 
 [[package]]
 name = "pytest"
@@ -1884,7 +1834,7 @@ name = "tqdm"
 version = "4.67.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737 }
 wheels = [
@@ -1998,18 +1948,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/6c/63/53559446a878410fc5a5974feb13d31d78d752eb18aeba59c7fef1af7598/wcwidth-0.2.13.tar.gz", hash = "sha256:72ea0c06399eb286d978fdedb6923a9eb47e1c486ce63e9b4e64fc18303972b5", size = 101301 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fd/84/fd2ba7aafacbad3c4201d395674fc6348826569da3c0937e75505ead3528/wcwidth-0.2.13-py2.py3-none-any.whl", hash = "sha256:3da69048e4540d84af32131829ff948f1e022c1c6bdb8d6102117aac784f6859", size = 34166 },
-]
-
-[[package]]
-name = "wmctrl"
-version = "0.5"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "attrs" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/60/d9/6625ead93412c5ce86db1f8b4f2a70b8043e0a7c1d30099ba3c6a81641ff/wmctrl-0.5.tar.gz", hash = "sha256:7839a36b6fe9e2d6fd22304e5dc372dbced2116ba41283ea938b2da57f53e962", size = 5202 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/13/ca/723e3f8185738d7947f14ee7dc663b59415c6dee43bd71575f8c7f5cd6be/wmctrl-0.5-py2.py3-none-any.whl", hash = "sha256:ae695c1863a314c899e7cf113f07c0da02a394b968c4772e1936219d9234ddd7", size = 4268 },
 ]
 
 [[package]]
