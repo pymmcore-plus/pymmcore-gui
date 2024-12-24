@@ -41,10 +41,12 @@ jobs:
       - name: Create DMG
         if: runner.os == 'macos'
         run: |
+          ls -la dist/pymmgui.app/Contents/Resources
           mkdir dist/dmg
           ln -s /Applications dist/dmg
           # Use cp -P to preserve symlinks
-          cp -P -r dist/pymmgui.app dist/dmg
+          rsync -a --copy-links dist/pymmgui.app dist/dmg/
+          ls -la dist/dmg/pymmgui.app/Contents/Resources
           hdiutil create -volname pymmgui -srcfolder dist/dmg -format UDZO dist/pymmgui.dmg
           rm -rf dist/dmg
 
