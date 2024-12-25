@@ -24,7 +24,7 @@ from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
-from .widgets._toolbars import OCToolBar
+from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -45,6 +45,7 @@ class Toolbar(str, Enum):
     CAMERA_ACTIONS = "Camera Actions"
     OPTICAL_CONFIGS = "Optical Configs"
     WIDGETS = "Widgets"
+    SHUTTERS = "Shutters"
 
     def __str__(self) -> str:
         return str(self.value)
@@ -63,6 +64,7 @@ class MicroManagerGUI(QMainWindow):
             CoreAction.TOGGLE_LIVE,
         ],
         Toolbar.OPTICAL_CONFIGS: OCToolBar,
+        Toolbar.SHUTTERS: ShuttersToolbar,
         Toolbar.WIDGETS: [
             WidgetAction.CONSOLE,
             WidgetAction.PROP_BROWSER,

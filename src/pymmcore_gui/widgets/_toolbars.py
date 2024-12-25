@@ -1,4 +1,7 @@
-from pymmcore_plus import CMMCorePlus
+from __future__ import annotations
+
+from pymmcore_plus import CMMCorePlus, DeviceType
+from pymmcore_widgets import ShuttersWidget
 from PyQt6.QtWidgets import QToolBar, QWidget
 
 
@@ -41,3 +44,44 @@ class OCToolBar(QToolBar):
             @action.triggered.connect  # type: ignore [misc]
             def _(checked: bool, pname: str = preset_name) -> None:
                 mmc.setConfig(ch_group, pname)
+
+
+class ShuttersToolbar(QToolBar):
+    """A QToolBar for the loased Shutters."""
+
+    def __init__(
+        self,
+        mmc: CMMCorePlus,
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__("Shutters", parent)
+        self.mmc = mmc
+        self.mmc.events.systemConfigurationLoaded.connect(self._on_cfg_loaded)
+        self._on_cfg_loaded()
+
+    def _on_cfg_loaded(self) -> None:
+        self._clear()
+        if not (shutters := self.mmc.getLoadedDevicesOfType(DeviceType.ShutterDevice)):
+            return
+
+        shutters_devs = sorted(
+            shutters,
+            key=lambda d: any(
+                "Physical Shutter" in x for x in self.mmc.getDevicePropertyNames(d)
+            ),
+            reverse=True,
+        )
+
+        for idx, shutter in enumerate(shutters_devs):
+            s = ShuttersWidget(shutter, autoshutter=idx == len(shutters_devs) - 1)
+            s.button_text_open = shutter
+            s.button_text_closed = shutter
+            # s.icon_color_open = ()
+            # s.icon_color_closed = ()
+            self.addWidget(s)
+
+    def _clear(self) -> None:
+        """Delete toolbar action."""
+        while self.actions():
+            action = self.actions()[0]
+            self.removeAction(action)
