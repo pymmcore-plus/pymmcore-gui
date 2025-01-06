@@ -50,12 +50,11 @@ dependencies = [
 ]
 
 [dependency-groups]
-# careful ... 
-# having pdbpp in the environment will break the console in the bundled app
 dev = [
     "ipython>=8.30.0",
     "mypy>=1.13.0",
     "pre-commit>=4.0.1",
+    "pyautogui>=0.9.54",
     "pyinstaller>=6.11.1",
     "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
