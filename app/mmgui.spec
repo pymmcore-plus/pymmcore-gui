@@ -90,8 +90,8 @@ a = Analysis(
     hiddenimports=["pdb"],
     # An optional list of additional paths to search for hooks.
     hookspath=[APP_ROOT / "hooks"],
-    # An optional list of module or package names (their Python names, not path names) that will be
-    # ignored (as though they were not found).
+    # An optional list of module or package names (their Python names, not path names)
+    # that will be ignored (as though they were not found).
     excludes=[
         "pdbpp",
         "FixTk",
@@ -102,7 +102,7 @@ a = Analysis(
         "Tkinter",
         "matplotlib",
     ],
-    # If True, do not place source files in a archive, but keep them as individual files.
+    # If True, do not place source files in a archive, but keep them as individual files
     noarchive=False,
     optimize=0,
 )
