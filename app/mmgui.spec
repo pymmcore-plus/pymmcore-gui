@@ -39,6 +39,7 @@ RESOURCES = PACKAGE / "resources"
 ICON = RESOURCES / ("icon.ico" if sys.platform.startswith("win") else "icon.icns")
 
 ONEFILE = os.name == "nt"
+SPLASH = os.name == "nt"
 
 NAME = "pymmgui"
 DEBUG = False
@@ -106,21 +107,28 @@ a = Analysis(
     optimize=0,
 )
 pyz = PYZ(a.pure)
-splash = Splash(
-    str(RESOURCES / "logo_trans.png"),
-    binaries=a.binaries,
-    datas=a.datas,
-    text_pos=None,
-    text_size=12,
-    minify_script=True,
-    always_on_top=True,
-)
+if SPLASH:
+    splash = Splash(
+        str(RESOURCES / "logo_trans.png"),
+        binaries=a.binaries,
+        datas=a.datas,
+        text_pos=None,
+        text_size=12,
+        minify_script=True,
+        always_on_top=True,
+    )
 
 if ONEFILE:
-    exe_args = (pyz, a.scripts, a.binaries, a.datas, splash, splash.binaries, [])
+    if SPLASH:
+        exe_args = (pyz, a.scripts, a.binaries, a.datas, splash, splash.binaries, [])
+    else:
+        exe_args = (pyz, a.scripts, a.binaries, a.datas, [])
     exe_kwargs = {"upx_exclude": [], "runtime_tmpdir": None}
 else:
-    exe_args = (pyz, a.scripts, splash, [])
+    if SPLASH:
+        exe_args = (pyz, a.scripts, splash, [])
+    else:
+        exe_args = (pyz, a.scripts, [])
     exe_kwargs = {"exclude_binaries": True}
 
 exe = EXE(
@@ -148,7 +156,7 @@ if not ONEFILE:
         exe,
         a.binaries,
         a.datas,
-        splash.binaries,
+        *((splash.binaries,) if SPLASH else ()),
         strip=False,
         upx=True,
         upx_exclude=[],
