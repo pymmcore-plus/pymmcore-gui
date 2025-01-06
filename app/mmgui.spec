@@ -158,7 +158,7 @@ if not ONEFILE:
         a.datas,
         *((splash.binaries,) if SPLASH else ()),
         strip=False,
-        upx=True,
+        upx=UPX,
         upx_exclude=[],
         name=NAME,
     )
