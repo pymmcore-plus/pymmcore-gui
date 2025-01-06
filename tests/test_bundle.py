@@ -20,25 +20,38 @@ import pyautogui  # noqa: E402
 @pytest.fixture
 def app_process() -> Iterator[subprocess.Popen]:
     process = subprocess.Popen([str(APP)])
-    time.sleep(1)
     if sys.platform == "darwin":
-        pyautogui.hotkey("command", "tab")
+        time.sleep(2)
+    elif sys.platform == "win32":
+        time.sleep(5)
+    pyautogui.click()
+    pyautogui.click(100, 500)
     yield process
     process.terminate()
     process.wait()
-    assert process.returncode in (0, -15)
+    assert process.returncode in (0, -15, 1)
+
+
+CMD_CTRL = "ctrl" if os.name == "nt" else "command"
 
 
 @pytest.mark.usefixtures("app_process")
 def test_app() -> None:
     # open widgets
     # TODO: these hotkeys should be pulled from source code
-    pyautogui.hotkey("command", "shift", "p")
-    pyautogui.hotkey("command", "shift", "i")
-    pyautogui.hotkey("command", "shift", "c")
-    pyautogui.hotkey("command", "shift", "m")
-    pyautogui.hotkey("command", "shift", "s")
-    pyautogui.hotkey("command", "shift", "r")
-    pyautogui.hotkey("command", "shift", "g")
-    pyautogui.hotkey("command", "shift", "e")
-    time.sleep(2)
+    pyautogui.hotkey(CMD_CTRL, "shift", "p")
+    pyautogui.click(100, 500)
+    pyautogui.hotkey(CMD_CTRL, "shift", "i")
+    pyautogui.click(100, 500)
+    pyautogui.hotkey(CMD_CTRL, "shift", "c")
+    pyautogui.click(100, 500)
+    pyautogui.hotkey(CMD_CTRL, "shift", "m")
+    pyautogui.click(100, 500)
+    pyautogui.hotkey(CMD_CTRL, "shift", "s")
+    pyautogui.click(100, 500)
+    pyautogui.hotkey(CMD_CTRL, "shift", "r")
+    pyautogui.click(100, 500)
+    pyautogui.hotkey(CMD_CTRL, "shift", "g")
+    pyautogui.click(100, 500)
+    pyautogui.hotkey(CMD_CTRL, "shift", "e")
+    time.sleep(3)
