@@ -212,6 +212,7 @@ class MicroManagerGUI(QMainWindow):
             if dock_area := key.dock_area():
                 self._dock_widgets[key] = dw = QDockWidget(key.value, self)
                 dw.setWidget(widget)
+                dw.closeEvent = _closeEvent
                 self.addDockWidget(dock_area, dw)
 
             # toggle checked state of QAction if it exists

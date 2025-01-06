@@ -7,6 +7,7 @@ import rich.pretty
 from PyInstaller.building.api import COLLECT, EXE, PYZ
 from PyInstaller.building.build_main import Analysis
 from PyInstaller.config import CONF
+from PyInstaller.utils.hooks import collect_data_files
 
 import pymmcore_gui
 
@@ -33,7 +34,10 @@ fpath.write_text(src)
 PACKAGE = Path(pymmcore_gui.__file__).parent
 ROOT = PACKAGE.parent.parent
 APP_ROOT = ROOT / "app"
-ICON = APP_ROOT / ("icon.ico" if sys.platform.startswith("win") else "icon.icns")
+RESOURCES = PACKAGE / "resources"
+ICON = RESOURCES / ("icon.ico" if sys.platform.startswith("win") else "icon.icns")
+
+ONEFILE = os.name == "nt"
 
 NAME = "pymmgui"
 DEBUG = False
@@ -41,6 +45,7 @@ UPX = True
 
 os.environ["QT_API"] = "PyQt6"
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
+
 
 def _get_win_version() -> "vi.VSVersionInfo":
     if sys.platform != "win32":
@@ -78,9 +83,9 @@ def _get_win_version() -> "vi.VSVersionInfo":
 a = Analysis(
     [PACKAGE / "__main__.py"],
     binaries=[],
-    datas=[],
+    datas=collect_data_files("pymmcore_gui"),
     # An optional list of additional (hidden) modules to include.
-    hiddenimports=['pdb'],
+    hiddenimports=["pdb"],
     # An optional list of additional paths to search for hooks.
     hookspath=[APP_ROOT / "hooks"],
     # An optional list of module or package names (their Python names, not path names) that will be
@@ -101,11 +106,16 @@ a = Analysis(
 )
 pyz = PYZ(a.pure)
 
+if ONEFILE:
+    exe_args = (pyz, a.scripts, a.binaries, a.datas, [])
+    exe_kwargs = {"upx_exclude": [], "runtime_tmpdir": None}
+else:
+    exe_args = (pyz, a.scripts, [])
+    exe_kwargs = {"exclude_binaries": True}
+
 exe = EXE(
-    pyz,
-    a.scripts,
-    [],
-    exclude_binaries=True,
+    *exe_args,
+    **exe_kwargs,
     name=NAME,
     debug=DEBUG,
     bootloader_ignore_signals=False,
@@ -123,15 +133,16 @@ exe = EXE(
     icon=ICON,
     version=_get_win_version(),
 )
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name="mmgui",
-)
+if not ONEFILE:
+    coll = COLLECT(
+        exe,
+        a.binaries,
+        a.datas,
+        strip=False,
+        upx=True,
+        upx_exclude=[],
+        name=NAME,
+    )
 
 if sys.platform == "darwin":
     from PyInstaller.building.osx import BUNDLE

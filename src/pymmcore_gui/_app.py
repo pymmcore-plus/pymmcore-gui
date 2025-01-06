@@ -24,9 +24,9 @@ APP_VERSION = __version__
 ORG_NAME = "pymmcore-plus"
 ORG_DOMAIN = "pymmcore-plus"
 APP_ID = f"{ORG_DOMAIN}.{ORG_NAME}.{APP_NAME}.{APP_VERSION}"
-ICON = Path(__file__).parent / "logo.png"
+RESOURCES = Path(__file__).parent / "resources"
+ICON = RESOURCES / ("icon.ico" if sys.platform.startswith("win") else "logo.png")
 IS_FROZEN = getattr(sys, "frozen", False)
-
 
 class MMQApplication(QApplication):
     exceptionRaised = pyqtSignal(BaseException)
@@ -78,6 +78,7 @@ def main() -> None:
     _install_excepthook()
 
     win = MicroManagerGUI()
+    win.setWindowIcon(QIcon(str(ICON)))
 
     # FIXME: be better...
     try:
