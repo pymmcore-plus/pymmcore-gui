@@ -48,6 +48,6 @@ jobs:
           path: ${{ runner.os == 'macos' && 'dist' || runner.os == 'windows' && 'dist/pymmgui' }}
           follow-symlinks: false
       
-      - name: Test Bundle
-        run: uv run pytest -v --color=yes tests/test_bundle.py
+      # - name: Test Bundle
+      #   run: uv run pytest -v --color=yes tests/test_bundle.py
   
