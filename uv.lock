@@ -1314,7 +1314,7 @@ wheels = [
 
 [[package]]
 name = "pymmcore-gui"
-version = "0.1.dev245+gb2e323b.d20250106"
+version = "0.1.dev246+g83bb9f0.d20250106"
 source = { editable = "." }
 dependencies = [
     { name = "ndv", extra = ["vispy"] },
@@ -1344,6 +1344,7 @@ dev = [
     { name = "rich" },
     { name = "ruff" },
     { name = "rust-just" },
+    { name = "types-pyautogui" },
 ]
 
 [package.metadata]
@@ -1374,6 +1375,7 @@ dev = [
     { name = "rich", specifier = ">=13.9.4" },
     { name = "ruff", specifier = ">=0.8.3" },
     { name = "rust-just", specifier = ">=1.38.0" },
+    { name = "types-pyautogui", specifier = ">=0.9.3.20241230" },
 ]
 
 [[package]]
@@ -2086,6 +2088,30 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/cb/ce/dca7b219718afd37a0068f4f2530a727c2b74a8b6e8e0c0080a4c0de4fcd/typer-0.15.1.tar.gz", hash = "sha256:a0588c0a7fa68a1978a069818657778f86abe6ff5ea6abf472f940a08bfe4f0a", size = 99789 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d0/cc/0a838ba5ca64dc832aa43f727bd586309846b0ffb2ce52422543e6075e8a/typer-0.15.1-py3-none-any.whl", hash = "sha256:7994fb7b8155b64d3402518560648446072864beefd44aa2dc36972a5972e847", size = 44908 },
+]
+
+[[package]]
+name = "types-pyautogui"
+version = "0.9.3.20241230"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "types-pyscreeze" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9b/b2/29e9a680f1eec37421261f8035310bccb74e7ffe51c108ab616149248086/types_pyautogui-0.9.3.20241230.tar.gz", hash = "sha256:e075f9815a4e7181dc3a63dabb5f266be7dbe9534fa9cb538075795db76d98ae", size = 9186 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/75/51/b6e787b2837fa7e564ff27784630911db953c4c17f91d39c1814e0651e8a/types_PyAutoGUI-0.9.3.20241230-py3-none-any.whl", hash = "sha256:314a5e59bbb6292e53b41c7bbd4edb1197564b3dd00f569d3bc2f3f62bdc116c", size = 9020 },
+]
+
+[[package]]
+name = "types-pyscreeze"
+version = "1.0.1.20240822"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pillow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/59/80/95a8fe5c3b90eaa7acd2e333296c514c62f6bce3049b681d12e8d6e9c43a/types-PyScreeze-1.0.1.20240822.tar.gz", hash = "sha256:ee44c1accffb42ec9ca2ab9f3e959077aed363c38557d979cb8bf02029c8b0e1", size = 4376 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c9/ed/95157b8f05d7a58168ef6a22459ecd828a43c5427c3a20102fa92c5c12d3/types_PyScreeze-1.0.1.20240822-py3-none-any.whl", hash = "sha256:0641ffece1006ce43e0c111a336e14d515ae16b8275e8f9c33e7e0001455a81e", size = 3921 },
 ]
 
 [[package]]

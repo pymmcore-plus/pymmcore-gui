@@ -62,6 +62,7 @@ dev = [
     "rich>=13.9.4",
     "ruff>=0.8.3",
     "rust-just>=1.38.0",
+    "types-pyautogui>=0.9.3.20241230",
 ]
 
 # same as console_scripts entry point

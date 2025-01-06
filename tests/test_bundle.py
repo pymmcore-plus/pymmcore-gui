@@ -5,12 +5,16 @@ import time
 from collections.abc import Iterator
 from pathlib import Path
 
-import pyautogui
 import pytest
 
 NAME = "pymmgui"
 DIST = Path(__file__).parent.parent / "dist"
 APP = DIST / NAME / (NAME + (".exe" if os.name == "nt" else ""))
+
+if not APP.exists():
+    pytest.skip(f"App not built: {APP}", allow_module_level=True)
+
+import pyautogui  # noqa: E402
 
 
 @pytest.fixture
