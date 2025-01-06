@@ -28,6 +28,7 @@ RESOURCES = Path(__file__).parent / "resources"
 ICON = RESOURCES / ("icon.ico" if sys.platform.startswith("win") else "logo.png")
 IS_FROZEN = getattr(sys, "frozen", False)
 
+
 class MMQApplication(QApplication):
     exceptionRaised = pyqtSignal(BaseException)
 
