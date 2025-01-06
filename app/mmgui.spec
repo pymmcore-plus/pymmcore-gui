@@ -38,7 +38,7 @@ APP_ROOT = ROOT / "app"
 RESOURCES = PACKAGE / "resources"
 ICON = RESOURCES / ("icon.ico" if sys.platform.startswith("win") else "icon.icns")
 
-ONEFILE = os.name == "nt"
+ONEFILE = "--onefile" in sys.argv
 SPLASH = os.name == "nt"
 
 NAME = "pymmgui"
@@ -158,7 +158,7 @@ if not ONEFILE:
         a.datas,
         *((splash.binaries,) if SPLASH else ()),
         strip=False,
-        upx=UPX,
+        upx=True,
         upx_exclude=[],
         name=NAME,
     )
