@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import importlib
+import importlib.util
 import os
 import sys
 import traceback
@@ -27,6 +29,7 @@ APP_ID = f"{ORG_DOMAIN}.{ORG_NAME}.{APP_NAME}.{APP_VERSION}"
 RESOURCES = Path(__file__).parent / "resources"
 ICON = RESOURCES / ("icon.ico" if sys.platform.startswith("win") else "logo.png")
 IS_FROZEN = getattr(sys, "frozen", False)
+
 
 class MMQApplication(QApplication):
     exceptionRaised = pyqtSignal(BaseException)
@@ -91,6 +94,12 @@ def main() -> None:
 
     win.showMaximized()
     win.show()
+
+    if "_PYI_SPLASH_IPC" in os.environ and importlib.util.find_spec("pyi_splash"):
+        import pyi_splash
+
+        pyi_splash.update_text("UI Loaded ...")
+        pyi_splash.close()
 
     app.exec()
 

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import rich.pretty
 from PyInstaller.building.api import COLLECT, EXE, PYZ
 from PyInstaller.building.build_main import Analysis
+from PyInstaller.building.splash import Splash
 from PyInstaller.config import CONF
 from PyInstaller.utils.hooks import collect_data_files
 
@@ -105,12 +106,21 @@ a = Analysis(
     optimize=0,
 )
 pyz = PYZ(a.pure)
+splash = Splash(
+    str(RESOURCES / "logo_trans.png"),
+    binaries=a.binaries,
+    datas=a.datas,
+    text_pos=None,
+    text_size=12,
+    minify_script=True,
+    always_on_top=True,
+)
 
 if ONEFILE:
-    exe_args = (pyz, a.scripts, a.binaries, a.datas, [])
+    exe_args = (pyz, a.scripts, a.binaries, a.datas, splash, splash.binaries, [])
     exe_kwargs = {"upx_exclude": [], "runtime_tmpdir": None}
 else:
-    exe_args = (pyz, a.scripts, [])
+    exe_args = (pyz, a.scripts, splash, [])
     exe_kwargs = {"exclude_binaries": True}
 
 exe = EXE(
@@ -138,6 +148,7 @@ if not ONEFILE:
         exe,
         a.binaries,
         a.datas,
+        splash.binaries,
         strip=False,
         upx=True,
         upx_exclude=[],
