@@ -36,7 +36,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "ndv[vispy]==0.0.4",
+    "ndv[vispy] @ git+https://github.com/pyapp-kit/ndv@main",
     "pymmcore-plus[cli]>=0.12.0",
     "pymmcore-widgets>=0.8.0",
     "PyQt6==6.7.1",
@@ -64,6 +64,9 @@ dev = [
     "rust-just>=1.38.0",
     "types-pyautogui>=0.9.3.20241230",
 ]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 # same as console_scripts entry point
 [project.scripts]

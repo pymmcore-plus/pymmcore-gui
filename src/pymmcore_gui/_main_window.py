@@ -24,6 +24,7 @@ from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
+from .core_link._core_link import CoreViewersLink
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
@@ -109,6 +110,8 @@ class MicroManagerGUI(QMainWindow):
 
         # get global CMMCorePlus instance
         self._mmc = mmc = mmcore or CMMCorePlus.instance()
+
+        self._core_link = CoreViewersLink(self, mmcore=self._mmc)
 
         # MENUS ====================================
         # To add menus or menu items, add them to the MENUS dict above
