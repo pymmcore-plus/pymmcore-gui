@@ -1478,7 +1478,7 @@ requires-dist = [
     { name = "ndv", extras = ["vispy"], specifier = "==0.0.4" },
     { name = "pymmcore-nano" },
     { name = "pymmcore-plus", extras = ["cli"], specifier = ">=0.13.0" },
-    { name = "pymmcore-widgets", git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=0759b73" },
+    { name = "pymmcore-widgets", specifier = ">=0.9.0" },
     { name = "pyqt6", specifier = "==6.7.1" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "qtconsole", specifier = ">=5.6.1" },
@@ -1560,14 +1560,18 @@ cli = [
 
 [[package]]
 name = "pymmcore-widgets"
-version = "0.8.1.dev17+g0759b73"
-source = { git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=0759b73#0759b731b11f5c126d8ecba7a753eea09f88be95" }
+version = "0.9.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fonticon-materialdesignicons6" },
     { name = "pymmcore-plus", extra = ["cli"] },
     { name = "qtpy" },
-    { name = "superqt", extra = ["quantity"] },
+    { name = "superqt", extra = ["cmap", "quantity"] },
     { name = "useq-schema" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f6/b1/546492a6004c841d22149106cb6d3b5b5752486d3c71a3ffe6cdd2b051be/pymmcore_widgets-0.9.0.tar.gz", hash = "sha256:aab19523fbaa3a31b63e162ffaf44e844658b43951335f7de8b04d7607e48532", size = 175538 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/64/fb/40b90a4f62b12b526648213e6cee8c24640f11ee03e1be7f7cbdb91bbbf6/pymmcore_widgets-0.9.0-py3-none-any.whl", hash = "sha256:fd9981c6bfbc55507bbff447109c496daa58881f8a0aba7de06d89f77c3ae176", size = 199028 },
 ]
 
 [[package]]

@@ -39,7 +39,7 @@ dependencies = [
     "ndv[vispy]==0.0.4",
     "pymmcore-plus[cli]>=0.13.0",
     "pymmcore-nano",
-    "pymmcore-widgets @ git+https://github.com/pymmcore-plus/pymmcore-widgets@0759b73",
+    "pymmcore-widgets>=0.9.0",
     "PyQt6==6.7.1",
     "pyyaml>=6.0.2",
     "qtconsole>=5.6.1",
