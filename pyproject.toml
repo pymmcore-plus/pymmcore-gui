@@ -50,12 +50,8 @@ dependencies = [
     "zarr>=2.18.3",
 ]
 
-[tool.hatch.metadata]
-allow-direct-references = true
-
 [tool.uv]
 override-dependencies = ["pymmcore ;  sys_platform == 'never'"]
-
 
 [dependency-groups]
 dev = [
