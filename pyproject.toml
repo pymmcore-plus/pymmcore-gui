@@ -37,7 +37,7 @@ classifiers = [
 ]
 dependencies = [
     "ndv[vispy]==0.0.4",
-    "pymmcore-plus[cli]>=0.12.0",
+    "pymmcore-plus[cli]>=0.13.0",
     "pymmcore-nano",
     "pymmcore-widgets @ git+https://github.com/pymmcore-plus/pymmcore-widgets@0759b73",
     "PyQt6==6.7.1",
