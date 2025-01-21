@@ -30,7 +30,7 @@ This is a stub repo for discussing a unified effort towards a GUI application fo
 
   At any time, you can run `uv sync` to ensure that your current environment matches
   the requirements specified in `uv.lock`. The lockfile itself shouldn't be manually
-  edited, but if you need to modify the *contraints* of the dependencies, you should
+  edited, but if you need to modify the *constraints* of the dependencies, you should
   do so in the normal way in `pyproject.toml`, and then run `uv lock` to update the
   lockfile, then commit it and open a PR.
 
