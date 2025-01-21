@@ -18,7 +18,6 @@ This is a stub repo for discussing a unified effort towards a GUI application fo
 
 For now, this serves as place to store TODO issues and discussion items.  Please open an issue if you are interested, (even just to say hi! 🙂)
 
-
 ## Existing Efforts
 
 ### napari-micromanager
@@ -39,11 +38,8 @@ One candidate to replace the viewing functionality provided by napari is [`ndv`]
 
 <img width="1190" alt="Screenshot 2024-10-13 at 2 50 57 PM" src="https://github.com/user-attachments/assets/cd1d81aa-1bab-48ca-ad31-420dc08e72a5">
 
-
 [`pymmcore-plus-sandbox`](https://github.com/gselzer/pymmcore-plus-sandbox) is another experimental standalone GUI written by Gabe Selzer ([@gselzer](https://github.com/gselzer) with input from [@marktsuchida](https://github.com/marktsuchida).  One initial goal here is to create a main window that looks very similar to the java based MMStudio (which would make it familiar to existing users of the java ecosystem).
 
 ### LEB-EPFL
 
 Willi Stepp ([@wl-stepp](https://github.com/wl-stepp)) has been an active contributor to pymmcore-widgets and uses some of these widgets in his event-driven microscopy controllers.
-
-
