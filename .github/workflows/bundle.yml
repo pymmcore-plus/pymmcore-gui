@@ -13,7 +13,7 @@ on:
 
 jobs:
   bundle:
-    name: ${{ matrix.platform }}
+    name: Bundle ${{ matrix.platform }}
     runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
@@ -26,7 +26,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
-          version: "0.5.11"
+          version: "0.5.21"
           enable-cache: true
 
       - name: Install the project
