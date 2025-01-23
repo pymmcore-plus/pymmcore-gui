@@ -83,3 +83,7 @@ just bundle
 ```
 
 This will create a double-clickable application in the `dist/` directory.
+
+> [!TIP] For details `pyinstaller` and the `mmgui.spec` file, see the
+> [PyInstaller
+> documentation](https://pyinstaller.org/en/stable/spec-files.html).
