@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from useq import MDAEvent
 
 
-class CoreViewersLink(QObject):
+class ViewersCoreLink(QObject):
 
     from ..data_wrappers import MMTensorstoreWrapper
 
@@ -49,8 +49,8 @@ class CoreViewersLink(QObject):
         # emit the sequenceStarted signal of the datastore since it is not connected
         self._datastore.sequenceStarted(sequence, meta)
         # connect the datastore mmcore signals
-        self._mmc.mda.events.sequenceFinished.connect(self._datastore.sequenceFinished)
         self._mmc.mda.events.frameReady.connect(self._datastore.frameReady)
+        self._mmc.mda.events.sequenceFinished.connect(self._datastore.sequenceFinished)
 
         # resume the sequence
         self._mmc.mda.toggle_pause()
@@ -60,6 +60,7 @@ class CoreViewersLink(QObject):
         if self._current_viewer is None and self._datastore.store is not None:
             self._create_ndv_viewer()
 
+        # TODO: fix this
         # elif self._current_viewer is not None:
         #     self._current_viewer.display_model.current_index.update(event.index)
 
