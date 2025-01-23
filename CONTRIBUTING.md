@@ -121,4 +121,5 @@ You can download the latest build artifacts from `main` branch
 For a list of all bundles created (including those from PRs), see the [GitHub
 Actions
 page](https://github.com/pymmcore-plus/pymmcore-gui/actions/workflows/bundle.yml)
-for the bundle workflow.
+for the bundle workflow.  Click on any given run, and you'll see the artifacts
+produced by that run at the bottom.
