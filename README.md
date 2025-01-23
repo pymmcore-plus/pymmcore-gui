@@ -7,37 +7,11 @@ This is a stub repo for discussing a unified effort towards a GUI application fo
 
   <h2>This repo now contains a working GUI prototype 🎉🚀</h2>
 
-  Dependencies are managed strictly using [uv](https://docs.astral.sh/uv/), and the
-  `uv.lock` [lockfile](https://docs.astral.sh/uv/concepts/projects/layout/#the-lockfile)
-  is checked into source, to ensure a reproducible environment for all developers.
-  The lockfile also dictates the exact dependencies that will go into the bundled application.
-  
-  To get started, make sure you have
-  [uv installed](https://docs.astral.sh/uv/getting-started/installation/), then run
-
-  ```sh
-  git clone https://github.com/pymmcore-plus/pymmcore-gui.git
-  cd pymmcore-gui
-  uv sync
-  ```
-
-  That will create a virtual environment at `.venv` in the root directory, and install
-  all dependencies.  You can then run tests using 
-
-  ```sh
-  uv run pytest
-  ```
-
-  At any time, you can run `uv sync` to ensure that your current environment matches
-  the requirements specified in `uv.lock`. The lockfile itself shouldn't be manually
-  edited, but if you need to modify the *constraints* of the dependencies, you should
-  do so in the normal way in `pyproject.toml`, and then run `uv lock` to update the
-  lockfile, then commit it and open a PR.
+  See [CONTRIBUTING](CONTRIBUITING.md) for more information on how to get started.
 
 </details>
 
-
-## Goals (and non-goals) of unification:
+## Goals (and non-goals) of unification
 
 **Goals**
 
@@ -59,7 +33,7 @@ For now, this serves as place to store TODO issues and discussion items.  Please
 
 <img width="1840" alt="napari-micromanager" src="https://github.com/pymmcore-plus/napari-micromanager/assets/1609449/e1f395cd-2d57-488e-89e2-b1923310fc2a">
 
-An initial effort towards a pure python micro-manager gui based on the pymmcore-plus ecosystem was [napari-micromanager](https://github.com/pymmcore-plus/napari-micromanager). It uses [napari](https://github.com/napari/napari) as the primary viewer, and [pymmcore-widgets](https://github.com/pymmcore-plus/pymmcore-widgets) for most of the UI related to micro-manager functionality. It still works and will continue to be maintained for the foreseable future, but we are also interested in exploring options that do not depend on napari. 
+An initial effort towards a pure python micro-manager gui based on the pymmcore-plus ecosystem was [napari-micromanager](https://github.com/pymmcore-plus/napari-micromanager). It uses [napari](https://github.com/napari/napari) as the primary viewer, and [pymmcore-widgets](https://github.com/pymmcore-plus/pymmcore-widgets) for most of the UI related to micro-manager functionality. It still works and will continue to be maintained for the foreseable future, but we are also interested in exploring options that do not depend on napari.
 
 One candidate to replace the viewing functionality provided by napari is [`ndv`](https://github.com/pyapp-kit/ndv), a slim multi-dimensional viewer with minimal dependencies.  Two experimental efforts exist to build a micro-manager gui using ndv
 
