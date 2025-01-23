@@ -32,14 +32,6 @@ current environment matches the requirements specified in `uv.lock`.
 > in `pyproject.toml`, and then run `uv lock` to update the lockfile, then
 > commit it and open a PR.
 
-### Python version support
-
-The "primary" version of python that we target at any time is defined in
-`.python-version`. This is the version that will be installed by `uv` if it's
-not already present on your system.  We also test against all versions greater
-than the minimium version defined in `pyproject.toml` under the
-`[project.requires-python]` section.
-
 ### Activating the virtual environment (optional)
 
 If you want to activate the virtual environment to run commands directly (without
@@ -56,6 +48,14 @@ On linux/mac:
 ```sh
 source .venv/bin/activate
 ```
+
+### Python version support
+
+The "primary" version of python that we target at any time is defined in
+`.python-version`. This is the version that will be installed by `uv` if it's
+not already present on your system.  We also test against all versions greater
+than the minimium version defined in `pyproject.toml` under the
+`[project.requires-python]` section.
 
 ## Running the GUI
 
