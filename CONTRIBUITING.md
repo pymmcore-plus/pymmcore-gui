@@ -5,7 +5,8 @@
 Dependencies are managed strictly using [uv](https://docs.astral.sh/uv/), and the
 `uv.lock` [lockfile](https://docs.astral.sh/uv/concepts/projects/layout/#the-lockfile)
 is checked into source, to ensure a reproducible environment for all developers.
-The lockfile also dictates the exact dependencies that will go into the bundled application.
+The lockfile also dictates the exact dependencies that will go into the bundled> [!NOTE]  
+application.
 
 To get started, make sure you have
 [uv installed](https://docs.astral.sh/uv/getting-started/installation/), then run
@@ -25,10 +26,19 @@ At any time, you can re-run [`uv
 sync`](https://docs.astral.sh/uv/reference/cli/#uv-sync) to ensure that your
 current environment matches the requirements specified in `uv.lock`. 
 
-> [!NOTE] The lockfile itself shouldn't be manually edited, but if you need to
-> modify the *constraints* of the dependencies, you should do so in the normal
-> way in `pyproject.toml`, and then run `uv lock` to update the lockfile, then
+> [!NOTE]
+> The lockfile itself shouldn't be manually edited, but if you need to
+> modify the *constraints* of the dependencies, you should do so as usual
+> in `pyproject.toml`, and then run `uv lock` to update the lockfile, then
 > commit it and open a PR.
+
+### Python version support
+
+The "primary" version of python that we target at any time is defined in
+`.python-version`. This is the version that will be installed by `uv` if it's
+not already present on your system.  We also test against all versions greater
+than the minimium version defined in `pyproject.toml` under the
+`[project.requires-python]` section.
 
 ### Activating the virtual environment (optional)
 
