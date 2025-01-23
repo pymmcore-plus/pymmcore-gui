@@ -25,18 +25,18 @@ edited, but if you need to modify the *constraints* of the dependencies, you sho
 do so in the normal way in `pyproject.toml`, and then run `uv lock` to update the
 lockfile, then commit it and open a PR.
 
-### Activating the virtual environment
+### Activating the virtual environment (optional)
 
 If you want to activate the virtual environment to run commands directly (without
-preceding everything with `uv run`), you can do so with
+preceding everything with `uv run`), run:
 
-on windows:
+On windows:
 
 ```cmd
 .venv\Scripts\activate
 ```
 
-on linux/mac:
+On linux/mac:
 
 ```sh
 source .venv/bin/activate
@@ -51,7 +51,7 @@ uv run mmgui
 ```
 
 (*or... just `mmgui` if you've [activated your virtual
-environment](#activating-the-virtual-environment))
+environment](#activating-the-virtual-environment-optional)*)
 
 > [!TIP]
 > This script is defined in `pyproject.toml` under the `[project.scripts]` section.
@@ -65,7 +65,7 @@ uv run pytest
 ```
 
 (*or... just `pytest` if you've [activated your virtual
-environment](#activating-the-virtual-environment)))
+environment](#activating-the-virtual-environment-optional)*)
 
 ## Creating a bundled application
 
