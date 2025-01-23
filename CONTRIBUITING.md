@@ -36,7 +36,7 @@ uv run mmgui
 (*or... just `mmgui` if you've activated your virtual environment with
 `.venv/bin/activate`*)
 
-> [!INFO]
+> [!TIP]
 > This script is defined in `pyproject.toml` under the `[project.scripts]` section.
 
 ## Testing
