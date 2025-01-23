@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, ClassVar, Generic, Self, TypeVar, cast
+from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar, cast
 
 from pymmcore_plus import CMMCorePlus
 from PyQt6.QtCore import QObject
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
     from PyQt6.QtCore import QObject, Qt
     from PyQt6.QtGui import QAction, QIcon, QKeySequence
+    from typing_extensions import Self
 
     CoreActionFunc: TypeAlias = Callable[[QCoreAction], Any]
     ActionTriggeredFunc: TypeAlias = Callable[[QCoreAction, bool], Any]
