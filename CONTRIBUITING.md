@@ -16,14 +16,19 @@ cd pymmcore-gui
 uv sync
 ```
 
-That will create a virtual environment at `.venv` in the root directory, and install
-all dependencies.
+That will create a virtual environment at `.venv` in the root directory, and
+install all dependencies. Note: `uv sync` will *also* [install
+python](https://docs.astral.sh/uv/guides/install-python/) for you if necessary,
+so you don't need to have it installed before running the command.
 
-At any time, you can run `uv sync` to ensure that your current environment matches
-the requirements specified in `uv.lock`. The lockfile itself shouldn't be manually
-edited, but if you need to modify the *constraints* of the dependencies, you should
-do so in the normal way in `pyproject.toml`, and then run `uv lock` to update the
-lockfile, then commit it and open a PR.
+At any time, you can re-run [`uv
+sync`](https://docs.astral.sh/uv/reference/cli/#uv-sync) to ensure that your
+current environment matches the requirements specified in `uv.lock`. 
+
+> [!NOTE] The lockfile itself shouldn't be manually edited, but if you need to
+> modify the *constraints* of the dependencies, you should do so in the normal
+> way in `pyproject.toml`, and then run `uv lock` to update the lockfile, then
+> commit it and open a PR.
 
 ### Activating the virtual environment (optional)
 
