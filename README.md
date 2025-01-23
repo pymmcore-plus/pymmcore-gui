@@ -10,7 +10,7 @@ for [`pymmcore-plus`](https://github.com/pymmcore-plus/pymmcore-plus) &
 
   <h2>This repo now contains a working GUI prototype 🎉🚀</h2>
 
-  See [CONTRIBUTING](CONTRIBUITING.md) for local setup instructions.
+  See [CONTRIBUTING](CONTRIBUTING.md) for local setup instructions.
 
 </details>
 
