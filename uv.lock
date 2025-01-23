@@ -776,7 +776,7 @@ name = "ml-dtypes"
 version = "0.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
+    { name = "numpy", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/32/49/6e67c334872d2c114df3020e579f3718c333198f8312290e09ec0216703a/ml_dtypes-0.5.1.tar.gz", hash = "sha256:ac5b58559bb84a95848ed6984eb8013249f90b6bab62aa5acbad876e256002c9", size = 698772 }
 wheels = [
@@ -861,16 +861,18 @@ wheels = [
 
 [[package]]
 name = "ndv"
-version = "0.0.4"
+version = "0.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "cmap" },
     { name = "numpy" },
-    { name = "qtpy" },
-    { name = "superqt", extra = ["cmap", "iconify"] },
+    { name = "psygnal" },
+    { name = "pydantic" },
+    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/27/a1/b3bc45071fed07a937e8b08bc845f88bd68086a817aa9b1fe0adbab2adad/ndv-0.0.4.tar.gz", hash = "sha256:ef5ba6ca3aaec0cbc8dbfef160045ab9f10505307dec6f3da76637b053f9f535", size = 34811 }
+sdist = { url = "https://files.pythonhosted.org/packages/bb/03/2551475aa0dec06e54cc859b69bf59f10be25b90b7863de949e27b0b798a/ndv-0.2.1.tar.gz", hash = "sha256:24600662977c9e7c301303cdb0e9cf850fdde04dfadc6e3711999a06db8b15db", size = 110872 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2a/15/9215ee0483e728abd1726cff52887d0b7a35bc70653a8445a49fd83f208d/ndv-0.0.4-py3-none-any.whl", hash = "sha256:92923ec3853860eb9369511dce88baf9009c60465093579c3f50901d43d086ec", size = 34619 },
+    { url = "https://files.pythonhosted.org/packages/97/09/619bfc79d08f631f67cf81c031ad341ff31fc06100c04f06158570234262/ndv-0.2.1-py3-none-any.whl", hash = "sha256:f950b1ea575d5ad24cdf23cc23d65b38d1d513fb6a9dfe3e1e6436ae682d2a95", size = 108389 },
 ]
 
 [package.optional-dependencies]
@@ -1475,7 +1477,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "ndv", extras = ["vispy"], specifier = "==0.0.4" },
+    { name = "ndv", extras = ["vispy"], specifier = ">=0.2" },
     { name = "pymmcore-nano" },
     { name = "pymmcore-plus", extras = ["cli"], specifier = ">=0.13.0" },
     { name = "pymmcore-widgets", specifier = ">=0.9.0" },
@@ -2111,8 +2113,8 @@ name = "tensorstore"
 version = "0.1.71"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ml-dtypes" },
-    { name = "numpy" },
+    { name = "ml-dtypes", marker = "python_full_version < '3.13'" },
+    { name = "numpy", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/fd/cf/9ec04b1d24aeecee27a456cc3a59974c9d2e863c34939bbc738a4db04df7/tensorstore-0.1.71.tar.gz", hash = "sha256:5c37c7b385517b568282a7aedded446216335d0cb41187c93c80b53596c92c96", size = 6716705 }
 wheels = [
