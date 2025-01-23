@@ -54,7 +54,7 @@ source .venv/bin/activate
 The "primary" version of python that we target at any time is defined in
 `.python-version`. This is the version that will be installed by `uv` if it's
 not already present on your system.  We also test against all versions greater
-than the minimium version defined in `pyproject.toml` under the
+than the minimum version defined in `pyproject.toml` under the
 `[project.requires-python]` section.
 
 ## Running the GUI
