@@ -24,7 +24,7 @@ so you don't need to have it installed before running the command.
 
 At any time, you can re-run [`uv
 sync`](https://docs.astral.sh/uv/reference/cli/#uv-sync) to ensure that your
-current environment matches the requirements specified in `uv.lock`. 
+current environment matches the requirements specified in `uv.lock`.
 
 > [!NOTE]
 > The lockfile itself shouldn't be manually edited, but if you need to
@@ -84,7 +84,17 @@ environment](#activating-the-virtual-environment-optional)*)
 
 ## Creating a bundled application
 
-To create a bundled application, run
+We use [PyInstaller](https://pyinstaller.org/) to freeze the application into a
+single, double-clickable executable. The configuration for PyInstaller is
+defined in [`app/mmgui.spec`](./app/mmgui.spec).
+
+> [!TIP]
+> For details `pyinstaller` and the `mmgui.spec` file, see the [PyInstaller
+> documentation](https://pyinstaller.org/en/stable/spec-files.html).
+
+### Locally
+
+To create a bundled application locally , run
 
 ```sh
 uv run pyinstaller app/mmgui.spec
@@ -99,6 +109,11 @@ just bundle
 
 This will create a double-clickable application in the `dist/` directory.
 
-> [!TIP]
-> For details `pyinstaller` and the `mmgui.spec` file, see the [PyInstaller
-> documentation](https://pyinstaller.org/en/stable/spec-files.html).
+### On CI (for distribution)
+
+The bundled application is also created on CI using GitHub Actions (it runs on
+every push to main, and even for pull-requests). The workflow is defined in
+[`.github/workflows/bundle.yml`](./.github/workflows/build.yml).
+
+You can download the latest build artifacts from `main` branch
+[here](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main)
