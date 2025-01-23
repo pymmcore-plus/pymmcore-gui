@@ -117,3 +117,8 @@ every push to main, and even for pull-requests). The workflow is defined in
 
 You can download the latest build artifacts from `main` branch
 [here](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main)
+
+For a list of all bundles created (including those from PRs), see the [GitHub
+Actions
+page](https://github.com/pymmcore-plus/pymmcore-gui/actions/workflows/bundle.yml)
+for the bundle workflow.
