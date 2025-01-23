@@ -35,8 +35,7 @@ jobs:
         with:
           version: "0.5.21"
           enable-cache: true
-          with:
-            python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python-version }}
 
       - uses: pyvista/setup-headless-display-action@v3
         with:
