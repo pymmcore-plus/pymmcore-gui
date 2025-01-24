@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from platformdirs import user_data_dir
+from pydantic import computed_field
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
@@ -75,6 +76,17 @@ class SettingsV1(BaseSettings):
     """Global settings for the PyMMCore GUI."""
 
     version: Literal["1.0"] = "1.0"
+
+    @computed_field(repr=False)  # type: ignore [prop-decorator]
+    @property
+    def version_tuple(self) -> tuple[int, int, str]:
+        """Return the version as a tuple of integers.
+
+        The first two are guaranteed to be integers.  Any additional parts are joined
+        with a period and returned as a string.
+        """
+        major, minor, *rest = self.version.split(".")
+        return int(major), int(minor), ".".join(rest)
 
     # ----------------------- Configurations -----------------------
 
