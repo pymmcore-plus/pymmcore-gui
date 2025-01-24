@@ -5,7 +5,7 @@
 Dependencies are managed strictly using [uv](https://docs.astral.sh/uv/), and the
 `uv.lock` [lockfile](https://docs.astral.sh/uv/concepts/projects/layout/#the-lockfile)
 is checked into source, to ensure a reproducible environment for all developers.
-The lockfile also dictates the exact dependencies that will go into the bundled> [!NOTE]  
+The lockfile also dictates the exact dependencies that will go into the bundled
 application.
 
 To get started, make sure you have
