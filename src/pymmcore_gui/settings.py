@@ -81,6 +81,7 @@ class SettingsV1(BaseSettings):
     model_config = SettingsConfigDict(
         # Prefix for all environment variables. e.g. PMM_<key>=<value>
         env_prefix="PMM_",
+        extra="ignore",
     )
 
     @classmethod
@@ -106,6 +107,3 @@ class SettingsV1(BaseSettings):
             MMGuiUserPrefsSource(settings_cls),
             file_secret_settings,
         )
-
-
-Settings = SettingsV1
