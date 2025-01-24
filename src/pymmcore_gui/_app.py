@@ -21,6 +21,8 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from types import TracebackType
 
+    ExcTuple = tuple[type[BaseException], BaseException, TracebackType | None]
+
 APP_NAME = "Micro-Manager GUI"
 APP_VERSION = __version__
 ORG_NAME = "pymmcore-plus"
@@ -150,9 +152,10 @@ def _print_exception(
         traceback.print_exception(exc_type, value=exc_value, tb=exc_traceback)
 
 
-EXCEPTION_LOG: list[
-    tuple[type[BaseException], BaseException, TracebackType | None]
-] = []
+# This log list is used by the ExceptionLog widget
+# Be aware that it's currently possible for that widget to clear this list.
+# If an immutable record of exceptions is needed, additional logic will be required.
+EXCEPTION_LOG: list[ExcTuple] = []
 
 
 def ndv_excepthook(
