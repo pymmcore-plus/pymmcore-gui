@@ -27,20 +27,36 @@ repos:
     hooks:
       - id: mypy
         files: "^src/"
+        # The dependencies are listed here in a somewhat unusual way...
+        # pre-commit.ci has a strict limit of 250MB for the entire environment
+        # which is much smaller than all of the transitive dependencies of this repo
+        # so we use --no-deps, and then add just enough to make sure we cover all of 
+        # our typing use cases.  Note also the custom PyQt6-stubs repo.
         additional_dependencies:
-          # primary dependencies
           - "--no-deps"
+          # required for mypy
           - mypy
           - typing_extensions
-          - ndv[vispy]>=0.2
-          - pymmcore-plus
+          - mypy_extensions
+          # required for mypy to find the installed packages
+          - cmap
+          - git+https://github.com/tlambert03/PyQt6-stubs.git@v6.7.3
+          - iconify
+          - ipykernel
+          - ipython
+          - ndv
+          - pydantic
+          - pydantic_core
           - pymmcore-nano
-          - pymmcore-widgets>=0.9.0
-          # - PyQt6==6.7.1
-          - pyyaml>=6.0.2
-          - qtconsole>=5.6.1
+          - pymmcore-plus
+          - pymmcore-widgets
+          - pyyaml
+          - qtconsole
           - rich
-          - superqt[cmap,iconify]>=0.7.0
-          # typing-only dependencies
+          - superqt
+          - tifffile
+          - tqdm
+          - traitlets
           - types-Pygments
-          - types-pyinstaller
+          - types-PyYAML
+          - zarr<3.0

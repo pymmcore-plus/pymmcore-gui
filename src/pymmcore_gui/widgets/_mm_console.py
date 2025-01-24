@@ -57,8 +57,8 @@ class MMConsole(RichJupyterWidget):
         self.kernel_client.start_channels()
 
         if rich is not None:
-            self.shell.run_cell("from rich import pretty; pretty.install()")  # type: ignore
-            self.shell.run_cell("from rich import print")  # type: ignore
+            self.shell.run_cell("from rich import pretty; pretty.install()")  # type: ignore [no-untyped-call]
+            self.shell.run_cell("from rich import print")  # type: ignore [no-untyped-call]
 
         self._inject_core_vars()
 
@@ -102,7 +102,7 @@ class MMConsole(RichJupyterWidget):
         return "\n".join(lines)
 
     def push(self, variables: dict[str, Any]) -> None:
-        self.shell.push(variables)  # type: ignore
+        self.shell.push(variables)  # type: ignore [no-untyped-call]
 
     def get_user_variables(self) -> dict:
         """Return the variables pushed to the console."""

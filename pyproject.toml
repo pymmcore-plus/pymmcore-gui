@@ -47,7 +47,7 @@ dependencies = [
     "superqt[cmap,iconify]>=0.7.1",
     "tifffile>=2024.12.12",
     "tqdm>=4.67.1",
-    "zarr>=2.18.3",
+    "zarr>=2.18.3,<3.0",
 ]
 
 [tool.uv]
@@ -69,6 +69,7 @@ dev = [
     "types-pyautogui>=0.9.3.20241230",
     "types-pygments>=2.19.0.20250107",
     "types-pyinstaller>=6.11.0.20241028",
+    "types-pyyaml>=6.0.12.20241230",
 ]
 
 # same as console_scripts entry point
