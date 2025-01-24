@@ -29,8 +29,9 @@ repos:
         files: "^src/"
         additional_dependencies:
           # primary dependencies
+          - "--no-deps"
           - ndv[vispy]>=0.2
-          - pymmcore-plus[cli]>=0.13.0
+          - pymmcore-plus
           - pymmcore-nano
           - pymmcore-widgets>=0.9.0
           # - PyQt6==6.7.1
@@ -38,9 +39,6 @@ repos:
           - qtconsole>=5.6.1
           - rich
           - superqt[cmap,iconify]>=0.7.0
-          - tifffile>=2024.12.12
-          - tqdm>=4.67.1
-          - zarr>=2.18.3
           # typing-only dependencies
           - types-Pygments
           - types-pyinstaller
