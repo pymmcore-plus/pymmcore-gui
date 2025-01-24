@@ -67,6 +67,8 @@ dev = [
     "ruff>=0.8.3",
     "rust-just>=1.38.0",
     "types-pyautogui>=0.9.3.20241230",
+    "types-pygments>=2.19.0.20250107",
+    "types-pyinstaller>=6.11.0.20241028",
 ]
 
 # same as console_scripts entry point
@@ -125,6 +127,14 @@ disallow_subclassing_any = false
 show_error_codes = true
 pretty = true
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["qtconsole.*"]
+follow_untyped_imports = true
+
+[[tool.mypy.overrides]]
+module = ["pydevd.*"]
+ignore_missing_imports = true
 
 # https://docs.pytest.org/
 [tool.pytest.ini_options]

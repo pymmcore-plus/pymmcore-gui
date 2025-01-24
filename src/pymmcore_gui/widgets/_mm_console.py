@@ -84,7 +84,7 @@ class MMConsole(RichJupyterWidget):
         default_vars.update({"mmc": mmc, "core": mmc, "mmcore": mmc, "mda": mmc.mda})
         self.push(default_vars)
 
-    @default("banner")  # type: ignore [misc]
+    @default("banner")
     def _banner_default(self) -> str:
         # Set the banner displayed at the top of the console
         lines = [

@@ -256,7 +256,7 @@ class CodeSyntaxHighlight(QSyntaxHighlighter):
     @property
     def background_color(self) -> str:
         style = cast("pygments.style.StyleMeta", self.formatter.style)
-        return style.background_color  # type: ignore
+        return style.background_color
 
     def highlightBlock(self, text: str | None) -> None:
         # dirty, dirty hack

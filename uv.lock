@@ -1473,6 +1473,8 @@ dev = [
     { name = "ruff" },
     { name = "rust-just" },
     { name = "types-pyautogui" },
+    { name = "types-pygments" },
+    { name = "types-pyinstaller" },
 ]
 
 [package.metadata]
@@ -1505,6 +1507,8 @@ dev = [
     { name = "ruff", specifier = ">=0.8.3" },
     { name = "rust-just", specifier = ">=1.38.0" },
     { name = "types-pyautogui", specifier = ">=0.9.3.20241230" },
+    { name = "types-pygments", specifier = ">=2.19.0.20250107" },
+    { name = "types-pyinstaller", specifier = ">=6.11.0.20241028" },
 ]
 
 [[package]]
@@ -2246,6 +2250,15 @@ wheels = [
 ]
 
 [[package]]
+name = "types-docutils"
+version = "0.21.0.20241128"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/dd/df/64e7ab01a4fc5ce46895dc94e31cffc8b8087c8d91ee54c45ac2d8d82445/types_docutils-0.21.0.20241128.tar.gz", hash = "sha256:4dd059805b83ac6ec5a223699195c4e9eeb0446a4f7f2aeff1759a4a7cc17473", size = 26739 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/59/b6/10ba95739f2cbb9c5bd2f6568148d62b468afe01a94c633e8892a2936d8a/types_docutils-0.21.0.20241128-py3-none-any.whl", hash = "sha256:e0409204009639e9b0bf4521eeabe58b5e574ce9c0db08421c2ac26c32be0039", size = 34677 },
+]
+
+[[package]]
 name = "types-pyautogui"
 version = "0.9.3.20241230"
 source = { registry = "https://pypi.org/simple" }
@@ -2258,6 +2271,28 @@ wheels = [
 ]
 
 [[package]]
+name = "types-pygments"
+version = "2.19.0.20250107"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "types-docutils" },
+    { name = "types-setuptools" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3c/d8/9e0ed97a3ca6143c74347bc32a2499809bc83039b115d0138e502679f4e8/types_pygments-2.19.0.20250107.tar.gz", hash = "sha256:94de72c7f09b956c518f566e056812c698272a7a03a9cd81f0065576c6bd3219", size = 18309 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ec/e2/0777eed72b5cec191168b37522fbbe831c8353fe6655c3f29a0454f73498/types_Pygments-2.19.0.20250107-py3-none-any.whl", hash = "sha256:34a555ed327f249daed18c6309e6e62770cdb8b9c321029ba7fd852d10b16f10", size = 25548 },
+]
+
+[[package]]
+name = "types-pyinstaller"
+version = "6.11.0.20241028"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/03/5a/437024c72ac1247177cbf258dea80f2b59b0fb96a69bff34428643bc6f6c/types-pyinstaller-6.11.0.20241028.tar.gz", hash = "sha256:b32b77f714ccdd8c5ee9ca1ea8a9647470535065055f6487f3714fd2b05a57a3", size = 14118 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/30/c9/b998c752a05a27809ce051fc1e8c372ed5816efae5f4b68792f0ee869a18/types_pyinstaller-6.11.0.20241028-py3-none-any.whl", hash = "sha256:d2415f6812cdcc7fd477486d4b4e6f6a66c6a584ca25d6b1c0793c24af022453", size = 16939 },
+]
+
+[[package]]
 name = "types-pyscreeze"
 version = "1.0.1.20240822"
 source = { registry = "https://pypi.org/simple" }
@@ -2267,6 +2302,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/59/80/95a8fe5c3b90eaa7acd2e333296c514c62f6bce3049b681d12e8d6e9c43a/types-PyScreeze-1.0.1.20240822.tar.gz", hash = "sha256:ee44c1accffb42ec9ca2ab9f3e959077aed363c38557d979cb8bf02029c8b0e1", size = 4376 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c9/ed/95157b8f05d7a58168ef6a22459ecd828a43c5427c3a20102fa92c5c12d3/types_PyScreeze-1.0.1.20240822-py3-none-any.whl", hash = "sha256:0641ffece1006ce43e0c111a336e14d515ae16b8275e8f9c33e7e0001455a81e", size = 3921 },
+]
+
+[[package]]
+name = "types-setuptools"
+version = "75.8.0.20250110"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f7/42/5713e90d4f9683f2301d900f33e4fc2405ad8ac224dda30f6cb7f4cd215b/types_setuptools-75.8.0.20250110.tar.gz", hash = "sha256:96f7ec8bbd6e0a54ea180d66ad68ad7a1d7954e7281a710ea2de75e355545271", size = 48185 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cf/a3/dbfd106751b11c728cec21cc62cbfe7ff7391b935c4b6e8f0bdc2e6fd541/types_setuptools-75.8.0.20250110-py3-none-any.whl", hash = "sha256:a9f12980bbf9bcdc23ecd80755789085bad6bfce4060c2275bc2b4ca9f2bc480", size = 71521 },
 ]
 
 [[package]]
