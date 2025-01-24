@@ -1485,7 +1485,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "qtconsole", specifier = ">=5.6.1" },
     { name = "rich" },
-    { name = "superqt", extras = ["cmap", "iconify"], specifier = ">=0.7.0" },
+    { name = "superqt", extras = ["cmap", "iconify"], specifier = ">=0.7.1" },
     { name = "tifffile", specifier = ">=2024.12.12" },
     { name = "tqdm", specifier = ">=4.67.1" },
     { name = "zarr", specifier = ">=2.18.3" },
