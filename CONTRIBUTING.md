@@ -38,6 +38,23 @@ current environment matches the requirements specified in `uv.lock`.
 > in `pyproject.toml`, and then run `uv lock` to update the lockfile, then
 > commit it and open a PR.
 
+### Pre-commit hooks
+
+We use [pre-commit](https://pre-commit.com/) to run code checks on CI. These
+checks are defined in [`.pre-commit-config.yaml`](./.pre-commit-config.yaml). If
+you want to catch errors locally before pushing to github, you can install the
+pre-commit hooks with:
+
+```sh
+pre-commit install
+```
+
+To run the tests manually at any time, you can use:
+
+```sh
+pre-commit run --all-files
+```
+
 ### Activating the virtual environment (optional)
 
 If you want to activate the virtual environment to run commands directly (without
