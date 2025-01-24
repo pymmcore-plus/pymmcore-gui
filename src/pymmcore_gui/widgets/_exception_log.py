@@ -223,4 +223,4 @@ def _is_dark_themed(wdg: QWidget) -> bool:
     """Check if the widget is using a dark theme."""
     palette = wdg.palette()
     background_color = palette.color(wdg.backgroundRole())
-    return background_color.lightnessF() < 0.5
+    return bool(background_color.lightnessF() < 0.5)
