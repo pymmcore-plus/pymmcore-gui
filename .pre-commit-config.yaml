@@ -30,6 +30,7 @@ repos:
         additional_dependencies:
           # primary dependencies
           - "--no-deps"
+          - "mypy"
           - ndv[vispy]>=0.2
           - pymmcore-plus
           - pymmcore-nano
