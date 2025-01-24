@@ -43,7 +43,7 @@ jobs:
           qt: true
 
       - name: Install the project
-        run: uv sync --all-extras --dev
+        run: uv sync --all-extras --dev --verbose
 
       - name: Set cache path
         shell: bash
