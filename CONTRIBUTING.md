@@ -1,5 +1,11 @@
 # Info for Contributors
 
+1. [Setup](#setup-with-uv)
+2. [Running](#running-the-gui)
+3. [Testing](#testing)
+4. [Application Bundle Creation](#creating-a-bundled-application)
+5. [Settings and Configuration](#settings-and-configuration)
+
 ## Setup with uv
 
 Dependencies are managed strictly using [uv](https://docs.astral.sh/uv/), and the

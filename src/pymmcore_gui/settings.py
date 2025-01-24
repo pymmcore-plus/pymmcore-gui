@@ -68,7 +68,7 @@ class MMGuiUserPrefsSource(PydanticBaseSettingsSource):
     ) -> tuple[Any, str, bool]:
         """Return the value for a field (required by ABC)."""
         # Nothing to do here. Only implement the return statement to make mypy happy
-        return None, "", False
+        return None, "", False  # pragma: no cover
 
 
 class SettingsV1(BaseSettings):

@@ -1,4 +1,10 @@
-from pymmcore_gui.settings import SettingsV1
+from unittest.mock import patch
+
+from pydantic import BaseModel
+from pydantic_settings import BaseSettings
+import pytest
+from pymmcore_gui.settings import SettingsV1, MMGuiUserPrefsSource
+from pathlib import Path
 
 
 def test_settings() -> None:
@@ -9,3 +15,21 @@ def test_settings() -> None:
     # (this is important for backwards compatibility)
     v = SettingsV1(random_value="asdf")
     assert not hasattr(v, "random_value")
+
+
+def test_user_settings(tmp_path: Path) -> None:
+    fake_settings = tmp_path / "settings.json"
+    with patch.object(MMGuiUserPrefsSource, "FILE", fake_settings):
+        assert not MMGuiUserPrefsSource.exists()
+        assert MMGuiUserPrefsSource.values() == {}
+
+        fake_settings.touch()
+        assert MMGuiUserPrefsSource.exists()
+        assert MMGuiUserPrefsSource(BaseSettings)() == {}
+
+        fake_settings.write_text('{"a": 1}')
+        assert MMGuiUserPrefsSource(BaseSettings)() == {"a": 1}
+
+        fake_settings.write_text("[]")
+        with pytest.warns(RuntimeWarning, match="Failed to read settings"):
+            assert MMGuiUserPrefsSource(BaseSettings)() == {}
