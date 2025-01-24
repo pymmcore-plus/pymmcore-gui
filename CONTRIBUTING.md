@@ -34,9 +34,10 @@ current environment matches the requirements specified in `uv.lock`.
 
 ### Pre-commit hooks
 
-We use [pre-commit](https://pre-commit.com/) to run code checks on CI.
-If you want to catch errors locally before pushing to github, you
-can install the pre-commit hooks with:
+We use [pre-commit](https://pre-commit.com/) to run code checks on CI. These
+checks are defined in [`.pre-commit-config.yaml`](./.pre-commit-config.yaml). If
+you want to catch errors locally before pushing to github, you can install the
+pre-commit hooks with:
 
 ```sh
 pre-commit install
