@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 import traceback
 from functools import cache, cached_property
-from typing import TYPE_CHECKING, Never
+from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QTextCursor
@@ -27,7 +27,7 @@ from pymmcore_gui import _app
 
 if TYPE_CHECKING:
     from types import TracebackType
-    from typing import TypeAlias
+    from typing import Never, TypeAlias
 
     ExcInfo: TypeAlias = tuple[type[BaseException], BaseException, TracebackType | None]
 
