@@ -1,10 +1,10 @@
+from pathlib import Path
 from unittest.mock import patch
 
-from pydantic import BaseModel
-from pydantic_settings import BaseSettings
 import pytest
-from pymmcore_gui.settings import SettingsV1, MMGuiUserPrefsSource
-from pathlib import Path
+from pydantic_settings import BaseSettings
+
+from pymmcore_gui.settings import MMGuiUserPrefsSource, SettingsV1
 
 
 def test_settings() -> None:
