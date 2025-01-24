@@ -103,7 +103,7 @@ class MicroManagerGUI(QMainWindow):
         self._inner_widgets = WeakValueDictionary[ActionKey, QWidget]()
         self._dock_widgets = WeakValueDictionary[ActionKey, QDockWidget]()
         self._qwidgets = ChainMap[ActionKey, QWidget](
-            self._dock_widgets,
+            self._dock_widgets,  # type: ignore [arg-type]  # (not covariant)
             self._inner_widgets,
         )
 
@@ -203,7 +203,7 @@ class MicroManagerGUI(QMainWindow):
                     superCloseEvent(a0)
 
             superCloseEvent = widget.closeEvent
-            widget.closeEvent = _closeEvent
+            widget.closeEvent = _closeEvent  # type: ignore [method-assign]
 
             # also hook up QDialog's finished signal to closeEvent
             if isinstance(widget, QDialog):
@@ -212,7 +212,7 @@ class MicroManagerGUI(QMainWindow):
             if dock_area := key.dock_area():
                 self._dock_widgets[key] = dw = QDockWidget(key.value, self)
                 dw.setWidget(widget)
-                dw.closeEvent = _closeEvent
+                dw.closeEvent = _closeEvent  # type: ignore [assignment]
                 self.addDockWidget(dock_area, dw)
 
             # toggle checked state of QAction if it exists
