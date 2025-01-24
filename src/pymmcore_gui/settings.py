@@ -106,3 +106,6 @@ class SettingsV1(BaseSettings):
             MMGuiUserPrefsSource(settings_cls),
             file_secret_settings,
         )
+
+
+Settings = SettingsV1
