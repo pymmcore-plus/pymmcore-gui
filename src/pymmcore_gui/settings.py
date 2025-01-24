@@ -15,7 +15,7 @@ APP_NAME = "pymmcore-gui"
 USER_DATA_DIR = Path(user_data_dir(appname=APP_NAME))
 
 
-class MMGuiSettingsSource(PydanticBaseSettingsSource):
+class MMGuiUserPrefsSource(PydanticBaseSettingsSource):
     """Loads variables from file json file persisted to disk."""
 
     FILE = USER_DATA_DIR / "settings.json"
@@ -23,20 +23,20 @@ class MMGuiSettingsSource(PydanticBaseSettingsSource):
     @staticmethod
     def exists() -> bool:
         """Return True if the settings file exists."""
-        return MMGuiSettingsSource.FILE.exists()
+        return MMGuiUserPrefsSource.FILE.exists()
 
     @staticmethod
     def content() -> str:
         """Return the contents of the settings file."""
-        return MMGuiSettingsSource.FILE.read_text(errors="ignore")
+        return MMGuiUserPrefsSource.FILE.read_text(errors="ignore")
 
     @staticmethod
     def values() -> dict[str, Any]:
         """Return the contents of the settings file."""
-        if not MMGuiSettingsSource.exists():
+        if not MMGuiUserPrefsSource.exists():
             return {}
 
-        if not (content := MMGuiSettingsSource.content()):
+        if not (content := MMGuiUserPrefsSource.content()):
             # file exists but is empty
             return {}
 
@@ -49,11 +49,11 @@ class MMGuiSettingsSource(PydanticBaseSettingsSource):
     def _read_settings(self) -> dict[str, Any]:
         """Return the settings values from the source."""
         try:
-            return MMGuiSettingsSource.values()
+            return MMGuiUserPrefsSource.values()
         except Exception as e:
             # Never block the application from starting because of a settings file
             warnings.warn(
-                f"Failed to read settings from {MMGuiSettingsSource.FILE}: {e}",
+                f"Failed to read settings from {MMGuiUserPrefsSource.FILE}: {e}",
                 RuntimeWarning,
                 stacklevel=2,
             )
@@ -103,6 +103,6 @@ class SettingsV1(BaseSettings):
             init_settings,
             env_settings,
             dotenv_settings,
-            MMGuiSettingsSource(settings_cls),
+            MMGuiUserPrefsSource(settings_cls),
             file_secret_settings,
         )
