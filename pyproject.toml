@@ -129,11 +129,7 @@ pretty = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["qtconsole.*"]
-follow_untyped_imports = true
-
-[[tool.mypy.overrides]]
-module = ["pydevd.*"]
+module = ["qtconsole.*", "pydevd.*"]
 ignore_missing_imports = true
 
 # https://docs.pytest.org/

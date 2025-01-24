@@ -27,6 +27,7 @@ except ImportError:
     rich = None  # type: ignore
 
 if TYPE_CHECKING:
+    from ipykernel.inprocess.ipkernel import InProcessInteractiveShell, InProcessKernel
     from PyQt6.QtGui import QCloseEvent
     from PyQt6.QtWidgets import QWidget
 
@@ -46,16 +47,18 @@ class MMConsole(RichJupyterWidget):
 
         # Create an in-process kernel
         self.kernel_manager = QtInProcessKernelManager()
-        self.kernel_manager.start_kernel()
-        self.kernel_manager.kernel.gui = "qt"
-        self.shell = self.kernel_manager.kernel.shell
+        self.kernel_manager.start_kernel()  # this creates .kernel attribute
+        kernel = cast("InProcessKernel", self.kernel_manager.kernel)
+
+        kernel.gui = "qt"
+        self.shell = cast("InProcessInteractiveShell", kernel.shell)
         self.shell.banner1 = ""
         self.kernel_client = self.kernel_manager.client()
         self.kernel_client.start_channels()
 
         if rich is not None:
-            self.shell.run_cell("from rich import pretty; pretty.install()")
-            self.shell.run_cell("from rich import print")
+            self.shell.run_cell("from rich import pretty; pretty.install()")  # type: ignore
+            self.shell.run_cell("from rich import print")  # type: ignore
 
         self._inject_core_vars()
 
@@ -99,7 +102,7 @@ class MMConsole(RichJupyterWidget):
         return "\n".join(lines)
 
     def push(self, variables: dict[str, Any]) -> None:
-        self.shell.push(variables)
+        self.shell.push(variables)  # type: ignore
 
     def get_user_variables(self) -> dict:
         """Return the variables pushed to the console."""

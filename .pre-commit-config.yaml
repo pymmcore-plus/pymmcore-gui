@@ -43,3 +43,4 @@ repos:
           - zarr>=2.18.3
           # typing-only dependencies
           - types-Pygments
+          - types-pyinstaller
