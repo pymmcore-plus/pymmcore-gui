@@ -36,14 +36,15 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+          prune-cache: false
           python-version: ${{ matrix.python-version }}
+
+      - name: Install the project
+        run: uv sync --all-extras --dev --verbose
 
       - uses: pyvista/setup-headless-display-action@v3
         with:
           qt: true
-
-      - name: Install the project
-        run: uv sync --all-extras --dev --verbose
 
       - name: Set cache path
         shell: bash
