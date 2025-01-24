@@ -48,6 +48,7 @@ dependencies = [
     "tifffile>=2024.12.12",
     "tqdm>=4.67.1",
     "zarr>=2.18.3",
+    "pydantic-settings>=2.7.1",
 ]
 
 [tool.uv]
