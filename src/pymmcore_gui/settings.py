@@ -13,43 +13,62 @@ from pydantic_settings import (
 
 APP_NAME = "pymmcore-gui"
 USER_DATA_DIR = Path(user_data_dir(appname=APP_NAME))
-SETTINGS_FILE = USER_DATA_DIR / "settings.json"
 
 
 class MMGuiSettingsSource(PydanticBaseSettingsSource):
     """Loads variables from file json file persisted to disk."""
 
+    FILE = USER_DATA_DIR / "settings.json"
+
+    @staticmethod
+    def exists() -> bool:
+        """Return True if the settings file exists."""
+        return MMGuiSettingsSource.FILE.exists()
+
+    @staticmethod
+    def content() -> str:
+        """Return the contents of the settings file."""
+        return MMGuiSettingsSource.FILE.read_text(errors="ignore")
+
+    @staticmethod
+    def values() -> dict[str, Any]:
+        """Return the contents of the settings file."""
+        if not MMGuiSettingsSource.exists():
+            return {}
+
+        if not (content := MMGuiSettingsSource.content()):
+            # file exists but is empty
+            return {}
+
+        values = json.loads(content)
+        if not isinstance(values, dict):
+            raise ValueError("Settings file does not contain a dictionary.")
+
+        return values
+
     def _read_settings(self) -> dict[str, Any]:
-        if SETTINGS_FILE.exists():
-            try:
-                if not (content := SETTINGS_FILE.read_text(errors="ignore")):
-                    # file exists but is empty
-                    return {}
-
-                values = json.loads(content)
-                if not isinstance(values, dict):
-                    raise ValueError("Settings file does not contain a dictionary.")
-
-                return values
-            except Exception as e:
-                # Never block the application from starting because of a settings file
-                warnings.warn(
-                    f"Failed to read settings from {SETTINGS_FILE}: {e}",
-                    RuntimeWarning,
-                    stacklevel=2,
-                )
+        """Return the settings values from the source."""
+        try:
+            return MMGuiSettingsSource.values()
+        except Exception as e:
+            # Never block the application from starting because of a settings file
+            warnings.warn(
+                f"Failed to read settings from {MMGuiSettingsSource.FILE}: {e}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
         return {}
-
-    def get_field_value(
-        self, field: FieldInfo, field_name: str
-    ) -> tuple[Any, str, bool]:
-        """Return the value for a field."""
-        # Nothing to do here. Only implement the return statement to make mypy happy
-        return None, "", False
 
     def __call__(self) -> dict[str, Any]:
         """Return Settings values for this source."""
         return self._read_settings()
+
+    def get_field_value(
+        self, field: FieldInfo, field_name: str
+    ) -> tuple[Any, str, bool]:
+        """Return the value for a field (required by ABC)."""
+        # Nothing to do here. Only implement the return statement to make mypy happy
+        return None, "", False
 
 
 class SettingsV1(BaseSettings):
