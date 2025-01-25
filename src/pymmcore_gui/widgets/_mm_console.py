@@ -31,6 +31,8 @@ if TYPE_CHECKING:
     from PyQt6.QtGui import QCloseEvent
     from PyQt6.QtWidgets import QWidget
 
+    # RichJupyterWidget has a very complex inheritance structure, and mypy/pyright
+    # are unable to determine that it is a QWidget subclass. This is a workaround.
     class RichJupyterWidget(RichJupyterWidget, QWidget): ...  # type: ignore[no-redef]
 
 
