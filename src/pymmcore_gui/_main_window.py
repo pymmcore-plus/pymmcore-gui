@@ -33,6 +33,7 @@ if TYPE_CHECKING:
 class Menu(str, Enum):
     """Menu names."""
 
+    PYMM_GUI = "pymmcore-gui"
     WINDOW = "Window"
 
     def __str__(self) -> str:
@@ -78,6 +79,7 @@ class MicroManagerGUI(QMainWindow):
     MENUS: Mapping[
         str, list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QMenu]
     ] = {
+        Menu.PYMM_GUI: [WidgetAction.ABOUT],
         Menu.WINDOW: [
             WidgetAction.CONSOLE,
             WidgetAction.PROP_BROWSER,
