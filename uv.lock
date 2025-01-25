@@ -1367,6 +1367,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "qtconsole" },
     { name = "rich" },
+    { name = "sentry-sdk" },
     { name = "superqt", extra = ["cmap", "iconify"] },
     { name = "tifffile" },
     { name = "tqdm" },
@@ -1403,6 +1404,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "qtconsole", specifier = ">=5.6.1" },
     { name = "rich" },
+    { name = "sentry-sdk", specifier = ">=2.20.0" },
     { name = "superqt", extras = ["cmap", "iconify"], specifier = ">=0.7.1" },
     { name = "tifffile", specifier = ">=2024.12.12" },
     { name = "tqdm", specifier = ">=4.67.1" },
@@ -1975,6 +1977,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/3a/e8/4ba3b2405db0864f9ea5cee2aaa7c057d5ee6c122e996428e9c2b749ddf0/rust_just-1.38.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:c626588d64b5fd39bbe5072c6ddd0e0f443b1682a4143be45429046f42be66e3", size = 1938453 },
     { url = "https://files.pythonhosted.org/packages/23/17/0f10aca56132d47e085c33a46d4a016a08ec081cd9efb8e55953ddc2067e/rust_just-1.38.0-py3-none-win32.whl", hash = "sha256:bcbaa423988d94218a457f44aa1310e959a2e634a93147d70cb9940b6a687a5d", size = 1559911 },
     { url = "https://files.pythonhosted.org/packages/a1/78/0a8b305c9fcd16a639ad6dd56268c642828769cd736041d554c82dc135ea/rust_just-1.38.0-py3-none-win_amd64.whl", hash = "sha256:2590b0a3eed6090129a618b7cbd94e107407b618eef95baba8c596fcf598f7a7", size = 1679295 },
+]
+
+[[package]]
+name = "sentry-sdk"
+version = "2.20.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/68/e8/6a366c0cd5e129dda6ecb20ff097f70b18182c248d4c27e813c21f98992a/sentry_sdk-2.20.0.tar.gz", hash = "sha256:afa82713a92facf847df3c6f63cec71eb488d826a50965def3d7722aa6f0fdab", size = 300125 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e6/0f/6f7e6cd0f4a141752caef3f79300148422fdf2b8b68b531f30b2b0c0cbda/sentry_sdk-2.20.0-py2.py3-none-any.whl", hash = "sha256:c359a1edf950eb5e80cffd7d9111f3dbeef57994cb4415df37d39fda2cf22364", size = 322576 },
 ]
 
 [[package]]
