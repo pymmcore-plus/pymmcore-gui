@@ -18,7 +18,6 @@ if os.name == "nt":
 
 from PyQt6.QtWidgets import QApplication
 from qtconsole.inprocess import QtInProcessKernelManager
-from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from traitlets import default
 
 try:
@@ -27,11 +26,19 @@ except ImportError:
     rich = None  # type: ignore
 
 if TYPE_CHECKING:
+    from ipykernel.inprocess.ipkernel import InProcessInteractiveShell, InProcessKernel
     from PyQt6.QtGui import QCloseEvent
     from PyQt6.QtWidgets import QWidget
+    from qtconsole.rich_jupyter_widget import RichJupyterWidget
+
+    # RichJupyterWidget has a very complex inheritance structure, and mypy/pyright
+    # are unable to determine that it is a QWidget subclass. This is a workaround.
+    class QtConsole(RichJupyterWidget, QWidget): ...  # pyright: ignore [reportIncompatibleMethodOverride]
+else:
+    from qtconsole.rich_jupyter_widget import RichJupyterWidget as QtConsole
 
 
-class MMConsole(RichJupyterWidget):
+class MMConsole(QtConsole):
     """A Qt widget for an IPython console, providing access to UI components."""
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -46,16 +53,18 @@ class MMConsole(RichJupyterWidget):
 
         # Create an in-process kernel
         self.kernel_manager = QtInProcessKernelManager()
-        self.kernel_manager.start_kernel()
-        self.kernel_manager.kernel.gui = "qt"
-        self.shell = self.kernel_manager.kernel.shell
+        self.kernel_manager.start_kernel()  # this creates .kernel attribute
+        kernel = cast("InProcessKernel", self.kernel_manager.kernel)
+
+        kernel.gui = "qt"
+        self.shell = cast("InProcessInteractiveShell", kernel.shell)
         self.shell.banner1 = ""
         self.kernel_client = self.kernel_manager.client()
         self.kernel_client.start_channels()
 
         if rich is not None:
-            self.shell.run_cell("from rich import pretty; pretty.install()")
-            self.shell.run_cell("from rich import print")
+            self.shell.run_cell("from rich import pretty; pretty.install()")  # type: ignore [no-untyped-call]
+            self.shell.run_cell("from rich import print")  # type: ignore [no-untyped-call]
 
         self._inject_core_vars()
 
@@ -84,7 +93,7 @@ class MMConsole(RichJupyterWidget):
         default_vars.update({"mmc": mmc, "core": mmc, "mmcore": mmc, "mda": mmc.mda})
         self.push(default_vars)
 
-    @default("banner")  # type: ignore [misc]
+    @default("banner")
     def _banner_default(self) -> str:
         # Set the banner displayed at the top of the console
         lines = [
@@ -99,13 +108,13 @@ class MMConsole(RichJupyterWidget):
         return "\n".join(lines)
 
     def push(self, variables: dict[str, Any]) -> None:
-        self.shell.push(variables)
+        self.shell.push(variables)  # type: ignore [no-untyped-call]
 
     def get_user_variables(self) -> dict:
         """Return the variables pushed to the console."""
         return {k: v for k, v in self.shell.user_ns.items() if k != "__builtins__"}
 
-    def closeEvent(self, event: QCloseEvent) -> None:
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
         """Clean up the integrated console."""
         if self.kernel_client is not None:
             self.kernel_client.stop_channels()
@@ -115,5 +124,6 @@ class MMConsole(RichJupyterWidget):
         # RichJupyterWidget doesn't clean these up
         self._completion_widget.deleteLater()
         self._call_tip_widget.deleteLater()
-        cast("QWidget", self).deleteLater()
-        event.accept()
+        self.deleteLater()
+        if a0 is not None:
+            a0.accept()

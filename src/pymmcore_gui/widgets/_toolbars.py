@@ -41,7 +41,7 @@ class OCToolBar(QToolBar):
             action.setCheckable(True)
             action.setChecked(preset_name == current)
 
-            @action.triggered.connect  # type: ignore [misc]
+            @action.triggered.connect  # type: ignore
             def _(checked: bool, pname: str = preset_name) -> None:
                 mmc.setConfig(ch_group, pname)
 
@@ -61,7 +61,8 @@ class ShuttersToolbar(QToolBar):
 
     def _on_cfg_loaded(self) -> None:
         self._clear()
-        if not (shutters := self.mmc.getLoadedDevicesOfType(DeviceType.ShutterDevice)):
+        shutters = self.mmc.getLoadedDevicesOfType(DeviceType.ShutterDevice)  # pyright: ignore [reportArgumentType]
+        if not shutters:
             return
 
         shutters_devs = sorted(

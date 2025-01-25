@@ -17,10 +17,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: pipx run check-manifest
+  pyright:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - run: uv sync
+      - run: uv run pyright
 
   test:
     name: ${{ matrix.platform }} py${{ matrix.python-version }}
     runs-on: ${{ matrix.platform }}
+    env:
+      UV_LOCKED: true
     strategy:
       fail-fast: false
       matrix:
@@ -33,18 +47,32 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
-          version: "0.5.21"
           enable-cache: true
           python-version: ${{ matrix.python-version }}
+
+      - name: Install the project
+        run: uv sync
 
       - uses: pyvista/setup-headless-display-action@v3
         with:
           qt: true
 
-      - name: Install the project
-        run: uv sync --all-extras --dev
+      - name: Set cache path
+        shell: bash
+        run: |
+          set -e
+          CACHE_PATH=$(uv run python -c 'from pymmcore_plus import install; print(install.USER_DATA_MM_PATH)')
+          echo "CACHE_PATH=$CACHE_PATH" >> $GITHUB_ENV
+
+      - name: Cache Drivers
+        id: cache-mm-build
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CACHE_PATH }}
+          key: ${{ runner.os }}-mmbuild
 
       - name: Install Micro-Manager
+        if: steps.cache-mm-build.outputs.cache-hit != 'true'
         run: uv run mmcore install
 
       - name: Test
@@ -54,36 +82,3 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-
-  deploy:
-    name: Deploy
-    needs: test
-    if: success() && startsWith(github.ref, 'refs/tags/') && github.event_name != 'schedule'
-    runs-on: ubuntu-latest
-
-    permissions:
-      id-token: write
-      contents: write
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: 👷 Build
-        run: |
-          python -m pip install build
-          python -m build
-
-      - name: 🚢 Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-
-      - uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true
-          files: "./dist/*"

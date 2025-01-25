@@ -5,7 +5,7 @@
 Dependencies are managed strictly using [uv](https://docs.astral.sh/uv/), and the
 `uv.lock` [lockfile](https://docs.astral.sh/uv/concepts/projects/layout/#the-lockfile)
 is checked into source, to ensure a reproducible environment for all developers.
-The lockfile also dictates the exact dependencies that will go into the bundled> [!NOTE]  
+The lockfile also dictates the exact dependencies that will go into the bundled
 application.
 
 To get started, make sure you have
@@ -31,6 +31,23 @@ current environment matches the requirements specified in `uv.lock`.
 > modify the *constraints* of the dependencies, you should do so as usual
 > in `pyproject.toml`, and then run `uv lock` to update the lockfile, then
 > commit it and open a PR.
+
+### Pre-commit hooks
+
+We use [pre-commit](https://pre-commit.com/) to run code checks on CI. These
+checks are defined in [`.pre-commit-config.yaml`](./.pre-commit-config.yaml). If
+you want to catch errors locally before pushing to github, you can install the
+pre-commit hooks with:
+
+```sh
+pre-commit install
+```
+
+To run the tests manually at any time, you can use:
+
+```sh
+pre-commit run --all-files
+```
 
 ### Activating the virtual environment (optional)
 

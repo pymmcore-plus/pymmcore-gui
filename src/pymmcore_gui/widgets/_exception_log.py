@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import sys
 import traceback
 from functools import cache, cached_property
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QTextCursor
+from PyQt6.QtGui import QTextCursor
 from PyQt6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -20,19 +21,32 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from superqt.utils import CodeSyntaxHighlight
 
 from pymmcore_gui import _app
-
-from ._code_syntax_highlight import CodeSyntaxHighlight
 
 if TYPE_CHECKING:
     from types import TracebackType
     from typing import TypeAlias
 
+    from typing_extensions import Never
+
     ExcInfo: TypeAlias = tuple[type[BaseException], BaseException, TracebackType | None]
 
-MONO = "Menlo, Courier New, Monaco, Consolas, Andale Mono, Source Code Pro, monospace"
-DEFAULT_THEME = "default"
+LIGHT_DEFAULT = "default"
+DARK_DEFAULT = "gruvbox-dark"
+THEME_OPTIONS = [
+    # ---- light themes ----
+    "colorful",
+    "default",
+    "friendly",
+    "solarized-light",
+    # ---- dark themes ----
+    "dracula",
+    "gruvbox-dark",
+    "one-dark",
+    "solarized-dark",
+]
 
 
 @cache
@@ -52,7 +66,7 @@ class ExceptionLog(QWidget):
 
         self.exception_log = _app.EXCEPTION_LOG
 
-        # Top: Filter and Copy
+        # Top Row: Filter and Copy
         self._type_combo = QComboBox()
         self._type_combo.addItem("All")
         self._type_combo.currentTextChanged.connect(self._refresh_exc_list)
@@ -62,67 +76,70 @@ class ExceptionLog(QWidget):
         self._text_search.setClearButtonEnabled(True)
         self._text_search.textChanged.connect(self._refresh_exc_list)
 
-        self._copy_btn = QPushButton("Copy to Clipboard")
-        self._copy_btn.clicked.connect(self.copy_to_clipboard)
-
-        # Middle: Exception List
+        # Middle: Exception List and details
         self._list_wdg = QListWidget()
         self._list_wdg.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self._list_wdg.currentRowChanged.connect(self._on_current_row_changed)
 
-        # Bottom: Exception Details
-        self._traceback_area = txt = QTextEdit()
-        txt.setReadOnly(True)
-        txt.setFont(QFont(MONO))
-        self._highlight = CodeSyntaxHighlight(txt, "pytb", DEFAULT_THEME)
+        self._traceback_area = tb_area = QTextEdit()
+        tb_area.setReadOnly(True)
+
+        # Bottom: Style and Clear
+        default_theme = DARK_DEFAULT if _is_dark_themed(self) else LIGHT_DEFAULT
+        self._highlight = CodeSyntaxHighlight(tb_area, "pytb", default_theme)
 
         self._style_combo = QComboBox()
         self._style_combo.currentTextChanged.connect(self._update_style)
-        self._style_combo.addItems(
-            [
-                "colorful",
-                "default",
-                "friendly",
-                "solarized-light",
-                "dracula",
-                "gruvbox-dark",
-                "one-dark",
-                "solarized-dark",
-            ]
-        )
+        self._style_combo.addItems(THEME_OPTIONS)
         self._style_combo.insertSeparator(4)
-        self._style_combo.setCurrentText(DEFAULT_THEME)
+        self._style_combo.setCurrentText(default_theme)
+
+        self._copy_btn = QPushButton("Copy to Clipboard")
+        self._copy_btn.clicked.connect(self.copy_to_clipboard)
+
+        self._clear_btn = QPushButton("Clear")
+        self._clear_btn.clicked.connect(self._clear)
 
         # LAYOUT
 
-        control_layout = QHBoxLayout()
-        control_layout.addWidget(QLabel("Error Type:"), 0)
-        control_layout.addWidget(self._type_combo, 1)
-        control_layout.addWidget(QLabel("Search:"), 0)
-        control_layout.addWidget(self._text_search, 1)
+        top_row = QHBoxLayout()
 
-        style_layout = QHBoxLayout()
-        style_layout.addStretch()
-        style_layout.addWidget(QLabel("Style:"))
-        style_layout.addWidget(self._style_combo)
-        style_layout.addWidget(self._copy_btn)
+        top_row.addWidget(QLabel("Error Type:"), 0)
+        top_row.addWidget(self._type_combo, 1)
+        top_row.addWidget(QLabel("Search:"), 0)
+        top_row.addWidget(self._text_search, 1)
+
+        bottom_row = QHBoxLayout()
+        bottom_row.addStretch()
+        bottom_row.addWidget(QLabel("Style:"))
+        bottom_row.addWidget(self._style_combo)
+        bottom_row.addWidget(self._copy_btn)
+        bottom_row.addWidget(self._clear_btn)
 
         splitter = QSplitter(Qt.Orientation.Vertical)
         splitter.addWidget(self._list_wdg)
         splitter.addWidget(self._traceback_area)
 
         layout = QVBoxLayout(self)
-        layout.addLayout(control_layout)
+        layout.addLayout(top_row)
         layout.addWidget(splitter)
-        layout.addLayout(style_layout)
+        layout.addLayout(bottom_row)
         self.resize(800, 600)
 
         self._refresh()
 
         if app := QApplication.instance():
-            # support for live updates
-            if hasattr(app, "exceptionRaised"):
+            # support for live updates.
+            if isinstance(app, _app.MMQApplication):
                 app.exceptionRaised.connect(self._refresh)
+
+        # TEST BUTTON FOR DEBUGGING --------------------
+
+        if not getattr(sys, "frozen", False):
+            raise_btn = QPushButton("TEST")
+            raise_btn.clicked.connect(self._raise_exception)
+            bottom_row.insertStretch(0)
+            bottom_row.insertWidget(0, raise_btn)
 
     def _refresh(self) -> None:
         """Add a new exception to the log."""
@@ -194,3 +211,18 @@ class ExceptionLog(QWidget):
         if clipboard := QApplication.clipboard():
             details = self._traceback_area.toPlainText()
             clipboard.setText(details)
+
+    def _clear(self) -> None:
+        """Clear the exception log."""
+        self.exception_log.clear()
+        self._refresh()
+
+    def _raise_exception(self) -> Never:
+        raise ValueError("This is a test exception.")
+
+
+def _is_dark_themed(wdg: QWidget) -> bool:
+    """Check if the widget is using a dark theme."""
+    palette = wdg.palette()
+    background_color = palette.color(wdg.backgroundRole())
+    return bool(background_color.lightnessF() < 0.5)
