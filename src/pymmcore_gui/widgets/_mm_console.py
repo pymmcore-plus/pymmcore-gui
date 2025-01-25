@@ -18,7 +18,6 @@ if os.name == "nt":
 
 from PyQt6.QtWidgets import QApplication
 from qtconsole.inprocess import QtInProcessKernelManager
-from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from traitlets import default
 
 try:
@@ -30,13 +29,16 @@ if TYPE_CHECKING:
     from ipykernel.inprocess.ipkernel import InProcessInteractiveShell, InProcessKernel
     from PyQt6.QtGui import QCloseEvent
     from PyQt6.QtWidgets import QWidget
+    from qtconsole.rich_jupyter_widget import RichJupyterWidget
 
     # RichJupyterWidget has a very complex inheritance structure, and mypy/pyright
     # are unable to determine that it is a QWidget subclass. This is a workaround.
-    class RichJupyterWidget(RichJupyterWidget, QWidget): ...  # type: ignore[no-redef]
+    class QtConsole(RichJupyterWidget, QWidget): ...  # pyright: ignore [reportIncompatibleMethodOverride]
+else:
+    from qtconsole.rich_jupyter_widget import RichJupyterWidget as QtConsole
 
 
-class MMConsole(RichJupyterWidget):
+class MMConsole(QtConsole):
     """A Qt widget for an IPython console, providing access to UI components."""
 
     def __init__(self, parent: QWidget | None = None) -> None:

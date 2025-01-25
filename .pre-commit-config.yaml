@@ -72,10 +72,12 @@ repos:
   # as an alternative to that annoying list of packages,
   # pyright can use a virtual environment to find the installed packages
   # here we direct it to look in the current directory for a .venv folder
+  # however, this won't work for pre-commit.ci (because of environment creation limits)
+  # so we use stages: [manual], and run it manually in ci.yml
   - repo: https://github.com/RobertCraigie/pyright-python
     rev: v1.1.392.post0
     hooks:
       - id: pyright
         files: "^src/"
         args: [--venvpath, "."]
-        # stages: [manual]
+        stages: [manual]
