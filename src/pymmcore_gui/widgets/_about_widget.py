@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
     QDialogButtonBox,
     QFormLayout,
     QLabel,
+    QHBoxLayout,
     QVBoxLayout,
     QWidget,
 )
@@ -30,10 +31,10 @@ class AboutWidget(QDialog):
         title = QLabel("pymmcore-gui")
         title.setFont(QFont("Arial", 20, QFont.Weight.Bold))
 
-        version = QLabel(f"v{__version__}")
+        version = QLabel(f"Version: {__version__}")
 
         logo = QLabel()
-        logo.setPixmap(QPixmap(str(RESOURCES / "logo.png")).scaled(180, 180))
+        logo.setPixmap(QPixmap(str(RESOURCES / "logo.png")).scaled(160, 160))
 
         link = QLabel(f"<a href={gh_link()}>{GH_REPO_URL}</a>")
         link.setTextFormat(Qt.TextFormat.RichText)
@@ -41,6 +42,8 @@ class AboutWidget(QDialog):
         link.setOpenExternalLinks(True)
 
         sys_info = system_info()
+        sys_info.pop("tifffile", None)
+        sys_info.pop("zarr", None)
         self._info = {"pymmcore-gui": __version__, **sys_info}
 
         form = QFormLayout()
@@ -55,11 +58,25 @@ class AboutWidget(QDialog):
         if copy := btn_box.addButton("Copy", QDialogButtonBox.ButtonRole.ActionRole):
             copy.clicked.connect(self._copy_info)
 
+        title_layout = QVBoxLayout()
+        title_layout.addStretch()
+        title_layout.addWidget(title)
+        title_layout.addWidget(version)
+        title_layout.addWidget(link)
+        title_layout.addStretch()
+
+        header_layout = QHBoxLayout()
+        header_layout.addStretch()
+        header_layout.addWidget(logo)
+        header_layout.addLayout(title_layout)
+        header_layout.addStretch()
+
         layout = QVBoxLayout(self)
-        layout.addWidget(title, 0, alignment=Qt.AlignmentFlag.AlignHCenter)
-        layout.addWidget(version, 0, alignment=Qt.AlignmentFlag.AlignHCenter)
-        layout.addWidget(logo, 0, alignment=Qt.AlignmentFlag.AlignHCenter)
-        layout.addWidget(link, 0, alignment=Qt.AlignmentFlag.AlignHCenter)
+        layout.addLayout(header_layout)
+        # layout.addWidget(title, 0, alignment=Qt.AlignmentFlag.AlignHCenter)
+        # layout.addWidget(version, 0, alignment=Qt.AlignmentFlag.AlignHCenter)
+        # layout.addWidget(logo, 0, alignment=Qt.AlignmentFlag.AlignHCenter)
+        # layout.addWidget(link, 0, alignment=Qt.AlignmentFlag.AlignHCenter)
         layout.addLayout(form)
         layout.addWidget(btn_box)
 
