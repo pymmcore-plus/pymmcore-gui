@@ -97,7 +97,8 @@ def main() -> None:
     win.showMaximized()
     win.show()
 
-    if "_PYI_SPLASH_IPC" in os.environ and importlib.util.find_spec("pyi_splash"):
+    splsh = "_PYI_SPLASH_IPC" in os.environ and importlib.util.find_spec("pyi_splash")
+    if splsh:  # pragma: no cover
         import pyi_splash  # pyright: ignore [reportMissingModuleSource]
 
         pyi_splash.update_text("UI Loaded ...")
@@ -173,7 +174,7 @@ def ndv_excepthook(
         (debugpy := sys.modules.get("debugpy"))
         and debugpy.is_client_connected()
         and ("pydevd" in sys.modules)
-    ):
+    ):  # pragma: no cover
         with suppress(Exception):
             import threading
 
