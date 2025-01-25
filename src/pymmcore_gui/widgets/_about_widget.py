@@ -1,13 +1,12 @@
-import urllib.error
-import urllib.request
 from pathlib import Path
 
-from pymmcore_plus._util import system_info
+from pymmcore_plus._util import system_info  # TODO: make public in pymmcore_plus
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QPixmap
 from PyQt6.QtWidgets import QDialog, QFormLayout, QLabel, QVBoxLayout, QWidget
 
 from pymmcore_gui import __version__
+from pymmcore_gui._utils import GH_REPO_URL, get_link
 
 RESOURCES = Path(__file__).parent.parent / "resources"
 
@@ -25,19 +24,9 @@ class AboutWidget(QDialog):
         logo = QLabel()
         logo.setPixmap(QPixmap(str(RESOURCES / "logo.png")).scaled(180, 180))
 
-        href = url = "http://github.com/pymmcore-plus/pymmcore-gui"
-        if "+" in __version__:
-            sha = __version__.split("+")[1]
-            href = f"{url}/commit/{sha}"
-
-            # check if the link is 404 and fallback to the main url
-            try:
-                urllib.request.urlopen(href)
-            except urllib.error.HTTPError as e:
-                if e.code == 404:
-                    href = url
-
-        link = QLabel(f"<a href={href}>{url}</a>")
+        href = get_link()
+        print(href)
+        link = QLabel(f"<a href={href}>{GH_REPO_URL}</a>")
         link.setTextFormat(Qt.TextFormat.RichText)
         link.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         link.setOpenExternalLinks(True)
