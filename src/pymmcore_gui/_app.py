@@ -8,7 +8,7 @@ import sys
 import traceback
 from contextlib import suppress
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QIcon
@@ -97,8 +97,9 @@ def main() -> None:
     win.showMaximized()
     win.show()
 
-    if "_PYI_SPLASH_IPC" in os.environ and importlib.util.find_spec("pyi_splash"):
-        import pyi_splash
+    splsh = "_PYI_SPLASH_IPC" in os.environ and importlib.util.find_spec("pyi_splash")
+    if splsh:  # pragma: no cover
+        import pyi_splash  # pyright: ignore [reportMissingModuleSource]
 
         pyi_splash.update_text("UI Loaded ...")
         pyi_splash.close()
@@ -173,13 +174,16 @@ def ndv_excepthook(
         (debugpy := sys.modules.get("debugpy"))
         and debugpy.is_client_connected()
         and ("pydevd" in sys.modules)
-    ):
+    ):  # pragma: no cover
         with suppress(Exception):
             import threading
 
-            import pydevd
+            import pydevd  # pyright: ignore [reportMissingImports]
 
-            py_db = pydevd.get_global_debugger()
+            if (py_db := pydevd.get_global_debugger()) is None:
+                return
+
+            py_db = cast("pydevd.PyDB", py_db)
             thread = threading.current_thread()
             additional_info = py_db.set_additional_thread_info(thread)
             additional_info.is_tracing += 1
