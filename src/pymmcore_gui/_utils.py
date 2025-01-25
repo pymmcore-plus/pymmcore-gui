@@ -26,12 +26,40 @@ def get_treeish() -> str:
     return tag
 
 
-def get_link(root: str = GH_REPO_URL, check_404: bool = True) -> str:
-    """Return the link to the current version of the repository."""
+def gh_link(
+    file: str | None = None,
+    line_no: int | tuple[int, int] | None = None,
+    root: str = GH_REPO_URL,
+    treeish: str | None = None,
+    check_404: bool = True,
+) -> str:
+    """Return a link to the root, file, or line number on the github repository.
+
+    Parameters
+    ----------
+    file : str | None
+        The file to link to. If None, the link will point to the root of the repository.
+    line_no : int | tuple[int, int] | None
+        The line number or range of (start, end) numbers to link to. If None, the link
+        will point to the file.
+    root : str
+        The root url of the repository. Default is the pymmcore-plus/pymmcore-gui
+        repository.
+    treeish : str | None
+        The git treeish of the version to link to (such as "main", "v0.1.0", or a
+        commit hash). If None, the treeish is determined from the current version.
+    check_404 : bool
+        If True, check if the link is 404 and fallback to the main url. Default is True.
+    """
     href = root
-    # try to build a link to this specific version
-    treeish = get_treeish()
-    href = f"{root}/tree/{treeish}"
+    href = f"{root}/tree/{treeish or get_treeish()}"
+    if file is not None:
+        href += f"/{file}"
+        if line_no is not None:
+            if isinstance(line_no, tuple):
+                href += f"#L{line_no[0]}-L{line_no[1]}"
+            else:
+                href += f"#L{line_no}"
 
     if check_404:
         # check if the link is 404 and fallback to the main url
