@@ -87,6 +87,7 @@ class MicroManagerGUI(QMainWindow):
             WidgetAction.CAMERA_ROI,
             WidgetAction.CONFIG_GROUPS,
             WidgetAction.EXCEPTION_LOG,
+            WidgetAction.CONFIG_WIZARD,
         ],
     }
 

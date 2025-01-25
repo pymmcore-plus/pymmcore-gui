@@ -117,6 +117,15 @@ def create_stage_widget(parent: QWidget) -> StagesControlWidget:
     return StagesControlWidget(parent=parent, mmcore=_get_core(parent))
 
 
+def create_config_wizard(parent: QWidget) -> pmmw.ConfigWizard:
+    """Create the Hardware Configuration Wizard."""
+    from pymmcore_widgets import ConfigWizard
+
+    mmcore = _get_core(parent)
+    config_file = mmcore.systemConfigurationFile() or ""
+    return ConfigWizard(config_file=config_file, core=mmcore, parent=parent)
+
+
 # ######################## WidgetAction Enum #########################
 
 
@@ -132,6 +141,7 @@ class WidgetAction(ActionKey):
     CONSOLE = "Console"
     EXCEPTION_LOG = "Exception Log"
     STAGE_CONTROL = "Stage Control"
+    CONFIG_WIZARD = "Hardware Config Wizard"
 
     def create_widget(self, parent: QWidget) -> QWidget:
         """Create the widget associated with this action."""
@@ -230,4 +240,11 @@ show_stage_control = WidgetActionInfo(
     icon="fa:arrows",
     create_widget=create_stage_widget,
     dock_area=Qt.DockWidgetArea.LeftDockWidgetArea,
+)
+
+show_config_wizard = WidgetActionInfo(
+    key=WidgetAction.CONFIG_WIZARD,
+    icon="mdi:cog",
+    create_widget=create_config_wizard,
+    dock_area=None,
 )
