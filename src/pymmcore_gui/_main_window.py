@@ -164,7 +164,7 @@ class MicroManagerGUI(QMainWindow):
                     f"Action {key} has not been created yet, and 'create' is False"
                 )
             # create and cache it
-            info = WidgetActionInfo.for_key(key)
+            info: WidgetActionInfo[QWidget] = WidgetActionInfo.for_key(key)
             self._qactions[key] = action = info.to_qaction(self._mmc, self)
             # connect WidgetActions to toggle their widgets
             if isinstance(action.key, WidgetAction):

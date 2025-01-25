@@ -48,8 +48,8 @@ class StagesControlWidget(QWidget):
         self._clear()
 
         stages = chain(
-            self._mmc.getLoadedDevicesOfType(DeviceType.XYStage),
-            self._mmc.getLoadedDevicesOfType(DeviceType.Stage),
+            self._mmc.getLoadedDevicesOfType(DeviceType.XYStage),  # pyright: ignore [reportArgumentType]
+            self._mmc.getLoadedDevicesOfType(DeviceType.Stage),  # pyright: ignore [reportArgumentType]
         )
         for idx, stage_dev in enumerate(stages):
             bx = _Group(stage_dev, self)

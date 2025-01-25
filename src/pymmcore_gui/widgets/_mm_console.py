@@ -31,6 +31,8 @@ if TYPE_CHECKING:
     from PyQt6.QtGui import QCloseEvent
     from PyQt6.QtWidgets import QWidget
 
+    class RichJupyterWidget(RichJupyterWidget, QWidget): ...  # type: ignore[no-redef]
+
 
 class MMConsole(RichJupyterWidget):
     """A Qt widget for an IPython console, providing access to UI components."""
@@ -108,7 +110,7 @@ class MMConsole(RichJupyterWidget):
         """Return the variables pushed to the console."""
         return {k: v for k, v in self.shell.user_ns.items() if k != "__builtins__"}
 
-    def closeEvent(self, event: QCloseEvent) -> None:
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
         """Clean up the integrated console."""
         if self.kernel_client is not None:
             self.kernel_client.stop_channels()
@@ -118,5 +120,6 @@ class MMConsole(RichJupyterWidget):
         # RichJupyterWidget doesn't clean these up
         self._completion_widget.deleteLater()
         self._call_tip_widget.deleteLater()
-        cast("QWidget", self).deleteLater()
-        event.accept()
+        self.deleteLater()
+        if a0 is not None:
+            a0.accept()
