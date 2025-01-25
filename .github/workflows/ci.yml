@@ -17,6 +17,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: pipx run check-manifest
+  pyright:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - run: uv sync
+      - run: uv run pyright
 
   test:
     name: ${{ matrix.platform }} py${{ matrix.python-version }}
@@ -39,7 +51,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install the project
-        run: uv sync --all-extras --dev
+        run: uv sync
 
       - uses: pyvista/setup-headless-display-action@v3
         with:

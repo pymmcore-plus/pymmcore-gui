@@ -61,7 +61,8 @@ class ShuttersToolbar(QToolBar):
 
     def _on_cfg_loaded(self) -> None:
         self._clear()
-        if not (shutters := self.mmc.getLoadedDevicesOfType(DeviceType.ShutterDevice)):
+        shutters = self.mmc.getLoadedDevicesOfType(DeviceType.ShutterDevice)  # pyright: ignore [reportArgumentType]
+        if not shutters:
             return
 
         shutters_devs = sorted(

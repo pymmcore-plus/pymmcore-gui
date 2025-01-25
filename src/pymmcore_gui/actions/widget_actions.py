@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Generic, TypeVar, cast
 
 from pymmcore_plus import CMMCorePlus
 from PyQt6.QtCore import Qt
@@ -135,7 +135,7 @@ class WidgetAction(ActionKey):
 
     def create_widget(self, parent: QWidget) -> QWidget:
         """Create the widget associated with this action."""
-        info = WidgetActionInfo.for_key(self)
+        info: WidgetActionInfo[QWidget] = WidgetActionInfo.for_key(self)
         if not info.create_widget:
             raise NotImplementedError(f"No constructor has been provided for {self!r}")
         return info.create_widget(parent)
@@ -147,15 +147,17 @@ class WidgetAction(ActionKey):
 
 # ######################## WidgetActionInfos #########################
 
+WT = TypeVar("WT", bound="QWidget")
+
 
 @dataclass
-class WidgetActionInfo(ActionInfo):
+class WidgetActionInfo(ActionInfo, Generic[WT]):
     """Subclass to set default values for WidgetAction."""
 
     # by default, widget actions are checkable, and the check state indicates visibility
     checkable: bool = True
     # function that can be called with (parent: QWidget) -> QWidget
-    create_widget: Callable[[QWidget], QWidget] | None = None
+    create_widget: Callable[[QWidget], WT] | None = None
     # Use None to indicate that the widget should not be docked
     dock_area: Qt.DockWidgetArea | None = Qt.DockWidgetArea.RightDockWidgetArea
 
