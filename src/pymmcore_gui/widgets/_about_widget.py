@@ -1,3 +1,5 @@
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 from pymmcore_plus._util import system_info
@@ -23,9 +25,19 @@ class AboutWidget(QDialog):
         logo = QLabel()
         logo.setPixmap(QPixmap(str(RESOURCES / "logo.png")).scaled(180, 180))
 
-        link = QLabel(
-            "<a href='http://github.com/pymmcore-plus/pymmcore-gui'>http://github.com/pymmcore-plus/pymmcore-gui</a>"
-        )
+        href = url = "http://github.com/pymmcore-plus/pymmcore-gui"
+        if "+" in __version__:
+            sha = __version__.split("+")[1]
+            href = f"{url}/commit/{sha}"
+
+            # check if the link is 404 and fallback to the main url
+            try:
+                urllib.request.urlopen(href)
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    href = url
+
+        link = QLabel(f"<a href={href}>{url}</a>")
         link.setTextFormat(Qt.TextFormat.RichText)
         link.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         link.setOpenExternalLinks(True)
