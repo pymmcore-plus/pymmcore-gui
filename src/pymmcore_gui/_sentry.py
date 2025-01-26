@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import functools
+import logging
 import os
 import platform
+import sys
 import uuid
 from contextlib import suppress
 from importlib import metadata
@@ -19,10 +21,11 @@ else:
     except ImportError:  # pragma: no cover
         from pprint import pprint as print
 
-SENTRY_DSN = "https://5dd4ce839a4257693e030b136b3ac126@o100671.ingest.us.sentry.io/4507535157952512"
+SENTRY_DSN = "https://3ea8feba276ec96bdf6c110a26fe9699@o100671.ingest.us.sentry.io/4507535157952512"
 SHOW_HOSTNAME = os.getenv("MM_TELEMETRY_SHOW_HOSTNAME", "0") in ("1", "True")
 SHOW_LOCALS = os.getenv("MM_TELEMETRY_SHOW_LOCALS", "1") in ("1", "True")
 DEBUG = bool(os.getenv("MM_TELEMETRY_DEBUG"))
+HOME_DIR = str(Path.home())
 
 
 def strip_sensitive_data(event: Event, hint: Hint) -> Event | None:
@@ -33,14 +36,21 @@ def strip_sensitive_data(event: Event, hint: Hint) -> Event | None:
     # modify event here
 
     # strip `abs_paths` from stack_trace to hide local paths
-    with suppress(KeyError, IndexError):
+    with suppress(Exception):
         if exception := event.get("exception"):
             for exc in exception.get("values", []):
                 for frame in exc.get("stacktrace", {}).get("frames", []):
-                    frame.pop("abs_path", None)
+                    if "abs_path" in frame:
+                        frame["abs_path"] = frame["abs_path"].replace(HOME_DIR, "~")
+
+    with suppress(Exception):
         # only include the name of the executable in sys.argv (remove paths)
-        if (extra := event.get("extra")) and (args := extra.get("sys.argv")):
-            args[0] = args[0].split(os.sep)[-1]
+        if (
+            (extra := event.get("extra"))
+            and (args := extra.get("sys.argv"))
+            and isinstance(args, list)
+        ):
+            args[:] = [str(x).replace(HOME_DIR, "~") for x in args]
     if DEBUG:  # pragma: no cover
         print(event)
     return event
@@ -51,8 +61,10 @@ def is_editable_install() -> bool:
 
     i.e: if the package isn't in site-packages or user site-packages.
     """
-    root = str(Path(__import__("pymmcore_gui").__file__).parent)
-    installed_paths = [*getsitepackages(), getusersitepackages()]
+    import pymmcore_gui
+
+    root = str(Path(pymmcore_gui.__file__).parent)
+    installed_paths = (*getsitepackages(), getusersitepackages())
     return all(loc not in root for loc in installed_paths)
 
 
@@ -62,7 +74,7 @@ def try_get_git_sha(dist_name: str = "pymmcore-gui") -> str:
     Return empty string on failure.
     """
     try:
-        ff = metadata.distribution(dist_name).locate_file("")
+        ff = str(metadata.distribution(dist_name).locate_file(""))
         out = run(["git", "-C", ff, "rev-parse", "HEAD"], capture_output=True)
         if out.returncode:  # pragma: no cover
             return ""
@@ -78,7 +90,7 @@ def try_get_git_sha(dist_name: str = "pymmcore-gui") -> str:
 
 
 @functools.lru_cache
-def get_release() -> str:
+def get_release() -> str | None:
     """Get the current release string for `package`.
 
     If the package is an editable install, it will return the current git sha.
@@ -89,21 +101,14 @@ def get_release() -> str:
             if sha := try_get_git_sha():
                 return sha
         return metadata.version("pymmcore-gui")
-    return "UNDETECTED"
+    return None
 
 
 @functools.lru_cache
 def get_tags() -> dict[str, str]:
     """Get platform and other tags to associate with this session."""
-    tags = {"platform.platform": platform.platform()}
-
-    with suppress(ImportError):
-        import qtpy
-
-        tags["qtpy.API_NAME"] = qtpy.API_NAME
-        tags["qtpy.QT_VERSION"] = qtpy.QT_VERSION
-
-    with suppress(ModuleNotFoundError):
+    tags = {"frozen": str(getattr(sys, "frozen", False))}
+    with suppress(Exception):
         tags["editable_install"] = str(is_editable_install())
 
     return tags
@@ -112,17 +117,21 @@ def get_tags() -> dict[str, str]:
 SENTRY_INSTALLED = False
 
 
-def install_error_reporter() -> None:
+def install_error_reporter() -> None:  # pragma: no cover
     """Initialize the error reporter with sentry.io."""
+    # never install sentry in pytest
+    if "PYTEST_VERSION" in os.environ:
+        return
+
     try:
         import sentry_sdk
-    except ImportError:  # pragma: no cover
-        print("sentry-sdk not installed, skipping error reporting.")
+    except ImportError:
+        logging.info("sentry-sdk not installed, skipping error reporting.")
         return
 
     global SENTRY_INSTALLED
     if SENTRY_INSTALLED:
-        return  # pragma: no cover
+        return
 
     sentry_sdk.init(
         SENTRY_DSN,
@@ -157,7 +166,9 @@ def install_error_reporter() -> None:
         release=get_release(),
         environment=platform.system(),
     )
+
     for k, v in get_tags().items():
         sentry_sdk.set_tag(k, v)
-    sentry_sdk.set_user({"id": uuid.getnode()})
+    with suppress(Exception):
+        sentry_sdk.set_user({"id": uuid.getnode()})
     SENTRY_INSTALLED = True

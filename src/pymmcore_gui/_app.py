@@ -17,6 +17,8 @@ from superqt.utils import WorkerBase
 
 from pymmcore_gui import MicroManagerGUI, __version__
 
+from . import _sentry
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from types import TracebackType
@@ -81,6 +83,7 @@ def main() -> None:
 
     app = MMQApplication(sys.argv)
     _install_excepthook()
+    _sentry.install_error_reporter()
 
     win = MicroManagerGUI()
     win.setWindowIcon(QIcon(str(ICON)))
