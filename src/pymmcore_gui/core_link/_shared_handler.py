@@ -32,6 +32,7 @@ class Handler:
             | None
         ),
     ) -> None:
+        print('00000000000000', handler)
         self.handler = handler
 
     def get(

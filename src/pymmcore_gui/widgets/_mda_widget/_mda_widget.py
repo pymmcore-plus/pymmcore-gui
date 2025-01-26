@@ -36,10 +36,9 @@ class _MDAWidget(MDAWidget):
     ) -> None:
         super().__init__(parent=parent, mmcore=mmcore)
 
+        # LAYOUT - emove the existing save_info widget from the layout and replace it
+        # with the custom SaveGroupBox widget that also handles tensorstore-zarr
         main_layout = cast(QBoxLayout, self.layout())
-
-        # remove the existing save_info widget from the layout and replace it with
-        # the custom SaveGroupBox widget that also handles tensorstore-zarr
         if hasattr(self, "save_info"):
             self.save_info.valueChanged.disconnect(self.valueChanged)
             main_layout.removeWidget(self.save_info)
@@ -47,6 +46,8 @@ class _MDAWidget(MDAWidget):
         self.save_info: SaveGroupBox = SaveGroupBox(parent=self)
         self.save_info.valueChanged.connect(self.valueChanged)
         main_layout.insertWidget(0, self.save_info)
+
+    # -------------------------PUBLIC METHODS-------------------------
 
     def run_mda(self) -> None:
         """Run the MDA experiment."""
@@ -57,8 +58,9 @@ class _MDAWidget(MDAWidget):
         sequence = self.value()
         save_meta = sequence.metadata.get(PYMMCW_METADATA_KEY, {})
         save_format = save_meta.get("format", None)
-        HANDLER.set(self._create_writer(save_format, save_path))
-        self.execute_mda(output=HANDLER.get())
+        handler = self._create_writer(save_format, save_path)
+        HANDLER.set(handler)
+        self.execute_mda(output=handler)
 
     # -------------------------PRIVATE METHODS-------------------------
 
@@ -71,7 +73,7 @@ class _MDAWidget(MDAWidget):
         # if save_path is a bool (False) or None or if save_format is not recognized
         formats = [ZARR_TESNSORSTORE, OME_ZARR, OME_TIFF, TIFF_SEQ]
         if not isinstance(save_path, str | Path) or save_format not in formats:
-            return TensorStoreHandler()
+            return TensorStoreHandler(driver="zarr")
         save_path = Path(save_path)
         if OME_TIFF in save_format:
             # if OME-TIFF, save_path should be a directory without extension, so
