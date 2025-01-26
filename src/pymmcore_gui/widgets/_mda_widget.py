@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING
 
-from pymmcore_plus import CMMCorePlus
 from pymmcore_plus.mda.handlers import (
     ImageSequenceWriter,
     OMETiffWriter,
@@ -11,20 +10,16 @@ from pymmcore_plus.mda.handlers import (
     TensorStoreHandler,
 )
 from pymmcore_widgets import MDAWidget
+from pymmcore_widgets.mda._save_widget import OME_TIFF, OME_ZARR, TIFF_SEQ, WRITERS
 from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
-from qtpy.QtWidgets import QBoxLayout, QWidget
 
 from pymmcore_gui.core_link import HANDLER
 
-from ._save_widget import (
-    OME_TIFF,
-    OME_ZARR,
-    TIFF_SEQ,
-    WRITERS,
-    ZARR_TESNSORSTORE,
-    SaveGroupBox,
-)
+if TYPE_CHECKING:
+    from pymmcore_plus import CMMCorePlus
+    from qtpy.QtWidgets import QWidget
 
+FORMATS = [OME_ZARR, OME_TIFF, TIFF_SEQ]
 OME_TIFFS = tuple(WRITERS[OME_TIFF])
 
 
@@ -35,17 +30,6 @@ class _MDAWidget(MDAWidget):
         self, *, parent: QWidget | None = None, mmcore: CMMCorePlus | None = None
     ) -> None:
         super().__init__(parent=parent, mmcore=mmcore)
-
-        # LAYOUT - emove the existing save_info widget from the layout and replace it
-        # with the custom SaveGroupBox widget that also handles tensorstore-zarr
-        main_layout = cast(QBoxLayout, self.layout())
-        if hasattr(self, "save_info"):
-            self.save_info.valueChanged.disconnect(self.valueChanged)
-            main_layout.removeWidget(self.save_info)
-            self.save_info.deleteLater()
-        self.save_info: SaveGroupBox = SaveGroupBox(parent=self)
-        self.save_info.valueChanged.connect(self.valueChanged)
-        main_layout.insertWidget(0, self.save_info)
 
     # -------------------------PUBLIC METHODS-------------------------
 
@@ -71,8 +55,7 @@ class _MDAWidget(MDAWidget):
     ):
         """Create a writer based on the save format."""
         # if save_path is a bool (False) or None or if save_format is not recognized
-        formats = [ZARR_TESNSORSTORE, OME_ZARR, OME_TIFF, TIFF_SEQ]
-        if not isinstance(save_path, str | Path) or save_format not in formats:
+        if not isinstance(save_path, str | Path) or save_format not in FORMATS:
             return TensorStoreHandler(driver="zarr")
         save_path = Path(save_path)
         if OME_TIFF in save_format:
@@ -83,9 +66,5 @@ class _MDAWidget(MDAWidget):
             return OMETiffWriter(save_path)
         elif OME_ZARR in save_format:
             return OMEZarrWriter(save_path)
-        elif ZARR_TESNSORSTORE in save_format:
-            return TensorStoreHandler(
-                driver="zarr", path=save_path, delete_existing=True
-            )
         else:
             return ImageSequenceWriter(save_path)

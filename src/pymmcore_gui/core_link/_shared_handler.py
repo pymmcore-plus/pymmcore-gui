@@ -32,7 +32,7 @@ class Handler:
             | None
         ),
     ) -> None:
-        print('00000000000000', handler)
+        """Set the handler."""
         self.handler = handler
 
     def get(
@@ -44,6 +44,7 @@ class Handler:
         | ImageSequenceWriter
         | None
     ):
+        """Get the handler."""
         return self.handler
 
 
