@@ -33,9 +33,7 @@ def strip_sensitive_data(event: Event, hint: Hint) -> Event | None:
 
     https://docs.sentry.io/platforms/python/configuration/filtering/#filtering-error-events
     """
-    # modify event here
-
-    # strip `abs_paths` from stack_trace to hide local paths
+    # strip home dir from `abs_paths` in stack_trace to hide local paths
     with suppress(Exception):
         if exception := event.get("exception"):
             for exc in exception.get("values", []):
@@ -89,7 +87,7 @@ def try_get_git_sha(dist_name: str = "pymmcore-gui") -> str:
         return ""
 
 
-@functools.lru_cache
+@functools.cache
 def get_release() -> str | None:
     """Get the current release string for `package`.
 
@@ -104,7 +102,7 @@ def get_release() -> str | None:
     return None
 
 
-@functools.lru_cache
+@functools.cache
 def get_tags() -> dict[str, str]:
     """Get platform and other tags to associate with this session."""
     tags = {"frozen": str(getattr(sys, "frozen", False))}
