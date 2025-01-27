@@ -55,7 +55,7 @@ repos:
           - ndv
           - pydantic
           - pydantic_core
-          - pymmcore-nano
+          - pymmcore
           - pymmcore-plus
           - pymmcore-widgets
           - pyyaml
