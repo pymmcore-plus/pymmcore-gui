@@ -11,9 +11,8 @@ from pymmcore_plus.mda.handlers import (
 )
 from pymmcore_widgets import MDAWidget
 from pymmcore_widgets.mda._save_widget import OME_TIFF, OME_ZARR, TIFF_SEQ, WRITERS
-from pymmcore_widgets.useq_widgets._mda_sequence import PYMMCW_METADATA_KEY
 
-from pymmcore_gui.core_link import HANDLER
+from pymmcore_gui.core_link._shared_handler import HANDLER_META_KEY, store_handler
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
@@ -33,23 +32,18 @@ class _MDAWidget(MDAWidget):
 
     # -------------------------PUBLIC METHODS-------------------------
 
-    def run_mda(self) -> None:
-        """Run the MDA experiment."""
-        save_path = self.prepare_mda()
-        if save_path is False:
-            return
-        # get save format from metadata
+    def execute_mda(self, output: Path | str | object | None) -> None:
+        """Execute the MDA experiment corresponding to the current value."""
         sequence = self.value()
-        save_meta = sequence.metadata.get(PYMMCW_METADATA_KEY, {})
-        save_format = save_meta.get("format", None)
-        handler = self._create_writer(save_format, save_path)
-        HANDLER.set(handler)
-        self.execute_mda(output=handler)
+        handler = TensorStoreHandler(driver="zarr")
+        sequence.metadata[HANDLER_META_KEY] = store_handler(handler)
+        # run the MDA experiment asynchronously
+        self._mmc.run_mda(sequence, output=handler)
 
     # -------------------------PRIVATE METHODS-------------------------
 
     def _create_writer(
-        self, save_format: str | None, save_path: bool | str | Path | None
+        self, save_format: str, save_path: bool | str | Path | None
     ) -> (
         OMEZarrWriter | OMETiffWriter | TensorStoreHandler | ImageSequenceWriter | None
     ):

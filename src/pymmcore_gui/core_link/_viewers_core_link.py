@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import contextlib
-import warnings
 from typing import TYPE_CHECKING, cast
 
 import ndv
@@ -15,7 +13,7 @@ from pymmcore_plus.mda.handlers import (
 )
 from qtpy.QtCore import QObject, Qt
 
-from ._shared_handler import HANDLER
+from ._shared_handler import get_handler
 
 if TYPE_CHECKING:
     import numpy as np
@@ -25,8 +23,7 @@ if TYPE_CHECKING:
 
 
 class ViewersCoreLink(QObject):
-
-    from ..data_wrappers import MMTensorstoreWrapper
+    from pymmcore_gui.data_wrappers import MMTensorstoreWrapper
 
     def __init__(self, parent: QWidget, *, mmcore: CMMCorePlus | None = None):
         super().__init__(parent)
@@ -52,7 +49,7 @@ class ViewersCoreLink(QObject):
     ) -> None:
         """Create a viewer if it does not exist, otherwise update the current index."""
         if self._mda_viewer is None:
-            if (handler := HANDLER.get()) is not None:
+            if handler := get_handler(event):
                 self._mda_viewer = self._create_viewer(handler)
                 self._mda_viewer.show()
         else:
@@ -67,7 +64,7 @@ class ViewersCoreLink(QObject):
         ),
     ) -> ndv.ArrayViewer:
         # TODO: temporary, create the DataWrapper for the handlers
-        data = handler._store if isinstance(handler, TensorStoreHandler) else handler
+        data = handler.store if isinstance(handler, TensorStoreHandler) else handler
 
         v = ndv.ArrayViewer(DataWrapper.create(data))
         wdg = cast("QWidget", v.widget())
@@ -78,7 +75,6 @@ class ViewersCoreLink(QObject):
 
     def _on_sequence_finished(self) -> None:
         """Reset the viewer and handler."""
-        HANDLER.set(None)
         self._mda_viewer = None
 
     # def _patch_handler(
