@@ -7,9 +7,6 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 
-[manifest]
-overrides = [{ name = "pymmcore", marker = "sys_platform == 'never'" }]
-
 [[package]]
 name = "altgraph"
 version = "0.17.4"
@@ -333,14 +330,14 @@ wheels = [
 
 [[package]]
 name = "deprecated"
-version = "1.2.17"
+version = "1.2.18"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "wrapt", marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2f/20/caa25c084ebad492360bf28ba5cb74f27b50fc6f3df965fd0add2b5b5993/deprecated-1.2.17.tar.gz", hash = "sha256:0114a10f0bbb750b90b2c2296c90cf7e9eaeb0abb5cf06c80de2c60138de0a82", size = 2928237 }
+sdist = { url = "https://files.pythonhosted.org/packages/98/97/06afe62762c9a8a86af0cfb7bfdab22a43ad17138b07af5b1a58442690a2/deprecated-1.2.18.tar.gz", hash = "sha256:422b6f6d859da6f2ef57857761bfb392480502a64c3028ca9bbe86085d72115d", size = 2928744 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/90/89be9a665bf63d3baaba6f34d9a514655abb42be2cc129f31c96df2cef51/Deprecated-1.2.17-py2.py3-none-any.whl", hash = "sha256:69cdc0a751671183f569495e2efb14baee4344b0236342eec29f1fde25d61818", size = 9140 },
+    { url = "https://files.pythonhosted.org/packages/6e/c6/ac0b6c1e2d138f1002bcf799d330bd6d85084fece321e662a14223794041/Deprecated-1.2.18-py2.py3-none-any.whl", hash = "sha256:bd5011788200372a32418f888e326a09ff80d0214bd961147cfed01b5c018eec", size = 9998 },
 ]
 
 [[package]]
@@ -1367,6 +1364,24 @@ dependencies = [
     { name = "numpy" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/cd/bf/1c02bbb3bc0f71555b28a99fe5a562039176bdeb5e461c74377c3ecca2af/pymmcore-11.2.1.71.0.tar.gz", hash = "sha256:4d9c1a35aace84ffce1534f0b48f2d4fadbee8dbb2758339bb375f7188569b95", size = 192943 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/92/e2/c9369b129567b4b9393a92471be79a746128fcf857293bca7992754c1440/pymmcore-11.2.1.71.0-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:a389aaa369bcc8db89d9dde1d6dfed35df21b35f79d4268a64a88217c3dad705", size = 920293 },
+    { url = "https://files.pythonhosted.org/packages/08/f7/efb742fcdf1aac893a826c3ec733e9f08601e38ce0e691367f0213016e87/pymmcore-11.2.1.71.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:b822918dcb57c30afbfba574bc49e34f09a6d7ed7069809358c153986a2b9ff0", size = 855859 },
+    { url = "https://files.pythonhosted.org/packages/fb/af/6f2c78d746ffb4d9bbab8cfbe5bfdd22eef23024896199289a2f0b21097e/pymmcore-11.2.1.71.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:20bc7597cd68fdb1c9322f6d2f879ac64e28230e833810f1a4e32b49e676b63b", size = 1028924 },
+    { url = "https://files.pythonhosted.org/packages/a1/d5/a629076303f13fe6e73d0bd5e18b1496045f0b6ed29b93fce749f5390c59/pymmcore-11.2.1.71.0-cp310-cp310-win_amd64.whl", hash = "sha256:014b8a0fb4281b260be8a565e141ca58ab07c36f24ea5474cba6cea3eeabfb0c", size = 600696 },
+    { url = "https://files.pythonhosted.org/packages/cd/59/69cc665d070656b413d8461c1ac17af21d171e7fdcb6db54c80149ea3752/pymmcore-11.2.1.71.0-cp311-cp311-macosx_10_14_x86_64.whl", hash = "sha256:5317ec0aaecf94aa81b72990c1729969d690f0c06ac72a7d39c77751ddb289bf", size = 920275 },
+    { url = "https://files.pythonhosted.org/packages/02/ab/1659e01976a5c551348a3803cb8efe0b32f9192e85601d34974fc4c59ad4/pymmcore-11.2.1.71.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:b57732eef12f631ffe665a22cc64e66197f66b57ce2b9a3760ef923ac4bf9b6b", size = 855868 },
+    { url = "https://files.pythonhosted.org/packages/ec/64/6019397b93b3f9712a9f03189395019e5c8d856deb8796a78cbee6d29773/pymmcore-11.2.1.71.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:89f79cf0bc400216df525fc446de56228a6883aa75d1916b415eca2aa69fd15a", size = 1029056 },
+    { url = "https://files.pythonhosted.org/packages/1a/20/3d379a16c763b96cb336bd9ec5b2d368e1ee1b2f27f1a202ece3289adfad/pymmcore-11.2.1.71.0-cp311-cp311-win_amd64.whl", hash = "sha256:95676556201fb2cb0bbdfa8c0a5adf45eeb24ec448a8b67fe041bdc2d5767745", size = 600605 },
+    { url = "https://files.pythonhosted.org/packages/bc/50/4cd7c416513bcd82aa4651bd4d9cc169bf5c92a18a3c3d6bc7cf7709227e/pymmcore-11.2.1.71.0-cp312-cp312-macosx_10_14_x86_64.whl", hash = "sha256:d539f863f9a7752b1e18c6765de7655c1c38a150a1bf685ee94c5597d6c3fb7c", size = 924554 },
+    { url = "https://files.pythonhosted.org/packages/b8/ed/c2cede64233def5c365610804c74cc0db875e167eef3a08955201a9b3f17/pymmcore-11.2.1.71.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:b3dabcf7c887d4697863fc60e8fcab3fd09ff6bb6e698aabf759e556225023cd", size = 856467 },
+    { url = "https://files.pythonhosted.org/packages/30/e0/d4d20db99603cec7ec2aaf58688db4dcc0aaf07a6af5542a2cf9c430f095/pymmcore-11.2.1.71.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d0199303cb217e3154c9a8083a92162fecfa299ec3c360edcad921097bf2788b", size = 1027839 },
+    { url = "https://files.pythonhosted.org/packages/61/38/c887dc84415b0ae2ea44aca36ded4ddd47cf4a9cefd0a5dcb22e7a2223bc/pymmcore-11.2.1.71.0-cp312-cp312-win_amd64.whl", hash = "sha256:594f3bbb9d16150d8953912be48e8ae8ae59db1a962bb297ee4b11d0ba1b0b16", size = 601978 },
+    { url = "https://files.pythonhosted.org/packages/b0/23/07b1e87ea6e28731e372eb391ed4f05fcf7cc80cf1a30cadd5e62fb6c39c/pymmcore-11.2.1.71.0-cp313-cp313-macosx_10_14_x86_64.whl", hash = "sha256:81a42d50dbe6ebdae9e6c2a29f9ccc4aab02513566220520c4f04f876a12914b", size = 924410 },
+    { url = "https://files.pythonhosted.org/packages/df/5a/10da5c5f5249584faa0cd1d2b069b63446c917a8ff0efa2704bf8dfbe61e/pymmcore-11.2.1.71.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:cf7cc50aa2038f0518acb188b8ca53c2187b7dd7e8176533ac4a448884d192b2", size = 856389 },
+    { url = "https://files.pythonhosted.org/packages/c8/36/e3c747ef2ed027fa056e16b3dacc5a403a3fe590177fa12f5fecdf55ed57/pymmcore-11.2.1.71.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:afd4959e768a0b839e885e73bab0815933dbb9479eca94ecc50f2c9ba3e6582d", size = 1027843 },
+    { url = "https://files.pythonhosted.org/packages/83/a8/279cbf67d1f77eb4523b759559e36480f0e86082835533ff05f7275b35ac/pymmcore-11.2.1.71.0-cp313-cp313-win_amd64.whl", hash = "sha256:b414ce0d775b3e9f70e42b4df4c14d05f34b04f5ef5920a215173a0dbcae79eb", size = 602124 },
+]
 
 [[package]]
 name = "pymmcore-gui"
@@ -1374,7 +1389,6 @@ source = { editable = "." }
 dependencies = [
     { name = "ndv", extra = ["vispy"] },
     { name = "pydantic-settings" },
-    { name = "pymmcore-nano" },
     { name = "pymmcore-plus", extra = ["cli"] },
     { name = "pymmcore-widgets" },
     { name = "pyqt6" },
@@ -1395,6 +1409,7 @@ dev = [
     { name = "pre-commit" },
     { name = "pyautogui" },
     { name = "pyinstaller" },
+    { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-qt" },
@@ -1411,7 +1426,6 @@ dev = [
 requires-dist = [
     { name = "ndv", extras = ["vispy"], specifier = ">=0.2" },
     { name = "pydantic-settings", specifier = ">=2.7.1" },
-    { name = "pymmcore-nano" },
     { name = "pymmcore-plus", extras = ["cli"], specifier = ">=0.13.0" },
     { name = "pymmcore-widgets", specifier = ">=0.9.0" },
     { name = "pyqt6", specifier = "==6.7.1" },
@@ -1431,6 +1445,7 @@ dev = [
     { name = "pre-commit", specifier = ">=4.0.1" },
     { name = "pyautogui", specifier = ">=0.9.54" },
     { name = "pyinstaller", specifier = ">=6.11.1" },
+    { name = "pyright", specifier = ">=1.1.392.post0" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "pytest-qt", specifier = ">=4.4.0" },
@@ -1444,33 +1459,6 @@ dev = [
 ]
 
 [[package]]
-name = "pymmcore-nano"
-version = "11.2.1.71.0.dev3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/30/e0/9040ff63db4c1100c4e1d684fca3300b9b8bd63d1431a5097980fa79b9ab/pymmcore_nano-11.2.1.71.0.dev3.tar.gz", hash = "sha256:98d2b9b9d1896393a06ca84c1d5f4b0b64a3166c31e872eec287051d3b7d681a", size = 261707 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/99/73/e3ad1bc4970b9aae848df9ac487b12f9ec42d98e92ba00d47dd587c03745/pymmcore_nano-11.2.1.71.0.dev3-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:61496ac8f5dbc78ee2e866ec0118be9a1bee1a83ccfbb39b29d0effaf5a1f9d0", size = 459806 },
-    { url = "https://files.pythonhosted.org/packages/41/4b/96b0fe3f3ca943a904df7d4289a4581abf285f15c32f3f41cdd0dd732f5f/pymmcore_nano-11.2.1.71.0.dev3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:514f390c916fad56ae58802f24debf627a96f0b0b9361efe61ec6c4f3117aded", size = 444747 },
-    { url = "https://files.pythonhosted.org/packages/65/09/0c0cbb58d9bc442cd02c764be7ae10ede97a6664884f6ea8d9c5ffdf0283/pymmcore_nano-11.2.1.71.0.dev3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:536ebd278800a7870f4f3a82d220a1818d05765c15a2f9e47718817cdb2e7279", size = 623329 },
-    { url = "https://files.pythonhosted.org/packages/2f/05/95bcf5cd083e710b4d2a815ac9b6e53a378f063e0da25771f992922a6278/pymmcore_nano-11.2.1.71.0.dev3-cp310-cp310-win_amd64.whl", hash = "sha256:a5530035bdcd08d59f6f49318cc87349a9ac7d05068444976da019bccecf1ee6", size = 393560 },
-    { url = "https://files.pythonhosted.org/packages/32/5a/ccfaa557c70145802885fc7e419d88798780229006ade312ac1408d015e9/pymmcore_nano-11.2.1.71.0.dev3-cp311-cp311-macosx_10_14_x86_64.whl", hash = "sha256:024527d09808ed11fdcf99ed24638135ecfd010b86271b6c2b3c2a7bca94fb76", size = 459975 },
-    { url = "https://files.pythonhosted.org/packages/06/71/fd67f8061f0e452af9854d1d2c5d138cd53efed666d8d10ec57dbd49f261/pymmcore_nano-11.2.1.71.0.dev3-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:b76a24773ba157368343e99eadd1de8558cf74b5f5e258949c44db3b43424482", size = 445141 },
-    { url = "https://files.pythonhosted.org/packages/92/5c/f7ce669f058bffb720c31c4b1058c77b348b606368a1b060d936991beb18/pymmcore_nano-11.2.1.71.0.dev3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e55314a4698041fecc81aba270901cffad79ad8a7809bfc0c36d88c453a8a35f", size = 623742 },
-    { url = "https://files.pythonhosted.org/packages/51/12/be6dfe2e1265a7409bd6abf6fe3d8e2beb3bc4627779d33eeef1e55a597d/pymmcore_nano-11.2.1.71.0.dev3-cp311-cp311-win_amd64.whl", hash = "sha256:509766e488db7db2a9a7cdd463a252a2861ba321ab5d28584d3bcbb6a6c31846", size = 393537 },
-    { url = "https://files.pythonhosted.org/packages/16/0f/a0a7851357248ae0beb58fb5c8c54f963f326e55f217b7b2dee7c1b355b9/pymmcore_nano-11.2.1.71.0.dev3-cp312-cp312-macosx_10_14_x86_64.whl", hash = "sha256:feae53ed7e614883f5cee085f81c30d40130517bf1cc0376377ebf3931b14e6c", size = 460995 },
-    { url = "https://files.pythonhosted.org/packages/ba/71/702b0fa7c762d86e6fbdadbfb553692854212cbde664fd504065c321b0f4/pymmcore_nano-11.2.1.71.0.dev3-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:92c62f703d9849ccfcdf5ee0828a9d6f8f4d3ca4a817342c6a31d87bcd5814be", size = 445085 },
-    { url = "https://files.pythonhosted.org/packages/c6/6b/227d820f3f6faeb6bfb6e46c879664bfe331b1eab122843390feb23bd07f/pymmcore_nano-11.2.1.71.0.dev3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2bddb67c2b80c536f6e10ef4ae148871deecc9cd974c1ae473e3235568f94dab", size = 622474 },
-    { url = "https://files.pythonhosted.org/packages/2a/b8/048a6ac18d84a28e247f88997f1b0d3fbcfdcd1c8f366ec8a691fa842140/pymmcore_nano-11.2.1.71.0.dev3-cp312-cp312-win_amd64.whl", hash = "sha256:ce2cbd70dcdb350e55e1ed2485a66df30a86c5c96b404cf3d2766f3f9d81885f", size = 393159 },
-    { url = "https://files.pythonhosted.org/packages/b0/0c/359d491611c98f1358b0885ac2ba8df2e126339252be19bab2b481296384/pymmcore_nano-11.2.1.71.0.dev3-cp313-cp313-macosx_10_14_x86_64.whl", hash = "sha256:13f43b7b943ba3b2741ebe66d5e130f486b26eb09991a19e4a407d329a54c37c", size = 460998 },
-    { url = "https://files.pythonhosted.org/packages/ea/bf/43a8430656522ecb4edb69cec75d7088e722d67ce47be420e51c356468d3/pymmcore_nano-11.2.1.71.0.dev3-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:2edc72cc4dcc7bb227dae68bfde033b979ffd236e2dffe035c40626fdcbd9558", size = 445099 },
-    { url = "https://files.pythonhosted.org/packages/62/22/2cd472c6c548d039ccf064e71e17e2cb27fea4cdc371d2e4b62b3dc45f0e/pymmcore_nano-11.2.1.71.0.dev3-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:412de435bbd8cae1deabbd2929d5bbe288bb619ae8471700a113308a17c4632a", size = 622505 },
-    { url = "https://files.pythonhosted.org/packages/af/e0/8f5dd7a892ca1dab020a8a606b507e8fd00494cbb74b95450621c98fec8c/pymmcore_nano-11.2.1.71.0.dev3-cp313-cp313-win_amd64.whl", hash = "sha256:639959be936d19846fa81ee3f23b69ad0631522d147aaa72a6bbb5a880151fc7", size = 393109 },
-]
-
-[[package]]
 name = "pymmcore-plus"
 version = "0.13.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1478,7 +1466,7 @@ dependencies = [
     { name = "numpy" },
     { name = "platformdirs" },
     { name = "psygnal" },
-    { name = "pymmcore", marker = "sys_platform == 'never'" },
+    { name = "pymmcore" },
     { name = "rich" },
     { name = "tensorstore", marker = "python_full_version < '3.13'" },
     { name = "typer" },
@@ -1641,6 +1629,19 @@ name = "pyrect"
 version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/cb/04/2ba023d5f771b645f7be0c281cdacdcd939fe13d1deb331fc5ed1a6b3a98/PyRect-0.2.0.tar.gz", hash = "sha256:f65155f6df9b929b67caffbd57c0947c5ae5449d3b580d178074bffb47a09b78", size = 17219 }
+
+[[package]]
+name = "pyright"
+version = "1.1.392.post0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nodeenv" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/66/df/3c6f6b08fba7ccf49b114dfc4bb33e25c299883fd763f93fad47ef8bc58d/pyright-1.1.392.post0.tar.gz", hash = "sha256:3b7f88de74a28dcfa90c7d90c782b6569a48c2be5f9d4add38472bdaac247ebd", size = 3789911 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e7/b1/a18de17f40e4f61ca58856b9ef9b0febf74ff88978c3f7776f910071f567/pyright-1.1.392.post0-py3-none-any.whl", hash = "sha256:252f84458a46fa2f0fd4e2f91fc74f50b9ca52c757062e93f6c250c0d8329eb2", size = 5595487 },
+]
 
 [[package]]
 name = "pyscreeze"

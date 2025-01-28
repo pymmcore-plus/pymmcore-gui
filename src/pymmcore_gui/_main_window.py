@@ -33,6 +33,7 @@ if TYPE_CHECKING:
 class Menu(str, Enum):
     """Menu names."""
 
+    PYMM_GUI = "pymmcore-gui"
     WINDOW = "Window"
 
     def __str__(self) -> str:
@@ -78,6 +79,7 @@ class MicroManagerGUI(QMainWindow):
     MENUS: Mapping[
         str, list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QMenu]
     ] = {
+        Menu.PYMM_GUI: [WidgetAction.ABOUT],
         Menu.WINDOW: [
             WidgetAction.CONSOLE,
             WidgetAction.PROP_BROWSER,
@@ -87,6 +89,7 @@ class MicroManagerGUI(QMainWindow):
             WidgetAction.CAMERA_ROI,
             WidgetAction.CONFIG_GROUPS,
             WidgetAction.EXCEPTION_LOG,
+            WidgetAction.CONFIG_WIZARD,
         ],
     }
 
@@ -164,7 +167,7 @@ class MicroManagerGUI(QMainWindow):
                     f"Action {key} has not been created yet, and 'create' is False"
                 )
             # create and cache it
-            info = WidgetActionInfo.for_key(key)
+            info: WidgetActionInfo[QWidget] = WidgetActionInfo.for_key(key)
             self._qactions[key] = action = info.to_qaction(self._mmc, self)
             # connect WidgetActions to toggle their widgets
             if isinstance(action.key, WidgetAction):

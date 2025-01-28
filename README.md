@@ -16,7 +16,7 @@ for [`pymmcore-plus`](https://github.com/pymmcore-plus/pymmcore-plus) &
 
 ## Goals (and non-goals) of unification
 
-**Goals**
+### Goals
 
 - Provide a napari-independent GUI for controlling micro-manager via
   pymmcore-plus (i.e. pure python micro-manager control).  We'd like to have a
@@ -31,7 +31,7 @@ for [`pymmcore-plus`](https://github.com/pymmcore-plus/pymmcore-plus) &
   is explicitly not part of pymmcore widgets.
 - Establish patterns for persistence and application state.
 
-**Non-Goals**
+### Non-Goals
 
 - Working on a shared application is *not* meant to discourage independent
   experimentation and repositories.  (One of the real strengths in doing this
