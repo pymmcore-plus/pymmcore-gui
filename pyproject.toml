@@ -38,7 +38,7 @@ classifiers = [
 dependencies = [
     "ndv[vispy] @ git+https://github.com/pyapp-kit/ndv@main",
     "pymmcore-plus[cli]>=0.13.0",
-    "pymmcore-nano",
+    # "pymmcore-nano",
     "pymmcore-widgets>=0.9.0",
     "PyQt6==6.7.1",
     "pyyaml>=6.0.2",
@@ -50,8 +50,8 @@ dependencies = [
     "zarr>=2.18.3,<3.0",
 ]
 
-[tool.uv]
-override-dependencies = ["pymmcore ;  sys_platform == 'never'"]
+# [tool.uv]
+# override-dependencies = ["pymmcore ;  sys_platform == 'never'"]
 
 [dependency-groups]
 dev = [
