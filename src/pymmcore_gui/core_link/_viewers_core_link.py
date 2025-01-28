@@ -53,6 +53,7 @@ class ViewersCoreLink(QObject):
                 self._mda_viewer = self._create_viewer(handler)
                 self._mda_viewer.show()
         else:
+            # TODO: add timer to delay the update
             self._mda_viewer.display_model.current_index.update(
                 dict(event.index.items())
             )
@@ -76,34 +77,3 @@ class ViewersCoreLink(QObject):
     def _on_sequence_finished(self) -> None:
         """Reset the viewer and handler."""
         self._mda_viewer = None
-
-    # def _patch_handler(
-    #     self,
-    #     handler: (
-    #         TensorStoreHandler | OMETiffWriter | OMEZarrWriter | ImageSequenceWriter
-    #     ),
-    # ) -> None:
-    #     self._superframeReady = getattr(handler, "frameReady", None)
-    #     if callable(self._superframeReady):
-    #         handler.frameReady = self._patched_frame_ready  # type: ignore
-    #     else:  # pragma: no cover
-    #         warnings.warn(
-    #             "MDAViewer: data does not have a frameReady method to patch, "
-    #             "are you sure this is a valid data handler?",
-    #             stacklevel=2,
-    #         )
-
-    # def _patched_frame_ready(
-    #     self, frame: np.ndarray, event: useq.MDAEvent, meta: SummaryMetaV1
-    # ) -> None:
-    #     self._superframeReady(frame, event, meta)  # type: ignore
-
-    #     if self._mda_viewer is None:
-    #         if (handler := HANDLER.get()) is not None:
-    #             self._mda_viewer = self._create_viewer(handler)
-    #             self._mda_viewer.show()
-    #     else:
-    #         dims = {d: i for i, d in enumerate(self._mda_viewer.data_wrapper.dims)}
-    #         self._mda_viewer.display_model.current_index.update(
-    #             {dims[ax]: idx for ax, idx in event.index.items()}
-    #         )
