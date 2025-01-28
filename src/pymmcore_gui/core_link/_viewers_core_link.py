@@ -43,7 +43,6 @@ class LivePreview(QObject):
         if self._mmc.mda.is_running():
             # This signal is emitted during MDAs as well - we want to ignore those.
             return
-        # self._update_viewer(self._mmc.getImage())
         self._viewer.data = self._mmc.getImage()
 
     @ensure_main_thread  # type: ignore
