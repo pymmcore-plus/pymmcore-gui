@@ -1,52 +1,27 @@
-from pymmcore_plus.mda.handlers import (
-    ImageSequenceWriter,
-    OMETiffWriter,
-    OMEZarrWriter,
-    TensorStoreHandler,
-)
+from typing import Any
+from weakref import WeakValueDictionary
+
+from useq import MDAEvent, MDASequence
+
+_HANDLER_CACHE: WeakValueDictionary[int, Any] = WeakValueDictionary()
+HANDLER_META_KEY = "some-handler-key"
 
 
-class Handler:
-    """Shared handler instance.
+def get_handler(obj: int | MDAEvent | MDASequence) -> Any | None:
+    """Get handler for id."""
+    if isinstance(obj, MDAEvent):
+        if obj.sequence is None:
+            return None
+        obj = obj.sequence
 
-    This class is used to create a HANDLER singleton instance that can be shared
-    across multiple classes (e.g. MDAWidget and ViewersCoreLink).
-    """
-
-    def __init__(self):
-        self.handler: (
-            OMEZarrWriter
-            | OMETiffWriter
-            | TensorStoreHandler
-            | ImageSequenceWriter
-            | None
-        ) = None
-
-    def set(
-        self,
-        handler: (
-            OMEZarrWriter
-            | OMETiffWriter
-            | TensorStoreHandler
-            | ImageSequenceWriter
-            | None
-        ),
-    ) -> None:
-        """Set the handler."""
-        self.handler = handler
-
-    def get(
-        self,
-    ) -> (
-        OMEZarrWriter
-        | OMETiffWriter
-        | TensorStoreHandler
-        | ImageSequenceWriter
-        | None
-    ):
-        """Get the handler."""
-        return self.handler
+    if isinstance(obj, MDASequence):
+        key = obj.metadata.get(HANDLER_META_KEY, None)
+    else:
+        key = obj
+    return _HANDLER_CACHE.get(key)
 
 
-# Create a shared instance of the handler
-HANDLER = Handler()
+def store_handler(handler: Any) -> int:
+    key = id(handler)
+    _HANDLER_CACHE[key] = handler
+    return key

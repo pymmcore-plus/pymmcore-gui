@@ -4,12 +4,10 @@ from collections.abc import Hashable, Mapping, Sequence
 from typing import TYPE_CHECKING, Any
 
 from ndv import DataWrapper
-from pymmcore_plus.mda.handlers import OMEZarrWriter, TensorStoreHandler
+from pymmcore_plus.mda.handlers import TensorStoreHandler
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-    from pymmcore_plus.mda.handlers._5d_writer_base import _5DWriterBase
 
 
 class MMTensorstoreWrapper(DataWrapper["TensorStoreHandler"]):
@@ -69,7 +67,7 @@ class MMTensorstoreWrapper(DataWrapper["TensorStoreHandler"]):
             new_ts.kvstore.write(".zattrs", meta_json).result()
 
     # def save_as_tiff(self, path: str | Path) -> None:
-        # ...
+    # ...
 
 
 # class MM5DWriterWrapper(DataWrapper["_5DWriterBase"]):
@@ -122,5 +120,5 @@ class MMTensorstoreWrapper(DataWrapper["TensorStoreHandler"]):
 #                 "Saving as Zarr is not yet implemented for OMETiffWriter."
 #             )
 
-    # def save_as_tiff(self, path: str | Path) -> None:
-    #     ...
+# def save_as_tiff(self, path: str | Path) -> None:
+#     ...
