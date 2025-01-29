@@ -88,9 +88,7 @@ def create_camera_roi(parent: QWidget) -> pmmw.CameraRoiWidget:
     """Create the Camera ROI widget."""
     from pymmcore_widgets import CameraRoiWidget
 
-    wdg = CameraRoiWidget(parent=parent, mmcore=_get_core(parent))
-    wdg.setMaximumHeight(140)
-    return wdg
+    return CameraRoiWidget(parent=parent, mmcore=_get_core(parent))
 
 
 def create_config_groups(parent: QWidget) -> pmmw.GroupPresetTableWidget:

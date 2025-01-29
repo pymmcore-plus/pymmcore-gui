@@ -11,16 +11,23 @@ import os
 os.environ["JUPYTER_PLATFORM_DIRS"] = "1"
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import patch
 
 import pytest
 from pymmcore_plus import CMMCorePlus, configure_logging
 from pymmcore_plus.core import _mmcore_plus
 
+from pymmcore_gui import settings
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
+    from pydantic_settings import (
+        EnvSettingsSource,
+        InitSettingsSource,
+        PydanticBaseSettingsSource,
+    )
     from PyQt6.QtWidgets import QApplication
     from pytest import FixtureRequest
 
@@ -62,3 +69,25 @@ def check_leaks(request: FixtureRequest, qapp: QApplication) -> Iterator[None]:
             print(r, r.parent())
         test = f"{request.node.path.name}::{request.node.originalname}"
         raise AssertionError(f"topLevelWidgets remaining after {test!r}: {remaining}")
+
+
+@pytest.fixture(autouse=True)
+def _mock_settings_sources() -> Iterator[None]:
+    """Ensure that the user settings file is not read or written during tests.
+
+    This is done by mocking the `settings_customise_sources` method to return only
+    the `InitSettingsSource` and `EnvSettingsSource` sources.  Further only environment
+    variables with the prefix `PMM_TEST_` will be considered.
+    """
+
+    def _test_sources(
+        *args: Any,
+        init_settings: InitSettingsSource,
+        env_settings: EnvSettingsSource,
+        **kwargs: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        env_settings.env_prefix = "PMM_TEST_"
+        return (init_settings, env_settings)
+
+    with patch.object(settings.SettingsV1, "settings_customise_sources", _test_sources):
+        yield
