@@ -1,5 +1,11 @@
 # Info for Contributors
 
+1. [Setup](#setup-with-uv)
+2. [Running](#running-the-gui)
+3. [Testing](#testing)
+4. [Application Bundle Creation](#creating-a-bundled-application)
+5. [Settings and Configuration](#settings-and-configuration)
+
 ## Setup with uv
 
 Dependencies are managed strictly using [uv](https://docs.astral.sh/uv/), and the
@@ -140,3 +146,44 @@ Actions
 page](https://github.com/pymmcore-plus/pymmcore-gui/actions/workflows/bundle.yml)
 for the bundle workflow.  Click on any given run, and you'll see the artifacts
 produced by that run at the bottom.
+
+## Settings and Configuration
+
+We use
+[`pydantic-settings`](https://docs.pydantic.dev/latest/concepts/pydantic_settings/)
+to manage settings for the application.
+
+Loading of user preferences and settings is done in `pymmcore_gui/settings.py`,
+from the following sources, in order of decreasing precedence:
+
+1. Values passed directly to the `Settings()` constructor (highest precedence)
+2. Environment variables starting with `PMM_`
+3. User settings stored in a `USER_DATA_DIR/settings.json` file. (lowest
+   precedence). `USER_DATA_DIR` is determined in a platform-specific way using
+   [`platformdirs.user_data_dir`](https://platformdirs.readthedocs.io/en/latest/api.html#user-data-directory)
+   with the appname `pymmcore-gui`.
+
+    - **Windows**: C:\Users\\[user]\AppData\Local\pymmcore-gui\pymmcore-gui
+    - **macOS**: ~/Library/Application Support/pymmcore-gui
+    - **Linux**: ~/.local/share/pymmcore-gui
+
+Additional sources could be added in the future (e.g. a system-wide settings, in
+addition to user-specific settings).  See [documentation for
+pydantic-settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/#customise-settings-sources)
+for more information.
+
+### Settings Schema Versioning
+
+The settings schema is versioned, and the version is stored in the settings. We
+aim to be backwards-compatible with older settings files (i.e. we should always
+be able to load settings from an older version of the schema) and, when
+possible, forward-compatible (i.e. we should be able to load settings from a
+newer version of the schema, even if we don't understand all the new fields).
+
+One **must** bump the schema version for any breaking changes.  Breaking changes
+include:
+
+- Renaming or removing a setting
+- Changing the type of a setting
+- Adding a new required setting (without a default value).  Note: *all* settings
+  should have a default value... so this should not happen.
