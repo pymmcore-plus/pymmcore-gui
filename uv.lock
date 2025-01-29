@@ -1324,7 +1324,7 @@ wheels = [
 
 [[package]]
 name = "pymmcore-gui"
-version = "0.1.dev318+g0754c46.d20250129"
+version = "0.1.dev320+gc29aa96.d20250129"
 source = { editable = "." }
 dependencies = [
     { name = "ndv", extra = ["vispy"] },
