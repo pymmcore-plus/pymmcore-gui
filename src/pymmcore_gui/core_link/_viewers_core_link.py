@@ -47,7 +47,7 @@ class ViewersCoreLink(QObject):
             self._handler = self._create_tensorstore_handler(sequence, meta)
 
         # since the handler is empty, create a ndv viewer with no data
-        self._mda_viewer = self._create_emply_viewer()
+        self._mda_viewer = self._create_empty_viewer()
         self._mda_viewer.show()
 
     def _create_tensorstore_handler(self, sequence, meta) -> TensorStoreHandler:
@@ -80,7 +80,7 @@ class ViewersCoreLink(QObject):
                 ),
             )
 
-    def _create_emply_viewer(self) -> ndv.ArrayViewer:
+    def _create_empty_viewer(self) -> ndv.ArrayViewer:
         """Create a new ndv viewer with no data."""
         # TODO: temporary, create the DataWrapper for the handlers
         viewer = ndv.ArrayViewer(None)
