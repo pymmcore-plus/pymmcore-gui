@@ -23,7 +23,12 @@ OME_TIFFS = tuple(WRITERS[OME_TIFF])
 
 
 class _MDAWidget(MDAWidget):
-    """Multi-dimensional acquisition widget."""
+    """Multi-dimensional acquisition widget.
+
+    Subclassing to override the execute_mda method and add a handler to the
+    sequence metadata that will be used by the viewers_core_link to display the
+    images with ndv.
+    """
 
     def __init__(
         self, *, parent: QWidget | None = None, mmcore: CMMCorePlus | None = None
@@ -35,30 +40,13 @@ class _MDAWidget(MDAWidget):
     def execute_mda(self, output: Path | str | object | None) -> None:
         """Execute the MDA experiment corresponding to the current value."""
         sequence = self.value()
+        # TODO: We are manually creating a TensorStoreHandler here. This should only 
+        # happen if the user does not specify a save type through the MDAWidget. If the
+        # user specifies a save type, we should retrieve the saving data type from the
+        # sequence metadata and create or set the handler accordingly.
         handler = TensorStoreHandler(driver="zarr")
+        # store the handler in the metadata of the sequence (this will be used by the
+        # viewers_core_link to display the images with ndv)
         sequence.metadata[HANDLER_META_KEY] = store_handler(handler)
         # run the MDA experiment asynchronously
         self._mmc.run_mda(sequence, output=handler)
-
-    # -------------------------PRIVATE METHODS-------------------------
-
-    def _create_writer(
-        self, save_format: str, save_path: bool | str | Path | None
-    ) -> (
-        OMEZarrWriter | OMETiffWriter | TensorStoreHandler | ImageSequenceWriter | None
-    ):
-        """Create a writer based on the save format."""
-        # if save_path is a bool (False) or None or if save_format is not recognized
-        if not isinstance(save_path, str | Path) or save_format not in FORMATS:
-            return TensorStoreHandler(driver="zarr")
-        save_path = Path(save_path)
-        if OME_TIFF in save_format:
-            # if OME-TIFF, save_path should be a directory without extension, so
-            # we need to add the ".ome.tif" to correctly use the OMETiffWriter
-            if not save_path.name.endswith(OME_TIFFS):
-                save_path = save_path.with_suffix(OME_TIFF)
-            return OMETiffWriter(save_path)
-        elif OME_ZARR in save_format:
-            return OMEZarrWriter(save_path)
-        else:
-            return ImageSequenceWriter(save_path)
