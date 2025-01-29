@@ -4,9 +4,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pymmcore_plus.mda.handlers import (
-    ImageSequenceWriter,
-    OMETiffWriter,
-    OMEZarrWriter,
     TensorStoreHandler,
 )
 from pymmcore_widgets import MDAWidget
@@ -40,11 +37,11 @@ class _MDAWidget(MDAWidget):
     def execute_mda(self, output: Path | str | object | None) -> None:
         """Execute the MDA experiment corresponding to the current value."""
         sequence = self.value()
-        # TODO: We are manually creating a TensorStoreHandler here. This should only 
+        # TODO: We are manually creating a TensorStoreHandler here. This should only
         # happen if the user does not specify a save type through the MDAWidget. If the
         # user specifies a save type, we should retrieve the saving data type from the
         # sequence metadata and create or set the handler accordingly.
-        handler = TensorStoreHandler(driver="zarr")
+        handler = TensorStoreHandler()
         # store the handler in the metadata of the sequence (this will be used by the
         # viewers_core_link to display the images with ndv)
         sequence.metadata[HANDLER_META_KEY] = store_handler(handler)
