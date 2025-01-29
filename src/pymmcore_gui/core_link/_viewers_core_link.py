@@ -60,12 +60,14 @@ class ViewersCoreLink(QObject):
 
     def _create_viewer(self, handler: TensorStoreHandler | None) -> ndv.ArrayViewer:
         # TODO: temporary, create the DataWrapper for the handlers
-        viewer = ndv.ArrayViewer(DataWrapper.create(handler))
+        data = None if handler is None else handler.store
+
+        viewer = ndv.ArrayViewer(DataWrapper.create(data))
 
         wdg = cast("QWidget", viewer.widget())
         wdg.setParent(self._parent)
-        wdg.setWindowFlags(Qt.WindowType.Dialog)
         # TODO: add viewer name
+        wdg.setWindowFlags(Qt.WindowType.Dialog)
 
         return viewer
 
