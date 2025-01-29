@@ -43,7 +43,7 @@ class ViewersCoreLink(QObject):
         # get the handler from the sequence metadata if it exists
         self._handler: TensorStoreHandler | None = get_handler(sequence)
 
-        # if it deas not exist, create a new TensorStoreHandler
+        # if it does not exist, create a new TensorStoreHandler
         if self._handler is None:
             self._handler = TensorStoreHandler()
             self._handler.sequenceStarted(sequence, meta)
