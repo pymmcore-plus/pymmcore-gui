@@ -81,6 +81,7 @@ class ViewersCoreLink(QObject):
             )
 
     def _create_emply_viewer(self) -> ndv.ArrayViewer:
+        """Create a new ndv viewer with no data."""
         # TODO: temporary, create the DataWrapper for the handlers
         viewer = ndv.ArrayViewer(None)
         wdg = cast("QWidget", viewer.widget())
