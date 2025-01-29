@@ -14,12 +14,13 @@ from pydantic_settings import (
 
 APP_NAME = "pymmcore-gui"
 USER_DATA_DIR = Path(user_data_dir(appname=APP_NAME))
+SETTINGS_FILE_NAME = USER_DATA_DIR / "pmm_settings.json"
 
 
 class MMGuiUserPrefsSource(PydanticBaseSettingsSource):
     """Loads variables from file json file persisted to disk."""
 
-    FILE = USER_DATA_DIR / "settings.json"
+    FILE = SETTINGS_FILE_NAME
 
     @staticmethod
     def exists() -> bool:
@@ -119,3 +120,6 @@ class SettingsV1(BaseSettings):
             MMGuiUserPrefsSource(settings_cls),
             file_secret_settings,
         )
+
+
+Settings = SettingsV1
