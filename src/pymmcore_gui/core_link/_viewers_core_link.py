@@ -58,21 +58,16 @@ class ViewersCoreLink(QObject):
                 dict(event.index.items())
             )
 
-    def _create_viewer(
-        self,
-        handler: (
-            TensorStoreHandler | OMETiffWriter | OMEZarrWriter | ImageSequenceWriter
-        ),
-    ) -> ndv.ArrayViewer:
+    def _create_viewer(self, handler: TensorStoreHandler | None) -> ndv.ArrayViewer:
         # TODO: temporary, create the DataWrapper for the handlers
-        data = handler.store if isinstance(handler, TensorStoreHandler) else handler
+        viewer = ndv.ArrayViewer(DataWrapper.create(handler))
 
-        v = ndv.ArrayViewer(DataWrapper.create(data))
-        wdg = cast("QWidget", v.widget())
+        wdg = cast("QWidget", viewer.widget())
         wdg.setParent(self._parent)
         wdg.setWindowFlags(Qt.WindowType.Dialog)
         # TODO: add viewer name
-        return v
+
+        return viewer
 
     def _on_sequence_finished(self) -> None:
         """Reset the viewer and handler."""
