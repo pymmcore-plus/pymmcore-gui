@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pymmcore_plus.mda.handlers import (
@@ -12,6 +11,8 @@ from pymmcore_widgets.mda._save_widget import OME_TIFF, OME_ZARR, TIFF_SEQ, WRIT
 from pymmcore_gui.core_link._shared_handler import HANDLER_META_KEY, store_handler
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from pymmcore_plus import CMMCorePlus
     from qtpy.QtWidgets import QWidget
 
