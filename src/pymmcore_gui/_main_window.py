@@ -24,7 +24,7 @@ from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
-from .core_link._viewers_core_link import ViewersCoreLink
+from .core_link import ViewersCoreLink
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
