@@ -34,7 +34,7 @@ jobs:
     name: ${{ matrix.platform }} py${{ matrix.python-version }}
     runs-on: ${{ matrix.platform }}
     env:
-      UV_LOCKED: true
+      UV_FROZEN: true
     strategy:
       fail-fast: false
       matrix:

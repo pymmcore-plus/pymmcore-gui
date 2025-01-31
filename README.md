@@ -12,6 +12,8 @@ for [`pymmcore-plus`](https://github.com/pymmcore-plus/pymmcore-plus) &
 
   See [CONTRIBUTING](CONTRIBUTING.md) for local setup instructions.
 
+  You can download the latest nightly bundled applications [here](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main)
+
 </details>
 
 ## Goals (and non-goals) of unification
