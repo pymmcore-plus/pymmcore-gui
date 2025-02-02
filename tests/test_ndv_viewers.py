@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import datetime
 import gc
+import os
 from typing import TYPE_CHECKING
 
+import pytest
 import useq
 from PyQt6.QtWidgets import QApplication, QWidget
 from useq import MDASequence
@@ -15,6 +17,7 @@ if TYPE_CHECKING:
     from pytestqt.qtbot import QtBot
 
 
+@pytest.mark.skipif(os.getenv("CI"), reason="Segfaults on CI")
 def test_viewers_manager(mmcore: CMMCorePlus, qtbot: QtBot) -> None:
     """Ensure that the viewers manager creates and cleans up viewers during MDA."""
     dummy = QWidget()
