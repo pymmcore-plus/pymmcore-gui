@@ -1,91 +1,106 @@
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, cast
+from weakref import WeakValueDictionary
 
 import ndv
 from pymmcore_plus import CMMCorePlus
-from pymmcore_plus.mda.handlers import (
-    TensorStoreHandler,
-)
-from qtpy.QtCore import QObject, Qt, QTimer
-
-from ._shared_handler import get_handler
+from pymmcore_plus.mda.handlers import TensorStoreHandler
+from qtpy.QtCore import Qt, QTimer
 
 if TYPE_CHECKING:
     import numpy as np
     import useq
-    from pymmcore_plus.metadata import SummaryMetaV1
+    from pymmcore_plus.mda import SupportsFrameReady
+    from pymmcore_plus.metadata import FrameMetaV1, SummaryMetaV1
     from qtpy.QtWidgets import QWidget
+    from useq import MDASequence
+
+SEQ_VIEWERS: WeakValueDictionary[str, ndv.ArrayViewer] = WeakValueDictionary()
 
 
-class ViewersCoreLink(QObject):
-    from pymmcore_gui.data_wrappers import MMTensorstoreWrapper
+class ViewersCoreLink:
+    """Object that mediates a connection between the MDA experiment and the viewers."""
 
     def __init__(self, parent: QWidget, *, mmcore: CMMCorePlus | None = None):
-        super().__init__(parent)
-
         self._parent = parent
-
         self._mmc = mmcore or CMMCorePlus.instance()
-
-        self._mda_viewer: ndv.ArrayViewer | None = None
-
+        self._active_viewer: ndv.ArrayViewer | None = None
         self._mmc.mda.events.sequenceStarted.connect(self._on_sequence_started)
         self._mmc.mda.events.frameReady.connect(self._on_frame_ready)
+        self._mmc.mda.events.sequenceFinished.connect(self._on_sequence_finished)
+        self._handler: SupportsFrameReady | None = None
+        self._own_handler: TensorStoreHandler | None = None
 
     def _on_sequence_started(
         self, sequence: useq.MDASequence, meta: SummaryMetaV1
     ) -> None:
         """Reset the viewer and handler."""
-        self._mda_viewer = None
-
         # get the handler from the sequence metadata if it exists
-        self._handler: TensorStoreHandler | None = get_handler(sequence)
-
+        if handlers := self._mmc.mda.get_output_handlers():
+            self._handler = handlers[0]
+            self._own_handler = None
         # if it does not exist, create a new TensorStoreHandler
-        if self._handler is None:
-            self._handler = self._create_tensorstore_handler(sequence, meta)
+        else:
+            self._own_handler = self._create_tensorstore_handler(sequence, meta)
+            self._handler = None
 
         # since the handler is empty, create a ndv viewer with no data
-        self._mda_viewer = self._create_emply_viewer()
-        self._mda_viewer.show()
-
-    def _create_tensorstore_handler(self, sequence, meta) -> TensorStoreHandler:
-        """Create a new TensorStoreHandler and connect the events."""
-        handler = TensorStoreHandler()
-        handler.sequenceStarted(sequence, meta)
-        self._mmc.mda.events.frameReady.connect(handler.frameReady)
-        self._mmc.mda.events.sequenceFinished.connect(handler.sequenceFinished)
-        return handler
+        self._active_viewer = viewer = self._create_viewer()
+        SEQ_VIEWERS[str(sequence.uid)] = viewer
+        viewer.show()
 
     def _on_frame_ready(
-        self, frame: np.ndarray, event: useq.MDAEvent, meta: SummaryMetaV1
+        self, frame: np.ndarray, event: useq.MDAEvent, meta: FrameMetaV1
     ) -> None:
         """Create a viewer if it does not exist, otherwise update the current index."""
         # at this point the viewer should exist
-        if self._mda_viewer is None:
+        if self._own_handler is not None:
+            self._own_handler.frameReady(frame, event, meta)
+
+        if (viewer := self._active_viewer) is None:
             return
+
         # if the viewer does not have data, set the data to the handler (this should
         # only happen once when the fist frame is received)
-        if self._mda_viewer.data is None and self._handler is not None:
-            # TODO: temporary. maybe create the DataWrapper for the handlers
-            # (e.g. data_wrappers.MMTensorstoreWrapper). right now we are using the
-            self._mda_viewer.data = self._handler.store
+        if viewer.data_wrapper is None:
+            handler = self._handler or self._own_handler
+            if isinstance(handler, TensorStoreHandler):
+                # TODO: temporary. maybe create the DataWrapper for the handlers
+                # (e.g. data_wrappers.MMTensorstoreWrapper). right now we are using the
+                viewer.data = handler.store
+            else:
+                warnings.warn(
+                    f"don't know how to show data of type {type(handler)}",
+                    stacklevel=2,
+                )
         else:
             # Add a small delay to make sure the data are available in the handler
             QTimer.singleShot(
                 5,
-                lambda: self._mda_viewer.display_model.current_index.update(
+                lambda: viewer.display_model.current_index.update(
                     dict(event.index.items())
                 ),
             )
 
-    def _create_emply_viewer(self) -> ndv.ArrayViewer:
+    def _on_sequence_finished(self, sequence: useq.MDASequence) -> None:
+        if self._own_handler is not None:
+            self._own_handler.sequenceFinished(sequence)
+
+    def _create_viewer(self) -> ndv.ArrayViewer:
         """Create a new ndv viewer with no data."""
-        # TODO: temporary, create the DataWrapper for the handlers
         viewer = ndv.ArrayViewer(None)
         wdg = cast("QWidget", viewer.widget())
         wdg.setParent(self._parent)
         # TODO: add viewer name
         wdg.setWindowFlags(Qt.WindowType.Dialog)
         return viewer
+
+    def _create_tensorstore_handler(
+        self, sequence: MDASequence, meta: SummaryMetaV1
+    ) -> TensorStoreHandler:
+        """Create a new TensorStoreHandler and connect the events."""
+        handler = TensorStoreHandler(driver="zarr", kvstore="memory://")
+        handler.reset(sequence)
+        return handler
