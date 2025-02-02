@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from pytestqt.qtbot import QtBot
 
 
-@pytest.mark.skipif(os.getenv("CI"), reason="Segfaults on CI")
+@pytest.mark.skipif(bool(os.getenv("CI")), reason="Segfaults on CI")
 def test_viewers_manager(mmcore: CMMCorePlus, qtbot: QtBot) -> None:
     """Ensure that the viewers manager creates and cleans up viewers during MDA."""
     dummy = QWidget()
