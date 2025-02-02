@@ -779,13 +779,17 @@ wheels = [
 [[package]]
 name = "ndv"
 version = "0.2.2"
-source = { git = "https://github.com/pyapp-kit/ndv?rev=main#e67cf68338b9db57587b482b5649e67b36cf2fc9" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cmap" },
     { name = "numpy" },
     { name = "psygnal" },
     { name = "pydantic" },
     { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e2/34/7641f1d79fb52f392e275b08358dd198c6640e8675469e92c417ee830355/ndv-0.2.2.tar.gz", hash = "sha256:733a5885c41c5089a82e544ba897d87e0ad30cb78855fd7e8329f45d80348b6a", size = 125026 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/73/b2/f0b6d9b81e53403997b71832aac7d8a17f793a5ecea33c50f1830d65c716/ndv-0.2.2-py3-none-any.whl", hash = "sha256:dc158b76b481cb71c21b0aac23d5ccddbeab77d1bba3f3323dd2d8633adb0447", size = 119349 },
 ]
 
 [package.optional-dependencies]
@@ -1421,7 +1425,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "ndv", extras = ["vispy"], git = "https://github.com/pyapp-kit/ndv?rev=main" },
+    { name = "ndv", extras = ["vispy"], specifier = ">=0.2.2" },
     { name = "pydantic-settings", specifier = ">=2.7.1" },
     { name = "pymmcore-plus", extras = ["cli"], git = "https://github.com/pymmcore-plus/pymmcore-plus?rev=main" },
     { name = "pymmcore-widgets", specifier = ">=0.9.0" },
