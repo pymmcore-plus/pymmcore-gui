@@ -31,10 +31,11 @@ from .actions._action_info import ActionKey
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping
+    from collections.abc import Callable, Iterator, Mapping
 
     import numpy as np
     import useq
+    from ndv.models._array_display_model import IndexMap
     from pymmcore_plus.mda import SupportsFrameReady
     from pymmcore_plus.metadata import FrameMetaV1, SummaryMetaV1
     from useq import MDASequence
@@ -293,6 +294,14 @@ class _ViewersManager(QObject):
         self._mmc.mda.events.sequenceStarted.connect(self._on_sequence_started)
         self._mmc.mda.events.frameReady.connect(self._on_frame_ready)
         self._mmc.mda.events.sequenceFinished.connect(self._on_sequence_finished)
+        # Connect parent's destroyed signal.
+        parent.destroyed.connect(self._cleanup_references)
+
+    # Adjust the slot to accept the QObject pointer (which is optional in Python)
+    def _cleanup_references(self, obj: QObject | None = None) -> None:
+        self._active_viewer = None
+        self._handler = None
+        self._own_handler = None
 
     def _on_sequence_started(
         self, sequence: useq.MDASequence, meta: SummaryMetaV1
@@ -345,7 +354,16 @@ class _ViewersManager(QObject):
             # asynchronously, so the data may not be available immediately to the viewer
             # after the handler's frameReady method is called.
             current_index = viewer.display_model.current_index
-            QTimer.singleShot(5, lambda: current_index.update(event.index.items()))
+
+            def _update(_idx: IndexMap = current_index) -> None:
+                try:
+                    current_index.update(event.index.items())
+                except Exception:
+                    # this happens if the viewer has been closed in the meantime
+                    # usually it's a RuntimeError, but could be an EmitLoopError
+                    pass
+
+            QTimer.singleShot(10, _update)
 
     def _on_sequence_finished(self, sequence: useq.MDASequence) -> None:
         """Called when a sequence has finished."""
@@ -367,3 +385,12 @@ class _ViewersManager(QObject):
         q_viewer.setWindowFlags(Qt.WindowType.Dialog)
         q_viewer.show()
         return ndv_viewer
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"<{self.__class__.__name__} {hex(id(self))} ({len(self)} viewer)>"
+
+    def __len__(self) -> int:
+        return len(self._seq_viewers)
+
+    def viewers(self) -> Iterator[ndv.ArrayViewer]:
+        yield from (self._seq_viewers.values())

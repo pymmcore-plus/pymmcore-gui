@@ -38,7 +38,7 @@ configure_logging(stderr_level="CRITICAL")
 
 # to create a new CMMCorePlus() for every test
 @pytest.fixture(autouse=True)
-def global_mmcore() -> Iterator[CMMCorePlus]:
+def mmcore() -> Iterator[CMMCorePlus]:
     mmc = CMMCorePlus()
     mmc.loadSystemConfiguration(TEST_CONFIG)
     with patch.object(_mmcore_plus, "_instance", mmc):
