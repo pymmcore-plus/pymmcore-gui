@@ -38,7 +38,7 @@ classifiers = [
 dependencies = [
     "ndv[vispy] @ git+https://github.com/pyapp-kit/ndv@main",
     "pydantic-settings>=2.7.1",
-    "pymmcore-plus[cli]>=0.13.0",
+    "pymmcore-plus[cli] @ git+https://github.com/pymmcore-plus/pymmcore-plus@main",
     "pymmcore-widgets>=0.9.0",
     "PyQt6==6.7.1",
     "pyright>=1.1.393",
