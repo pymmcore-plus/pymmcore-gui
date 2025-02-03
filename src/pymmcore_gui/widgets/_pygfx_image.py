@@ -22,7 +22,7 @@ else:
 _DEFAULT_WAIT = 10
 
 
-class ImagePreview(QWidget):
+class PygfxImagePreview(QWidget):
     """A Widget that displays the last image snapped by active core.
 
     This widget will automatically update when the active core snaps an image, when the
@@ -50,7 +50,7 @@ class ImagePreview(QWidget):
         use_with_mda: bool = False,
     ):
         super().__init__(parent=parent)
-        self._mmc = mmcore
+        self._mmc: CMMCorePlus | None = None
         self._use_with_mda = use_with_mda
 
         self._clims: tuple[float, float] | Literal["auto"] = "auto"
@@ -58,41 +58,68 @@ class ImagePreview(QWidget):
         self._timer_id: int | None = None
         # IMAGE NODE
 
-        self._texture = pygfx.Texture(np.zeros((512, 512), dtype=np.uint8), dim=2)
+        self._texture = pygfx.Texture(
+            np.random.randint(0, 6000, (512, 512), dtype=np.uint16), dim=2
+        )
         self._geometry = pygfx.Geometry(grid=self._texture)
         self._material = pygfx.ImageBasicMaterial(
-            clim=(0, 1), map=self._cmap.to_pygfx()
+            clim=(706, 5846),
+            # map=self._cmap.to_pygfx(),
         )
         self._image_node = img = pygfx.Image(self._geometry, self._material)
 
         # SCENE
 
-        self._scene = pygfx.Scene()
+        dark_gray = np.array((169, 167, 168, 255)) / 255
+        light_gray = np.array((100, 100, 100, 255)) / 255
+        self._scene = scene = pygfx.Scene()
+        background = pygfx.Background(
+            None, pygfx.BackgroundMaterial(light_gray, dark_gray)
+        )
+        scene.add(background)
+        scene.add(pygfx.AmbientLight())
+
         self._scene.add(self._image_node)
         self._canvas = QRenderWidget(self)
         self._renderer = renderer = pygfx.WgpuRenderer(self._canvas)
         self._camera = camera = pygfx.OrthographicCamera()
-        self._camera.show_object(img, up=(0, 1, 0), scale=1.4)  # pyright: ignore [reportArgumentType]
+        self._camera.add(pygfx.DirectionalLight())
         self._scene.add(self._camera)
+        self._camera.show_object(img, up=(0, 1, 0), scale=1.4)  # pyright: ignore [reportArgumentType]
         self._controller = pygfx.PanZoomController(camera, register_events=renderer)
+        self._controller.add_camera(self._camera)
         self._canvas.request_draw(self._draw_function)
 
-        ev = self._mmc.events
+        self.attach(mmcore)
+
+        # layout = QVBoxLayout(self)
+        # layout.setContentsMargins(0, 0, 0, 0)
+        # layout.addWidget(self._canvas)
+
+        # if isinstance(parent, QObject):
+        #     parent.destroyed.connect(self.detach)
+
+    def attach(self, core: CMMCorePlus) -> None:
+        """Attach this widget to events in `core`."""
+        if self._mmc is not None:
+            self.detach()
+        ev = core.events
         ev.imageSnapped.connect(self._on_image_snapped)
         ev.continuousSequenceAcquisitionStarted.connect(self._on_streaming_start)
         ev.sequenceAcquisitionStopped.connect(self._on_streaming_stop)
         ev.exposureChanged.connect(self._on_exposure_changed)
+        self._mmc = core
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self._canvas)
-
-        if isinstance(parent, QObject):
-            parent.destroyed.connect(self._disconnect)
-
-    def _draw_function(self) -> None:
-        self._renderer.render(self._scene, self._camera)
-        self._renderer.request_draw()
+    def detach(self) -> None:
+        """Detach this widget from events in `core`."""
+        if self._mmc is None:
+            return
+        with suppress(RuntimeError):
+            ev, self._mmc = self._mmc.events, None
+            ev.imageSnapped.disconnect(self._on_image_snapped)
+            ev.continuousSequenceAcquisitionStarted.disconnect(self._on_streaming_start)
+            ev.sequenceAcquisitionStopped.disconnect(self._on_streaming_stop)
+            ev.exposureChanged.disconnect(self._on_exposure_changed)
 
     @property
     def use_with_mda(self) -> bool:
@@ -110,39 +137,15 @@ class ImagePreview(QWidget):
         """
         self._use_with_mda = use_with_mda
 
-    def _disconnect(self) -> None:
-        with suppress(RuntimeError):
-            ev = self._mmc.events
-            ev.imageSnapped.disconnect(self._on_image_snapped)
-            ev.continuousSequenceAcquisitionStarted.disconnect(self._on_streaming_start)
-            ev.sequenceAcquisitionStopped.disconnect(self._on_streaming_stop)
-            ev.exposureChanged.disconnect(self._on_exposure_changed)
-
     def _on_streaming_start(self) -> None:
-        wait = int(self._mmc.getExposure()) or _DEFAULT_WAIT
-        self._timer_id = self.startTimer(wait, Qt.TimerType.PreciseTimer)
+        if (core := self._mmc) is not None:
+            wait = int(core.getExposure()) or _DEFAULT_WAIT
+            self._timer_id = self.startTimer(wait, Qt.TimerType.PreciseTimer)
 
     def _on_streaming_stop(self) -> None:
         if self._timer_id is not None:
             self.killTimer(self._timer_id)
             self._timer_id = None
-
-    def _on_exposure_changed(self, device: str, value: str) -> None:
-        # change timer interval
-        if self._timer_id is not None:
-            self.killTimer(self._timer_id)
-            self._timer_id = self.startTimer(int(value), Qt.TimerType.PreciseTimer)
-
-    def timerEvent(self, a0: QTimerEvent | None) -> None:
-        self._on_image_snapped()
-
-    def _on_image_snapped(self) -> None:
-        if not self._use_with_mda and self._mmc.mda.is_running():
-            return
-
-        with suppress(RuntimeError):
-            last = self._mmc.getImage()
-            self.set_data(last)
 
     @property
     def data(self) -> np.ndarray | None:
@@ -153,9 +156,8 @@ class ImagePreview(QWidget):
 
         The dtype must be compatible with wgpu texture formats.s
         """
-        # if self._clims == "auto":
         self._material.clim = np.min(data), np.max(data)
-        print(" > DATA", data.shape, data.dtype, self._material.clim)
+        print("setting pygfx data", np.mean(data), (np.min(data), np.max(data)))
         self._texture = pygfx.Texture(data, dim=2)
         self._geometry = pygfx.Geometry(grid=self._texture)
 
@@ -192,3 +194,45 @@ class ImagePreview(QWidget):
         cmap = Colormap(cmap)
         self._cmap = cmap
         self._material.map = cmap.to_pygfx()
+
+    # ----------------------------
+
+    def _draw_function(self) -> None:
+        self._renderer.render(self._scene, self._camera)
+        self._renderer.request_draw()
+
+    def _on_exposure_changed(self, device: str, value: str) -> None:
+        # change timer interval
+        if self._timer_id is not None:
+            self.killTimer(self._timer_id)
+            self._timer_id = self.startTimer(int(value), Qt.TimerType.PreciseTimer)
+
+    def timerEvent(self, a0: QTimerEvent | None) -> None:
+        self._on_image_snapped()
+
+    def _on_image_snapped(self) -> None:
+        if (core := self._mmc) is None:
+            return
+        if not self._use_with_mda and core.mda.is_running():
+            return
+
+        with suppress(RuntimeError):
+            last = core.getImage()
+            self.set_data(last)
+            self._draw_function()
+
+
+if __name__ == "__main__":
+    from pymmcore_plus import CMMCorePlus
+    from pymmcore_widgets import SnapButton
+    from PyQt6.QtWidgets import QApplication
+
+    core = CMMCorePlus()
+    core.loadSystemConfiguration()
+
+    app = QApplication([])
+    widget = PygfxImagePreview(None, core)
+    widget.show()
+    snap = SnapButton(parent=None, mmcore=core)
+    snap.show()
+    app.exec()

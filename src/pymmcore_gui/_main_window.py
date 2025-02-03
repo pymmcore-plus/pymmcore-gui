@@ -22,10 +22,10 @@ from PyQt6.QtWidgets import (
 
 from pymmcore_gui.actions._core_qaction import QCoreAction
 from pymmcore_gui.actions.widget_actions import WidgetActionInfo
-
+from pymmcore_widgets import ImagePreview
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
-from .widgets._image_preview import ImagePreview
+from .widgets._pygfx_image import PygfxImagePreview
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
@@ -155,6 +155,7 @@ class MicroManagerGUI(QMainWindow):
         self.setCentralWidget(central_wdg)
 
         layout = QVBoxLayout(central_wdg)
+        layout.addWidget(PygfxImagePreview(self, mmcore=self._mmc))
         layout.addWidget(ImagePreview(self, mmcore=self._mmc))
 
     @property
