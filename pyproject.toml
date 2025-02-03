@@ -137,7 +137,7 @@ pretty = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["qtconsole.*", "pydevd.*"]
+module = ["qtconsole.*", "pydevd.*", "pygfx.*", "rendercanvas.*"]
 ignore_missing_imports = true
 
 [tool.pyright]

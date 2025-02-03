@@ -88,9 +88,9 @@ def main() -> None:
     # FIXME: be better...
     try:
         if args.config:
-            win.mmc.loadSystemConfiguration(args.config)
+            win.mmcore.loadSystemConfiguration(args.config)
         else:
-            win.mmc.loadSystemConfiguration()
+            win.mmcore.loadSystemConfiguration()
     except Exception as e:
         print(f"Failed to load system configuration: {e}")
 
