@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, cast
 from weakref import WeakValueDictionary
 
 from pymmcore_plus import CMMCorePlus
+from PyQt6.QtCore import QByteArray
 from PyQt6.QtGui import QAction, QCloseEvent
 from PyQt6.QtWidgets import (
     QDialog,
@@ -23,6 +24,7 @@ from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
+from .settings import settings
 from .widgets._pygfx_image import PygfxImagePreview
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
@@ -156,6 +158,17 @@ class MicroManagerGUI(QMainWindow):
 
         layout = QVBoxLayout(central_wdg)
         layout.addWidget(self._img_preview)
+
+        if geo := settings.window.geometry:
+            self.restoreGeometry(QByteArray(geo))
+        if state := settings.window.window_state:
+            self.restoreState(QByteArray(state))
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+        settings.window.geometry = self.saveGeometry().data()
+        settings.window.window_state = self.saveState().data()
+        settings.flush()
+        return super().closeEvent(a0)
 
     @property
     def mmcore(self) -> CMMCorePlus:

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from platformdirs import user_data_dir
-from pydantic import computed_field
+from pydantic import Base64Bytes, Field
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
@@ -14,6 +14,7 @@ from pydantic_settings import (
 
 APP_NAME = "pymmcore-gui"
 USER_DATA_DIR = Path(user_data_dir(appname=APP_NAME))
+USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
 SETTINGS_FILE_NAME = USER_DATA_DIR / "pmm_settings.json"
 
 
@@ -45,7 +46,6 @@ class MMGuiUserPrefsSource(PydanticBaseSettingsSource):
         values = json.loads(content)
         if not isinstance(values, dict):
             raise ValueError("Settings file does not contain a dictionary.")
-
         return values
 
     def _read_settings(self) -> dict[str, Any]:
@@ -73,12 +73,19 @@ class MMGuiUserPrefsSource(PydanticBaseSettingsSource):
         return None, "", False  # pragma: no cover
 
 
+class WindowSettingsV1(BaseSettings):
+    """Settings related to window positioning and geometry."""
+
+    geometry: Base64Bytes | None = None
+    window_state: Base64Bytes | None = None
+
+
 class SettingsV1(BaseSettings):
     """Global settings for the PyMMCore GUI."""
 
     version: Literal["1.0"] = "1.0"
+    window: WindowSettingsV1 = Field(default_factory=WindowSettingsV1)
 
-    @computed_field(repr=False)  # type: ignore [prop-decorator]
     @property
     def version_tuple(self) -> tuple[int, int, str]:
         """Return the version as a tuple of integers.
@@ -121,5 +128,11 @@ class SettingsV1(BaseSettings):
             file_secret_settings,
         )
 
+    def flush(self) -> None:
+        """Write the settings to disk."""
+        json_str = self.model_dump_json(indent=2, exclude_defaults=True)
+        SETTINGS_FILE_NAME.write_text(json_str, errors="ignore")
+
 
 Settings = SettingsV1
+settings = SettingsV1()
