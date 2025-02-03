@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, cast
 from weakref import WeakValueDictionary
 
 from pymmcore_plus import CMMCorePlus
-from pymmcore_widgets import ImagePreview
+
+# from pymmcore_widgets import ImagePreview
 from PyQt6.QtGui import QAction, QCloseEvent
 from PyQt6.QtWidgets import (
     QDialog,
@@ -24,6 +25,7 @@ from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
+from .widgets._image_preview import ImagePreview
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
@@ -153,7 +155,7 @@ class MicroManagerGUI(QMainWindow):
         self.setCentralWidget(central_wdg)
 
         layout = QVBoxLayout(central_wdg)
-        layout.addWidget(ImagePreview(mmcore=self._mmc))
+        layout.addWidget(ImagePreview(self, mmcore=self._mmc))
 
     @property
     def mmc(self) -> CMMCorePlus:
