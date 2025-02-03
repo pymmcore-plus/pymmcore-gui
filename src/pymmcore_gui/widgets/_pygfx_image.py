@@ -209,8 +209,7 @@ class PygfxImagePreview(QWidget):
         """Return the interpolation method."""
         return self._material.interpolation  # type: ignore [no-any-return]
 
-    @interpolation.setter
-    def interpolation(self, interpolation: Literal["nearest", "linear"]) -> None:
+    def set_interpolation(self, interpolation: Literal["nearest", "linear"]) -> None:
         """Set the interpolation method."""
         self._material.interpolation = interpolation
 

@@ -6,8 +6,6 @@ from typing import TYPE_CHECKING, cast
 from weakref import WeakValueDictionary
 
 from pymmcore_plus import CMMCorePlus
-
-# from pymmcore_widgets import ImagePreview
 from PyQt6.QtGui import QAction, QCloseEvent
 from PyQt6.QtWidgets import (
     QDialog,
