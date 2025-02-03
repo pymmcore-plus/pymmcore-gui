@@ -53,6 +53,7 @@ repos:
           - ipykernel
           - ipython
           - ndv
+          - pygfx
           - pydantic
           - pydantic_core
           - pymmcore

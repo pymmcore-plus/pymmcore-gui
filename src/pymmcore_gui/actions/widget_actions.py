@@ -42,7 +42,7 @@ def _get_mm_main_window(obj: QObject) -> MicroManagerGUI | None:
 
 def _get_core(obj: QObject) -> CMMCorePlus:
     if win := _get_mm_main_window(obj):
-        return win.mmc
+        return win.mmcore
     return CMMCorePlus.instance()
 
 
