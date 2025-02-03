@@ -236,9 +236,9 @@ class PygfxImagePreview(QWidget):
 
     def _on_image_snapped(self) -> None:
         if (core := self._mmc) is None:
-            return
+            return  # pragma: no cover
         if not self.use_with_mda and core.mda.is_running():
-            return
+            return  # pragma: no cover
 
         last = core.getImage()
         self.set_data(last)
@@ -254,7 +254,7 @@ class PygfxImagePreview(QWidget):
             self._timer_id = None
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     from pymmcore_plus import CMMCorePlus
     from pymmcore_widgets import SnapButton
     from PyQt6.QtWidgets import QApplication
