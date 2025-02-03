@@ -294,11 +294,9 @@ class _ViewersManager(QObject):
         self._mmc.mda.events.sequenceStarted.connect(self._on_sequence_started)
         self._mmc.mda.events.frameReady.connect(self._on_frame_ready)
         self._mmc.mda.events.sequenceFinished.connect(self._on_sequence_finished)
-        # Connect parent's destroyed signal.
-        parent.destroyed.connect(self._cleanup_references)
+        parent.destroyed.connect(self._cleanup)
 
-    # Adjust the slot to accept the QObject pointer (which is optional in Python)
-    def _cleanup_references(self, obj: QObject | None = None) -> None:
+    def _cleanup(self, obj: QObject | None = None) -> None:
         self._active_viewer = None
         self._handler = None
         self._own_handler = None
@@ -333,7 +331,7 @@ class _ViewersManager(QObject):
             self._own_handler.frameReady(frame, event, meta)
 
         if (viewer := self._active_viewer) is None:
-            return
+            return  # pragma: no cover
 
         # if the viewer does not yet have data, it's likely the very first frame
         # so update the viewer's data source to the underlying handlers store
@@ -342,7 +340,7 @@ class _ViewersManager(QObject):
             if isinstance(handler, TensorStoreHandler):
                 # TODO: temporary. maybe create the DataWrapper for the handlers
                 viewer.data = handler.store
-            else:
+            else:  # pragma: no cover
                 warnings.warn(
                     f"don't know how to show data of type {type(handler)}",
                     stacklevel=2,
@@ -357,8 +355,8 @@ class _ViewersManager(QObject):
 
             def _update(_idx: IndexMap = current_index) -> None:
                 try:
-                    current_index.update(event.index.items())
-                except Exception:
+                    _idx.update(event.index.items())
+                except Exception:  # pragma: no cover
                     # this happens if the viewer has been closed in the meantime
                     # usually it's a RuntimeError, but could be an EmitLoopError
                     pass
