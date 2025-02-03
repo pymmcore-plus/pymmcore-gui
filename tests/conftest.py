@@ -43,6 +43,7 @@ def mmcore() -> Iterator[CMMCorePlus]:
     mmc.loadSystemConfiguration(TEST_CONFIG)
     with patch.object(_mmcore_plus, "_instance", mmc):
         yield mmc
+    mmc.waitForSystem()
 
 
 @pytest.fixture()

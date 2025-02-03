@@ -131,6 +131,7 @@ class PygfxImagePreview(QWidget):
         ev = core.events
         ev.imageSnapped.connect(self._on_image_snapped)
         ev.continuousSequenceAcquisitionStarted.connect(self._on_streaming_start)
+        ev.sequenceAcquisitionStarted.connect(self._on_streaming_start)
         ev.sequenceAcquisitionStopped.connect(self._on_streaming_stop)
         ev.exposureChanged.connect(self._on_exposure_changed)
         self._mmc = core
@@ -139,10 +140,11 @@ class PygfxImagePreview(QWidget):
         """Detach this widget from events in `core`."""
         if self._mmc is None:
             return
-        with suppress(RuntimeError):
+        with suppress(Exception):
             ev, self._mmc = self._mmc.events, None
             ev.imageSnapped.disconnect(self._on_image_snapped)
             ev.continuousSequenceAcquisitionStarted.disconnect(self._on_streaming_start)
+            ev.sequenceAcquisitionStarted.disconnect(self._on_streaming_start)
             ev.sequenceAcquisitionStopped.disconnect(self._on_streaming_stop)
             ev.exposureChanged.disconnect(self._on_exposure_changed)
 
