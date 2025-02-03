@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, cast
 from weakref import WeakValueDictionary
 
 from pymmcore_plus import CMMCorePlus
+from pymmcore_widgets import ImagePreview
 
 # from pymmcore_widgets import ImagePreview
 from PyQt6.QtGui import QAction, QCloseEvent
@@ -22,7 +23,7 @@ from PyQt6.QtWidgets import (
 
 from pymmcore_gui.actions._core_qaction import QCoreAction
 from pymmcore_gui.actions.widget_actions import WidgetActionInfo
-from pymmcore_widgets import ImagePreview
+
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
 from .widgets._pygfx_image import PygfxImagePreview

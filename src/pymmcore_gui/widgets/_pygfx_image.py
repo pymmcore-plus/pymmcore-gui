@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pygfx
 from cmap import Colormap
-from PyQt6.QtCore import QObject, Qt, QTimerEvent
-from PyQt6.QtWidgets import QVBoxLayout, QWidget
+from PyQt6.QtCore import Qt, QTimerEvent
+from PyQt6.QtWidgets import QWidget
 
 if TYPE_CHECKING:
     import rendercanvas.qt
