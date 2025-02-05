@@ -95,7 +95,7 @@ class MicroManagerGUI(QMainWindow):
 
     def __init__(self, *, mmcore: CMMCorePlus | None = None) -> None:
         super().__init__()
-        self.setWindowTitle("Mike")
+        self.setWindowTitle("MicroManagerGUI")
         self.setObjectName("MicroManagerGUI")
 
         # Serves to cache created QAction objects so that they can be re-used
