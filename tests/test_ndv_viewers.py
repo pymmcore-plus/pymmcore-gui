@@ -9,7 +9,7 @@ import useq
 from PyQt6.QtWidgets import QApplication, QWidget
 from useq import MDASequence
 
-from pymmcore_gui._main_window import _ViewersManager
+from pymmcore_gui._ndv_viewers import NDVViewersManager
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 def test_viewers_manager(mmcore: CMMCorePlus, qtbot: QtBot) -> None:
     """Ensure that the viewers manager creates and cleans up viewers during MDA."""
     dummy = QWidget()
-    manager = _ViewersManager(dummy, mmcore)
+    manager = NDVViewersManager(dummy, mmcore)
 
     assert len(manager) == 0
     mmcore.mda.run(
