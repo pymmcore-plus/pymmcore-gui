@@ -125,6 +125,7 @@ class MicroManagerGUI(QMainWindow):
         self._mmc = mmc = mmcore or CMMCorePlus.instance()
 
         self._img_preview = PygfxImagePreview(self, mmcore=self._mmc)
+        self._viewers_manager = _ViewersManager(self, self._mmc)
 
         # MENUS ====================================
         # To add menus or menu items, add them to the MENUS dict above
