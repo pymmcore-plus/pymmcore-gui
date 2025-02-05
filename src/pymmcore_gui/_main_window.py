@@ -9,7 +9,6 @@ from weakref import WeakValueDictionary
 import ndv
 from pymmcore_plus import CMMCorePlus
 from pymmcore_plus.mda.handlers import TensorStoreHandler
-from pymmcore_widgets import ImagePreview
 from PyQt6.QtCore import QObject, Qt, QTimer
 from PyQt6.QtGui import QAction, QCloseEvent
 from PyQt6.QtWidgets import (
@@ -28,6 +27,7 @@ from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
+from .widgets._pygfx_image import PygfxImagePreview
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
@@ -124,7 +124,7 @@ class MicroManagerGUI(QMainWindow):
         # get global CMMCorePlus instance
         self._mmc = mmc = mmcore or CMMCorePlus.instance()
 
-        self._viewers_manager = _ViewersManager(self, self._mmc)
+        self._img_preview = PygfxImagePreview(self, mmcore=self._mmc)
 
         # MENUS ====================================
         # To add menus or menu items, add them to the MENUS dict above
@@ -166,10 +166,10 @@ class MicroManagerGUI(QMainWindow):
         self.setCentralWidget(central_wdg)
 
         layout = QVBoxLayout(central_wdg)
-        layout.addWidget(ImagePreview(mmcore=self._mmc, use_with_mda=False))
+        layout.addWidget(self._img_preview)
 
     @property
-    def mmc(self) -> CMMCorePlus:
+    def mmcore(self) -> CMMCorePlus:
         return self._mmc
 
     def get_action(self, key: ActionKey, create: bool = True) -> QAction:
