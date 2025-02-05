@@ -21,6 +21,7 @@ from PyQt6.QtWidgets import (
 from pymmcore_gui.actions._core_qaction import QCoreAction
 from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
+from ._ndv_viewers import NDVViewersManager
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
 from .widgets._pygfx_image import PygfxImagePreview
@@ -114,6 +115,7 @@ class MicroManagerGUI(QMainWindow):
         self._mmc = mmc = mmcore or CMMCorePlus.instance()
 
         self._img_preview = PygfxImagePreview(self, mmcore=self._mmc)
+        self._viewers_manager = NDVViewersManager(self, self._mmc)
 
         # MENUS ====================================
         # To add menus or menu items, add them to the MENUS dict above

@@ -79,6 +79,9 @@ dev = [
     "types-pyyaml>=6.0.12.20241230",
 ]
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 # same as console_scripts entry point
 [project.scripts]
 mmgui = "pymmcore_gui._app:main"
