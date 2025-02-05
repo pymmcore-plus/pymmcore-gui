@@ -1,23 +1,18 @@
 from __future__ import annotations
 
-import sys
 import warnings
-from typing import TYPE_CHECKING, Any, TypeGuard, cast
+from typing import TYPE_CHECKING, cast
 from weakref import WeakValueDictionary
 
 import ndv
-import numpy as np
-from ndv import DataWrapper
 from pymmcore_plus.mda.handlers import TensorStoreHandler
-from pymmcore_plus.mda.handlers._5d_writer_base import _5DWriterBase
 from PyQt6.QtCore import QObject, Qt, QTimer
-from PyQt6.QtWidgets import (
-    QWidget,
-)
+from PyQt6.QtWidgets import QWidget
 
 if TYPE_CHECKING:
-    from collections.abc import Hashable, Iterator, Mapping, Sequence
+    from collections.abc import Iterator
 
+    import numpy as np
     import useq
     from ndv.models._array_display_model import IndexMap
     from pymmcore_plus import CMMCorePlus
@@ -106,8 +101,6 @@ class NDVViewersManager(QObject):
             if isinstance(handler, TensorStoreHandler):
                 # TODO: temporary. maybe create the DataWrapper for the handlers
                 viewer.data = handler.store
-            elif isinstance(handler, _5DWriterBase):
-                viewer.data = _OME5DWrapper(handler)
             else:
                 warnings.warn(
                     f"don't know how to show data of type {type(handler)}",
@@ -160,56 +153,3 @@ class NDVViewersManager(QObject):
 
     def viewers(self) -> Iterator[ndv.ArrayViewer]:
         yield from (self._seq_viewers.values())
-
-
-# --------------------------------------------------------------------------------
-# this could be improved.  Just a quick Datawrapper for the pymmcore-plus 5D writer
-# indexing and isel is particularly ugly at the moment.  TODO...
-
-
-class _OME5DWrapper(DataWrapper["_5DWriterBase"]):
-    @classmethod
-    def supports(cls, obj: Any) -> TypeGuard[_5DWriterBase]:
-        if "pymmcore_plus.mda" in sys.modules:
-            from pymmcore_plus.mda.handlers._5d_writer_base import _5DWriterBase
-
-            return isinstance(obj, _5DWriterBase)
-        return False
-
-    @property
-    def dims(self) -> tuple[Hashable, ...]:
-        """Return the dimension labels for the data."""
-        if not self.data.current_sequence:
-            return ()
-        return (*tuple(self.data.current_sequence.sizes), "y", "x")
-
-    @property
-    def coords(self) -> Mapping[Hashable, Sequence]:
-        """Return the coordinates for the data."""
-        if not self.data.current_sequence or not self.data.position_arrays:
-            return {}
-        coords: dict[Hashable, Sequence] = {
-            dim: range(size) for dim, size in self.data.current_sequence.sizes.items()
-        }
-        ary = next(iter(self.data.position_arrays.values()))
-        coords.update({"y": range(ary.shape[-2]), "x": range(ary.shape[-1])})
-        return coords
-
-    def isel(self, index: Mapping[int, int | slice]) -> np.ndarray:
-        # oh lord look away.
-        # this is a mess, partially caused by the ndv slice/model
-
-        idx = [index.get(k, slice(None)) for k in range(len(self.dims))]
-        try:
-            pidx = self.dims.index("p")
-        except ValueError:
-            pidx = 0
-
-        _pcoord: int | slice = index[pidx]
-        pcoord: int = _pcoord.start if isinstance(_pcoord, slice) else _pcoord
-
-        del idx[pidx]
-        key = self.data.get_position_key(pcoord)
-        data = self.data.position_arrays[key][tuple(idx)]
-        # add back position dimension
-        return np.expand_dims(data, axis=pidx)
