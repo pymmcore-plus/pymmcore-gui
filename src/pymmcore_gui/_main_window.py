@@ -21,9 +21,10 @@ from PyQt6.QtWidgets import (
 from pymmcore_gui.actions._core_qaction import QCoreAction
 from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
+from ._ndv_viewers import NDVViewersManager
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
-from .core_link._viewers_core_link import LivePreview
+from .widgets._pygfx_image import PygfxImagePreview
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
@@ -113,7 +114,8 @@ class MicroManagerGUI(QMainWindow):
         # get global CMMCorePlus instance
         self._mmc = mmc = mmcore or CMMCorePlus.instance()
 
-        self._live_view = LivePreview(self, mmcore=self._mmc)
+        self._img_preview = PygfxImagePreview(self, mmcore=self._mmc)
+        self._viewers_manager = NDVViewersManager(self, self._mmc)
 
         # MENUS ====================================
         # To add menus or menu items, add them to the MENUS dict above
@@ -155,10 +157,10 @@ class MicroManagerGUI(QMainWindow):
         self.setCentralWidget(central_wdg)
 
         layout = QVBoxLayout(central_wdg)
-        layout.addWidget(self._live_view.viewer.widget())
+        layout.addWidget(self._img_preview)
 
     @property
-    def mmc(self) -> CMMCorePlus:
+    def mmcore(self) -> CMMCorePlus:
         return self._mmc
 
     def get_action(self, key: ActionKey, create: bool = True) -> QAction:

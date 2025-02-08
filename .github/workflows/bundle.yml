@@ -30,6 +30,8 @@ jobs:
 
       - name: Install the project
         run: uv sync --all-extras --dev
+        env:
+          UV_LOCKED: ${{ github.ref_name == 'main' && 1 || 0 }}
 
       - name: Bundle
         shell: bash

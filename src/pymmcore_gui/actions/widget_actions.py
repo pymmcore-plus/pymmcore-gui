@@ -42,7 +42,7 @@ def _get_mm_main_window(obj: QObject) -> MicroManagerGUI | None:
 
 def _get_core(obj: QObject) -> CMMCorePlus:
     if win := _get_mm_main_window(obj):
-        return win.mmc
+        return win.mmcore
     return CMMCorePlus.instance()
 
 
@@ -79,19 +79,17 @@ def create_install_widgets(parent: QWidget) -> pmmw.InstallWidget:
 
 def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
     """Create the MDA widget."""
+    # from pymmcore_gui.widgets import _MDAWidget
     from pymmcore_widgets import MDAWidget
 
-    wdg = MDAWidget(parent=parent, mmcore=_get_core(parent))
-    return wdg
+    return MDAWidget(parent=parent, mmcore=_get_core(parent))
 
 
 def create_camera_roi(parent: QWidget) -> pmmw.CameraRoiWidget:
     """Create the Camera ROI widget."""
     from pymmcore_widgets import CameraRoiWidget
 
-    wdg = CameraRoiWidget(parent=parent, mmcore=_get_core(parent))
-    wdg.setMaximumHeight(140)
-    return wdg
+    return CameraRoiWidget(parent=parent, mmcore=_get_core(parent))
 
 
 def create_config_groups(parent: QWidget) -> pmmw.GroupPresetTableWidget:
