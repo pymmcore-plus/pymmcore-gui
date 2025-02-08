@@ -22,9 +22,9 @@ from pymmcore_gui.actions._core_qaction import QCoreAction
 from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
 from ._ndv_viewers import NDVViewersManager
+from ._preview_viewer import LivePreview
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
-from .widgets._pygfx_image import PygfxImagePreview
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
@@ -114,7 +114,9 @@ class MicroManagerGUI(QMainWindow):
         # get global CMMCorePlus instance
         self._mmc = mmc = mmcore or CMMCorePlus.instance()
 
-        self._img_preview = PygfxImagePreview(self, mmcore=self._mmc)
+        # self._img_preview = PygfxImagePreview(self, mmcore=self._mmc)
+
+        self._img_preview = LivePreview(self, mmcore=self._mmc)
         self._viewers_manager = NDVViewersManager(self, self._mmc)
 
         # MENUS ====================================
@@ -157,7 +159,7 @@ class MicroManagerGUI(QMainWindow):
         self.setCentralWidget(central_wdg)
 
         layout = QVBoxLayout(central_wdg)
-        layout.addWidget(self._img_preview)
+        layout.addWidget(self._img_preview.viewer.widget())
 
     @property
     def mmcore(self) -> CMMCorePlus:
