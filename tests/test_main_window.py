@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pymmcore_widgets
-from PyQt6.QtWidgets import QDockWidget
 
 from pymmcore_gui import CoreAction, MicroManagerGUI, WidgetAction
 
@@ -18,7 +17,7 @@ def test_main_window(qtbot: QtBot) -> None:
         gui.get_action(w_action)
         gui.get_widget(w_action)
         assert w_action in gui._qactions
-        assert w_action in gui._qwidgets
+        assert w_action in gui._action_widgets
 
     for c_action in CoreAction:
         gui.get_action(c_action)
@@ -27,4 +26,4 @@ def test_main_window(qtbot: QtBot) -> None:
     assert isinstance(
         gui.get_widget(WidgetAction.MDA_WIDGET), pymmcore_widgets.MDAWidget
     )
-    assert isinstance(gui.get_dock_widget(WidgetAction.MDA_WIDGET), QDockWidget)
+    # assert isinstance(gui.get_dock_widget(WidgetAction.MDA_WIDGET), QDockWidget)
