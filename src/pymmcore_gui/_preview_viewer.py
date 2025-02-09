@@ -28,7 +28,7 @@ class LivePreview(QObject):
 
         # connections
         ev = self._mmc.events
-        ev.imageSnapped.connect(self._handle_snap)
+        ev.imageSnapped.connect(self._on_snap)
         ev.continuousSequenceAcquisitionStarted.connect(self._start_live_viewer)
         ev.sequenceAcquisitionStopped.connect(self._stop_live_viewer)
         ev.exposureChanged.connect(self._restart_live)
@@ -39,7 +39,8 @@ class LivePreview(QObject):
         return self._viewer
 
     @ensure_main_thread
-    def _handle_snap(self) -> None:
+    def _on_snap(self) -> None:
+        """Update the viewer when an image is snapped."""
         if self._mmc.mda.is_running():
             return
         self._viewer.data = self._mmc.getImage()
@@ -58,8 +59,8 @@ class LivePreview(QObject):
             self.killTimer(self._live_timer_id)
             self._live_timer_id = None
 
-    def _update_viewer(self, data: np.ndarray | None = None) -> None:
-        """Update viewer with the latest image from the circular buffer."""
+    def _update_live_viewer(self, data: np.ndarray | None = None) -> None:
+        """Update the live viewer with the latest image from the circular buffer."""
         if data is None:
             if self._mmc.getRemainingImageCount() == 0:
                 return
@@ -70,13 +71,13 @@ class LivePreview(QObject):
                 return
         self._viewer.data = data
 
+    def timerEvent(self, a0: QTimerEvent | None) -> None:
+        """Handle the timer event by updating the viewer (on gui thread)."""
+        self._update_live_viewer()
+
     def _restart_live(self, exposure: float) -> None:
-        """Restart live view with new exposure settings."""
+        """Restart live view with new exposure or new configuration is set."""
         if not self.live_view:
             return
         self._mmc.stopSequenceAcquisition()
         self._mmc.startContinuousSequenceAcquisition()
-
-    def timerEvent(self, a0: QTimerEvent | None) -> None:
-        """Handle the timer event by updating the viewer (on gui thread)."""
-        self._update_viewer()
