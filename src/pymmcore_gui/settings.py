@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Annotated, Any, Literal
 
 from platformdirs import user_data_dir
-from pydantic import Base64Bytes, Field, PlainSerializer, WrapSerializer
+from pydantic import Base64Bytes, Field, WrapSerializer
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
