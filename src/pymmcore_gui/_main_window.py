@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from collections import ChainMap
 from enum import Enum
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast, overload
 from weakref import WeakValueDictionary
 
 from pymmcore_plus import CMMCorePlus
+from pymmcore_widgets import ConfigWizard
 from PyQt6.QtGui import QAction, QCloseEvent
 from PyQt6.QtWidgets import (
     QDialog,
@@ -29,6 +30,21 @@ from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
+
+    from pymmcore_widgets import (
+        CameraRoiWidget,
+        ConfigWizard,
+        GroupPresetTableWidget,
+        InstallWidget,
+        MDAWidget,
+        PixelConfigurationWidget,
+        PropertyBrowser,
+    )
+
+    from pymmcore_gui.widgets._about_widget import AboutWidget
+    from pymmcore_gui.widgets._exception_log import ExceptionLog
+    from pymmcore_gui.widgets._mm_console import MMConsole
+    from pymmcore_gui.widgets._stage_control import StagesControlWidget
 
 
 class Menu(str, Enum):
@@ -166,7 +182,7 @@ class MicroManagerGUI(QMainWindow):
     def get_action(self, key: ActionKey, create: bool = True) -> QAction:
         """Create a QAction from this key."""
         if key not in self._qactions:
-            if not create:
+            if not create:  # pragma: no cover
                 raise KeyError(
                     f"Action {key} has not been created yet, and 'create' is False"
                 )
@@ -179,6 +195,35 @@ class MicroManagerGUI(QMainWindow):
 
         return self._qactions[key]
 
+    # TODO: it's possible this could be expressed using Generics...
+    # which would avoid the need for the manual overloads
+    # fmt: off
+    @overload
+    def get_widget(self, key: Literal[WidgetAction.ABOUT], create: bool = ...) -> AboutWidget: ...  # noqa: E501
+    @overload
+    def get_widget(self, key: Literal[WidgetAction.CAMERA_ROI], create: bool = ...) -> CameraRoiWidget: ...  # noqa: E501
+    @overload
+    def get_widget(self, key: Literal[WidgetAction.CONFIG_GROUPS], create: bool = ...) -> GroupPresetTableWidget: ...  # noqa: E501
+    @overload
+    def get_widget(self, key: Literal[WidgetAction.CONFIG_WIZARD], create: bool = ...) -> ConfigWizard: ...  # noqa: E501
+    @overload
+    def get_widget(self, key: Literal[WidgetAction.CONSOLE], create: bool = ...) -> MMConsole: ...  # noqa: E501
+    @overload
+    def get_widget(self, key: Literal[WidgetAction.EXCEPTION_LOG], create: bool = ...) -> ExceptionLog: ...  # noqa: E501
+    @overload
+    def get_widget(self, key: Literal[WidgetAction.INSTALL_DEVICES], create: bool = ...) -> InstallWidget: ...  # noqa: E501
+    @overload
+    def get_widget(self, key: Literal[WidgetAction.MDA_WIDGET], create: bool = ...) -> MDAWidget: ...  # noqa: E501
+    @overload
+    def get_widget(self, key: Literal[WidgetAction.PIXEL_CONFIG], create: bool = ...) -> PixelConfigurationWidget: ...  # noqa: E501
+    @overload
+    def get_widget(self, key: Literal[WidgetAction.PROP_BROWSER], create: bool = ...) -> PropertyBrowser: ...  # noqa: E501
+    @overload
+    def get_widget(self, key: Literal[WidgetAction.STAGE_CONTROL], create: bool = ...) -> StagesControlWidget: ...  # noqa: E501
+    # generic fallback
+    @overload
+    def get_widget(self, key: WidgetAction, create: bool = ...) -> QWidget: ...
+    # fmt: on
     def get_widget(self, key: WidgetAction, create: bool = True) -> QWidget:
         """Get (or create) widget for `key`.
 
@@ -195,7 +240,7 @@ class MicroManagerGUI(QMainWindow):
             If the widget doesn't exist and `create` is False.
         """
         if key not in self._qwidgets:
-            if not create:
+            if not create:  # pragma: no cover
                 raise KeyError(
                     f"Widget {key} has not been created yet, and 'create' is False"
                 )
@@ -216,6 +261,7 @@ class MicroManagerGUI(QMainWindow):
             if isinstance(widget, QDialog):
                 widget.finished.connect(_closeEvent)
 
+            # If this key specifies a dock area, create a QDockWidget for it
             if dock_area := key.dock_area():
                 self._dock_widgets[key] = dw = QDockWidget(key.value, self)
                 dw.setWidget(widget)
@@ -227,7 +273,32 @@ class MicroManagerGUI(QMainWindow):
             if action := self._qactions.get(key):
                 action.setChecked(True)
 
-        return self._qwidgets[key]
+        return self._inner_widgets[key]
+
+    def get_dock_widget(self, key: WidgetAction) -> QDockWidget:
+        """Get the QDockWidget for `key`.
+
+        Note, you can also get the QDockWidget by calling `get_widget(key)`, and then
+        calling `widget.parent()`.  The parent will *either* be an instance of
+        `QDockWidget` (if it's actually a docked widget), or `MicroManagerGUI`, if
+        it's not docked.  You *should* use `isisinstance` in this case to check.
+
+        Parameters
+        ----------
+        key : WidgetAction
+            The key for the *inner* widget owned by the requested QDockWidget.
+
+        Raises
+        ------
+        KeyError
+            If the widget doesn't exist.
+        """
+        if key not in self._dock_widgets:
+            raise KeyError(  # pragma: no cover
+                f"Dock widget for {key} has not been created yet, "
+                "or it is not owned by a dock widget"
+            )
+        return self._dock_widgets[key]
 
     def _toggle_action_widget(self, checked: bool) -> None:
         """Callback that toggles the visibility of a widget.
