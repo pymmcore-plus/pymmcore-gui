@@ -182,7 +182,7 @@ class MicroManagerGUI(QMainWindow):
     def get_action(self, key: ActionKey, create: bool = True) -> QAction:
         """Create a QAction from this key."""
         if key not in self._qactions:
-            if not create:
+            if not create:  # pragma: no cover
                 raise KeyError(
                     f"Action {key} has not been created yet, and 'create' is False"
                 )
@@ -223,7 +223,7 @@ class MicroManagerGUI(QMainWindow):
     # generic fallback
     @overload
     def get_widget(self, key: WidgetAction, create: bool = ...) -> QWidget: ...
-    # fmt: off
+    # fmt: on
     def get_widget(self, key: WidgetAction, create: bool = True) -> QWidget:
         """Get (or create) widget for `key`.
 
@@ -240,7 +240,7 @@ class MicroManagerGUI(QMainWindow):
             If the widget doesn't exist and `create` is False.
         """
         if key not in self._qwidgets:
-            if not create:
+            if not create:  # pragma: no cover
                 raise KeyError(
                     f"Widget {key} has not been created yet, and 'create' is False"
                 )
@@ -294,7 +294,7 @@ class MicroManagerGUI(QMainWindow):
             If the widget doesn't exist.
         """
         if key not in self._dock_widgets:
-            raise KeyError(
+            raise KeyError(  # pragma: no cover
                 f"Dock widget for {key} has not been created yet, "
                 "or it is not owned by a dock widget"
             )
