@@ -82,17 +82,8 @@ def main() -> None:
     app = MMQApplication(sys.argv)
     _install_excepthook()
 
-    win = MicroManagerGUI()
+    win = MicroManagerGUI(config=args.config)
     win.setWindowIcon(QIcon(str(ICON)))
-
-    # FIXME: be better...
-    try:
-        if args.config:
-            win.mmcore.loadSystemConfiguration(args.config)
-        else:
-            win.mmcore.loadSystemConfiguration()
-    except Exception as e:
-        print(f"Failed to load system configuration: {e}")
 
     win.show()
 

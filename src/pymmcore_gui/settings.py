@@ -12,6 +12,8 @@ from pydantic_settings import (
     SettingsConfigDict,
 )
 
+from pymmcore_gui.actions.widget_actions import WidgetAction
+
 APP_NAME = "pymmcore-gui"
 USER_DATA_DIR = Path(user_data_dir(appname=APP_NAME))
 USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -78,6 +80,7 @@ class WindowSettingsV1(BaseSettings):
 
     geometry: Base64Bytes | None = None
     window_state: Base64Bytes | None = None
+    open_widgets: set[WidgetAction] = Field(default_factory=set)
 
 
 class SettingsV1(BaseSettings):
@@ -85,6 +88,7 @@ class SettingsV1(BaseSettings):
 
     version: Literal["1.0"] = "1.0"
     window: WindowSettingsV1 = Field(default_factory=WindowSettingsV1)
+    last_config: Path | None = None
 
     @property
     def version_tuple(self) -> tuple[int, int, str]:
