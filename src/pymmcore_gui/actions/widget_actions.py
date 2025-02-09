@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Generic, TypeVar, cast
 
 from pymmcore_plus import CMMCorePlus
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QAction
 
 from pymmcore_gui.actions._action_info import ActionKey
 
@@ -41,7 +42,7 @@ def _get_mm_main_window(obj: QObject) -> MicroManagerGUI | None:
 
 def _get_core(obj: QObject) -> CMMCorePlus:
     if win := _get_mm_main_window(obj):
-        return win.mmc
+        return win.mmcore
     return CMMCorePlus.instance()
 
 
@@ -50,6 +51,13 @@ def create_property_browser(parent: QWidget) -> pmmw.PropertyBrowser:
     from pymmcore_widgets import PropertyBrowser
 
     return PropertyBrowser(parent=parent, mmcore=_get_core(parent))
+
+
+def create_about_widget(parent: QWidget) -> QWidget:
+    """Create an "about this program" widget."""
+    from pymmcore_gui.widgets._about_widget import AboutWidget
+
+    return AboutWidget(parent=parent)
 
 
 def create_mm_console(parent: QWidget) -> MMConsole:
@@ -71,19 +79,17 @@ def create_install_widgets(parent: QWidget) -> pmmw.InstallWidget:
 
 def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
     """Create the MDA widget."""
+    # from pymmcore_gui.widgets import _MDAWidget
     from pymmcore_widgets import MDAWidget
 
-    wdg = MDAWidget(parent=parent, mmcore=_get_core(parent))
-    return wdg
+    return MDAWidget(parent=parent, mmcore=_get_core(parent))
 
 
 def create_camera_roi(parent: QWidget) -> pmmw.CameraRoiWidget:
     """Create the Camera ROI widget."""
     from pymmcore_widgets import CameraRoiWidget
 
-    wdg = CameraRoiWidget(parent=parent, mmcore=_get_core(parent))
-    wdg.setMaximumHeight(140)
-    return wdg
+    return CameraRoiWidget(parent=parent, mmcore=_get_core(parent))
 
 
 def create_config_groups(parent: QWidget) -> pmmw.GroupPresetTableWidget:
@@ -132,6 +138,7 @@ def create_config_wizard(parent: QWidget) -> pmmw.ConfigWizard:
 class WidgetAction(ActionKey):
     """Widget Actions toggle/create singleton widgets."""
 
+    ABOUT = "About Pymmcore Gui"
     PROP_BROWSER = "Property Browser"
     PIXEL_CONFIG = "Pixel Configuration"
     INSTALL_DEVICES = "Install Devices"
@@ -171,6 +178,13 @@ class WidgetActionInfo(ActionInfo, Generic[WT]):
     # Use None to indicate that the widget should not be docked
     dock_area: Qt.DockWidgetArea | None = Qt.DockWidgetArea.RightDockWidgetArea
 
+
+show_about = WidgetActionInfo(
+    key=WidgetAction.ABOUT,
+    create_widget=create_about_widget,
+    dock_area=None,
+    menu_role=QAction.MenuRole.AboutRole,
+)
 
 show_console = WidgetActionInfo(
     key=WidgetAction.CONSOLE,
