@@ -338,6 +338,12 @@ class MicroManagerGUI(QMainWindow):
 
 
 class _CloseEventFilter(QObject):
+    """Event filter that intercepts close events and hides the widget instead.
+
+    This is installed on widgets that are associated with a QAction, so that closing
+    the widget will simply hide it and update the action toggle state.
+    """
+
     def __init__(self, action: QAction) -> None:
         super().__init__()
         self._action = action
