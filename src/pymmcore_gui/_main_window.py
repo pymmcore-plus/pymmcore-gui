@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
@@ -10,7 +11,7 @@ from weakref import WeakValueDictionary
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets import ConfigWizard
 from PyQt6.QtCore import QEvent, QObject, Qt, QTimer
-from PyQt6.QtGui import QAction, QCloseEvent
+from PyQt6.QtGui import QAction, QCloseEvent, QIcon
 from PyQt6.QtWidgets import (
     QDockWidget,
     QMainWindow,
@@ -50,6 +51,9 @@ if TYPE_CHECKING:
     from pymmcore_gui.widgets._stage_control import StagesControlWidget
 
 logger = logging.getLogger("pymmcore_gui")
+
+RESOURCES = Path(__file__).parent / "resources"
+ICON = RESOURCES / ("icon.ico" if sys.platform.startswith("win") else "logo.png")
 
 
 class Menu(str, Enum):
@@ -125,6 +129,7 @@ class MicroManagerGUI(QMainWindow):
     ) -> None:
         super().__init__()
         self.setWindowTitle("Mike")
+        self.setWindowIcon(QIcon(str(ICON)))
         self.setObjectName("MicroManagerGUI")
 
         # Serves to cache created QAction objects so that they can be re-used
