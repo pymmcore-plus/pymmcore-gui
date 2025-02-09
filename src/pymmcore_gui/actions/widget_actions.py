@@ -79,6 +79,7 @@ def create_install_widgets(parent: QWidget) -> pmmw.InstallWidget:
 
 def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
     """Create the MDA widget."""
+    # from pymmcore_gui.widgets import _MDAWidget
     from pymmcore_widgets import MDAWidget
 
     return MDAWidget(parent=parent, mmcore=_get_core(parent))

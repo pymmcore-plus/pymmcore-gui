@@ -38,7 +38,7 @@ classifiers = [
 dependencies = [
     "ndv[pygfx]>=0.2.2",
     "pydantic-settings>=2.7.1",
-    "pymmcore-plus[cli]>=0.13.0",
+    "pymmcore-plus[cli]>=0.13.2",
     "pymmcore-widgets>=0.9.0",
     "PyQt6==6.7.1",
     "pyright>=1.1.393",
@@ -78,6 +78,9 @@ dev = [
     "types-pyinstaller>=6.11.0.20241028",
     "types-pyyaml>=6.0.12.20241230",
 ]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 # same as console_scripts entry point
 [project.scripts]
