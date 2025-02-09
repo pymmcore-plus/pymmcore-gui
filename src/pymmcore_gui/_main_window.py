@@ -278,6 +278,11 @@ class MicroManagerGUI(QMainWindow):
     def get_dock_widget(self, key: WidgetAction) -> QDockWidget:
         """Get the QDockWidget for `key`.
 
+        Note, you can also get the QDockWidget by calling `get_widget(key)`, and then
+        calling `widget.parent()`.  The parent will *either* be an instance of
+        `QDockWidget` (if it's actually a docked widget), or `MicroManagerGUI`, if
+        it's not docked.  You *should* use `isisinstance` in this case to check.
+
         Parameters
         ----------
         key : WidgetAction
