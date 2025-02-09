@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from collections import ChainMap
 from enum import Enum
 from typing import TYPE_CHECKING, Literal, cast, overload
 from weakref import WeakValueDictionary
 
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets import ConfigWizard
-from PyQt6.QtGui import QAction, QCloseEvent
+from PyQt6.QtCore import QEvent, QObject, Qt
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import (
-    QDialog,
     QDockWidget,
     QMainWindow,
     QMenu,
@@ -120,12 +119,10 @@ class MicroManagerGUI(QMainWindow):
         # synchronize the state of actions that may appear in multiple menus or
         # toolbars.
         self._qactions = WeakValueDictionary[ActionKey, QAction]()
-        self._inner_widgets = WeakValueDictionary[ActionKey, QWidget]()
+        # widgets that are associated with a QAction
+        self._action_widgets = WeakValueDictionary[ActionKey, QWidget]()
+        # the wrapping QDockWidget for widgets that are associated with a QAction
         self._dock_widgets = WeakValueDictionary[ActionKey, QDockWidget]()
-        self._qwidgets = ChainMap[ActionKey, QWidget](
-            self._dock_widgets,  # type: ignore [arg-type]  # (not covariant)
-            self._inner_widgets,
-        )
 
         # get global CMMCorePlus instance
         self._mmc = mmc = mmcore or CMMCorePlus.instance()
@@ -225,7 +222,12 @@ class MicroManagerGUI(QMainWindow):
     def get_widget(self, key: WidgetAction, create: bool = ...) -> QWidget: ...
     # fmt: on
     def get_widget(self, key: WidgetAction, create: bool = True) -> QWidget:
-        """Get (or create) widget for `key`.
+        """Get (or create) widget for `key` ensuring that it is linked to its QAction.
+
+        If the widget has been "closed" (hidden), it will be re-shown.
+
+        Note that all widgets created this way are singletons, so calling this method
+        multiple times will return the same widget instance.
 
         Parameters
         ----------
@@ -239,41 +241,29 @@ class MicroManagerGUI(QMainWindow):
         KeyError
             If the widget doesn't exist and `create` is False.
         """
-        if key not in self._qwidgets:
+        if key not in self._action_widgets:
             if not create:  # pragma: no cover
                 raise KeyError(
                     f"Widget {key} has not been created yet, and 'create' is False"
                 )
-            self._inner_widgets[key] = widget = key.create_widget(self)
+            widget = key.create_widget(self)
+            self._action_widgets[key] = widget
 
-            # override closeEvent to uncheck the corresponding QAction
-            # FIXME: this still doesn't work for some QDialogs
-            def _closeEvent(a0: QCloseEvent | None = None) -> None:
-                if action := self._qactions.get(key):
-                    action.setChecked(False)
-                if isinstance(a0, QCloseEvent):
-                    superCloseEvent(a0)
+            # If a dock area is specified, wrap the widget in a QDockWidget.
+            if (dock_area := key.dock_area()) is not None:
+                dock = QDockWidget(key.value, self)
+                dock.setWidget(widget)
+                self._link_widget_to_action(dock, key)
+                self._dock_widgets[key] = dock
+                self.addDockWidget(dock_area, dock)
+            else:
+                self._link_widget_to_action(widget, key)
 
-            superCloseEvent = widget.closeEvent
-            widget.closeEvent = _closeEvent  # type: ignore [method-assign]
-
-            # also hook up QDialog's finished signal to closeEvent
-            if isinstance(widget, QDialog):
-                widget.finished.connect(_closeEvent)
-
-            # If this key specifies a dock area, create a QDockWidget for it
-            if dock_area := key.dock_area():
-                self._dock_widgets[key] = dw = QDockWidget(key.value, self)
-                dw.setWidget(widget)
-                dw.closeEvent = _closeEvent  # type: ignore [assignment]
-                self.addDockWidget(dock_area, dw)
-
-            # toggle checked state of QAction if it exists
-            # can this go somewhere else?
-            if action := self._qactions.get(key):
+            # Set the action checked since the widget is now “open.”
+            if (action := self._qactions.get(key)) is not None:
                 action.setChecked(True)
 
-        return self._inner_widgets[key]
+        return self._action_widgets[key]
 
     def get_dock_widget(self, key: WidgetAction) -> QDockWidget:
         """Get the QDockWidget for `key`.
@@ -300,6 +290,27 @@ class MicroManagerGUI(QMainWindow):
             )
         return self._dock_widgets[key]
 
+    def _link_widget_to_action(self, widget: QWidget, key: WidgetAction) -> None:
+        """Sets up the two-way link between a widget and its associated QAction."""
+        # When the action is toggled, show or hide the widget.
+        action: QAction = self.get_action(key)
+
+        # Ensure the widget does not get deleted on close.
+        widget.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
+        inner_widget: QWidget | None = None
+        if isinstance(widget, QDockWidget) and (inner_widget := widget.widget()):
+            inner_widget.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
+
+        # Install an event filter so that "closing" the widget
+        # simply hides it and updates the action toggle state.
+        if not hasattr(widget, "_close_filter"):
+            # it's important to store the event filter on the widget, otherwise
+            # it will be garbage collected and the event filter will stop working
+            widget._close_filter = ef = _CloseEventFilter(action)  # type: ignore
+            widget.installEventFilter(ef)
+            if inner_widget is not None:
+                inner_widget.installEventFilter(ef)
+
     def _toggle_action_widget(self, checked: bool) -> None:
         """Callback that toggles the visibility of a widget.
 
@@ -313,7 +324,44 @@ class MicroManagerGUI(QMainWindow):
         ):
             return
 
-        widget = self.get_widget(key)
+        # if the widget is a dock widget, we want to toggle the dock widget
+        # rather than the inner widget
+        if key in self._dock_widgets:
+            widget: QWidget = self.get_dock_widget(key)
+        else:
+            # this will create the widget if it doesn't exist yet,
+            # e.g. for a click event on a Toolbutton that doesn't yet have a widget
+            widget = self.get_widget(key)
         widget.setVisible(checked)
         if checked:
             widget.raise_()
+
+
+class _CloseEventFilter(QObject):
+    """Event filter that intercepts close events and hides the widget instead.
+
+    This is installed on widgets that are associated with a QAction, so that closing
+    the widget will simply hide it and update the action toggle state.
+    """
+
+    def __init__(self, action: QAction) -> None:
+        super().__init__()
+        self._action = action
+
+    def eventFilter(self, watched: QObject | None, event: QEvent | None) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
+        if event and event.type() in (QEvent.Type.Close, QEvent.Type.HideToParent):
+            # Instead of destroying, simply hide the widget and update the action.
+            event.ignore()
+            try:
+                self._action.setChecked(False)
+            except RuntimeError:
+                return True
+            if isinstance(watched, QWidget):
+                # prefer hiding/showing the dock widget, since this will also hide/show
+                # the inner widget.
+                if isinstance(par := watched.parent(), QDockWidget):
+                    par.hide()
+                else:
+                    watched.hide()
+            return True  # Prevent further processing (do not destroy the widget)
+        return False
