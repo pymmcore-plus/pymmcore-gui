@@ -16,7 +16,7 @@ if os.name == "nt":
         sys.stderr = open(os.devnull, "w")
 
 
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QWidget
 from qtconsole.inprocess import QtInProcessKernelManager
 from traitlets import default
 
@@ -27,8 +27,8 @@ except ImportError:
 
 if TYPE_CHECKING:
     from ipykernel.inprocess.ipkernel import InProcessInteractiveShell, InProcessKernel
+    from PyQt6.QtCore import QObject
     from PyQt6.QtGui import QCloseEvent
-    from PyQt6.QtWidgets import QWidget
     from qtconsole.rich_jupyter_widget import RichJupyterWidget
 
     # RichJupyterWidget has a very complex inheritance structure, and mypy/pyright
@@ -36,6 +36,11 @@ if TYPE_CHECKING:
     class QtConsole(RichJupyterWidget, QWidget): ...  # pyright: ignore [reportIncompatibleMethodOverride]
 else:
     from qtconsole.rich_jupyter_widget import RichJupyterWidget as QtConsole
+
+
+class _FakeCfg:
+    def _has_section(self, name: str) -> bool:
+        return False
 
 
 class MMConsole(QtConsole):
@@ -127,3 +132,13 @@ class MMConsole(QtConsole):
         self.deleteLater()
         if a0 is not None:
             a0.accept()
+
+    # HACK:
+    # fix the fact that somewhere in the inheritance structure of RichJupyterWidget
+    # the `parent` method is broken by setting it to traitlets.Instance
+    # this may have unintended consequences, but having `parent` not return a QObject
+    # is a bigger problem
+    def parent(self) -> QObject | None:
+        return QWidget.parent(self)
+
+    parent._find_my_config = lambda cfg: _FakeCfg()  # type: ignore

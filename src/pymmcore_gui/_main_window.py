@@ -295,6 +295,12 @@ class MicroManagerGUI(QMainWindow):
         # When the action is toggled, show or hide the widget.
         action: QAction = self.get_action(key)
 
+        # Ensure the widget does not get deleted on close.
+        widget.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
+        inner_widget: QWidget | None = None
+        if isinstance(widget, QDockWidget) and (inner_widget := widget.widget()):
+            inner_widget.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
+
         # Install an event filter so that "closing" the widget
         # simply hides it and updates the action toggle state.
         if not hasattr(widget, "_close_filter"):
@@ -302,11 +308,8 @@ class MicroManagerGUI(QMainWindow):
             # it will be garbage collected and the event filter will stop working
             widget._close_filter = ef = _CloseEventFilter(action)  # type: ignore
             widget.installEventFilter(ef)
-
-        # Ensure the widget does not get deleted on close.
-        widget.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
-        if isinstance(widget, QDockWidget) and (inner_widget := widget.widget()):
-            inner_widget.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
+            if inner_widget is not None:
+                inner_widget.installEventFilter(ef)
 
     def _toggle_action_widget(self, checked: bool) -> None:
         """Callback that toggles the visibility of a widget.
@@ -321,9 +324,13 @@ class MicroManagerGUI(QMainWindow):
         ):
             return
 
+        # if the widget is a dock widget, we want to toggle the dock widget
+        # rather than the inner widget
         if key in self._dock_widgets:
             widget: QWidget = self.get_dock_widget(key)
         else:
+            # this will create the widget if it doesn't exist yet,
+            # e.g. for a click event on a Toolbutton that doesn't yet have a widget
             widget = self.get_widget(key)
         widget.setVisible(checked)
         if checked:
@@ -336,10 +343,19 @@ class _CloseEventFilter(QObject):
         self._action = action
 
     def eventFilter(self, watched: QObject | None, event: QEvent | None) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
-        if event and event.type() == QEvent.Type.Close:
+        if event and event.type() in (QEvent.Type.Close, QEvent.Type.HideToParent):
             # Instead of destroying, simply hide the widget and update the action.
-            self._action.setChecked(False)
+            event.ignore()
+            try:
+                self._action.setChecked(False)
+            except RuntimeError:
+                return True
             if isinstance(watched, QWidget):
-                watched.hide()
+                # prefer hiding/showing the dock widget, since this will also hide/show
+                # the inner widget.
+                if isinstance(par := watched.parent(), QDockWidget):
+                    par.hide()
+                else:
+                    watched.hide()
             return True  # Prevent further processing (do not destroy the widget)
         return False
