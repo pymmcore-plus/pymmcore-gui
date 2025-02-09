@@ -18,6 +18,7 @@ class LivePreview(QObject):
 
         self._mmc = mmcore or CMMCorePlus.instance()
 
+        # timer id for live preview
         self._live_timer_id: int | None = None
 
         self.live_view: bool = False
@@ -30,31 +31,28 @@ class LivePreview(QObject):
         ev.imageSnapped.connect(self._handle_snap)
         ev.continuousSequenceAcquisitionStarted.connect(self._start_live_viewer)
         ev.sequenceAcquisitionStopped.connect(self._stop_live_viewer)
-
-        self._mmc.events.exposureChanged.connect(self._restart_live)
-        self._mmc.events.configSet.connect(self._restart_live)
+        ev.exposureChanged.connect(self._restart_live)
+        ev.configSet.connect(self._restart_live)
 
     @property
     def viewer(self) -> ndv.ArrayViewer:
         return self._viewer
 
-    @ensure_main_thread  # type: ignore
+    @ensure_main_thread
     def _handle_snap(self) -> None:
         if self._mmc.mda.is_running():
-            # This signal is emitted during MDAs as well - we want to ignore those.
             return
         self._viewer.data = self._mmc.getImage()
 
-    @ensure_main_thread  # type: ignore
+    @ensure_main_thread
     def _start_live_viewer(self) -> None:
+        """Start the live viewer."""
         self.live_view = True
-
-        # Start timer to update live viewer
         interval = int(self._mmc.getExposure())
         self._live_timer_id = self.startTimer(interval, Qt.TimerType.PreciseTimer)
 
     def _stop_live_viewer(self, cameraLabel: str) -> None:
-        # Pause live viewer, but leave it open.
+        """Stop the live viewer."""
         if self.live_view and self._live_timer_id is not None:
             self.live_view = False
             self.killTimer(self._live_timer_id)
@@ -73,6 +71,7 @@ class LivePreview(QObject):
         self._viewer.data = data
 
     def _restart_live(self, exposure: float) -> None:
+        """Restart live view with new exposure settings."""
         if not self.live_view:
             return
         self._mmc.stopSequenceAcquisition()
