@@ -78,6 +78,5 @@ class LivePreview(QObject):
         self._mmc.startContinuousSequenceAcquisition()
 
     def timerEvent(self, a0: QTimerEvent | None) -> None:
-        """Handles TimerEvents."""
-        # Handle the timer event by updating the viewer (on gui thread)
+        """Handle the timer event by updating the viewer (on gui thread)."""
         self._update_viewer()
