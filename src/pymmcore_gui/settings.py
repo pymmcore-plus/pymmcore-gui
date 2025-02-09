@@ -1,10 +1,10 @@
 import json
 import warnings
 from pathlib import Path
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from platformdirs import user_data_dir
-from pydantic import Base64Bytes, Field
+from pydantic import Base64Bytes, Field, PlainSerializer, WrapSerializer
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
@@ -80,7 +80,9 @@ class WindowSettingsV1(BaseSettings):
 
     geometry: Base64Bytes | None = None
     window_state: Base64Bytes | None = None
-    open_widgets: set[WidgetAction] = Field(default_factory=set)
+    open_widgets: Annotated[
+        set[WidgetAction], WrapSerializer(lambda v, h: sorted(h(v)))
+    ] = Field(default_factory=set)
 
 
 class SettingsV1(BaseSettings):

@@ -215,17 +215,20 @@ class MicroManagerGUI(QMainWindow):
 
     def _restore_state(self) -> None:
         """Restore the state of the window from settings."""
-        for key in settings.window.open_widgets or self.DEFAULT_WIDGETS:
-            try:
-                print("restoring", key)
-                self.get_widget(key)
-            except Exception:
-                logger.exception(f"Failed to restore widget {key}")
+        keys = settings.window.open_widgets or self.DEFAULT_WIDGETS
+        for key in keys:
+            self.get_widget(key)
         if geo := settings.window.geometry:
             self.restoreGeometry(geo)
         if state := settings.window.window_state:
+
+            def _restore_later() -> None:
+                self.restoreState(state)
+                for key in keys:
+                    self.get_action(key).setChecked(True)
+
             # https://forum.qt.io/post/794120
-            QTimer.singleShot(10, lambda: self.restoreState(state))
+            QTimer.singleShot(0, _restore_later)
 
     def _save_state(self) -> None:
         """Save the state of the window to settings."""
@@ -312,12 +315,14 @@ class MicroManagerGUI(QMainWindow):
                     f"Widget {key} has not been created yet, and 'create' is False"
                 )
             widget = key.create_widget(self)
+            widget.setObjectName(key.name)
             self._action_widgets[key] = widget
 
             # If a dock area is specified, wrap the widget in a QDockWidget.
             if (dock_area := key.dock_area()) is not None:
                 dock = QDockWidget(key.value, self)
                 dock.setWidget(widget)
+                dock.setObjectName(f"docked_{key.name}")
                 self._link_widget_to_action(dock, key)
                 self._dock_widgets[key] = dock
                 self.addDockWidget(dock_area, dock)
