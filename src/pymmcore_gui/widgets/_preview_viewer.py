@@ -71,6 +71,7 @@ class LivePreview(QObject):
         elif self._viewer._data_model.data_wrapper is not None:
             wrapper = cast(PreviewDataWrapper, self._viewer._data_model.data_wrapper)
             wrapper.data = data
+            # TODO: change this
             self._viewer._clear_canvas()
             self._viewer._request_data()
         else:
