@@ -22,6 +22,7 @@ class LivePreview(QObject):
         self._live_timer_id: int | None = None
 
         self.live_view: bool = False
+        self._mda_running: bool = False
 
         self._viewer = ndv.ArrayViewer()
         self._viewer.show()
@@ -34,6 +35,10 @@ class LivePreview(QObject):
         ev.exposureChanged.connect(self._restart_live)
         ev.configSet.connect(self._restart_live)
 
+        ev_mda = self._mmc.mda.events
+        ev_mda.sequenceStarted.connect(lambda: setattr(self, "_mda_running", True))
+        ev_mda.sequenceFinished.connect(lambda: setattr(self, "_mda_running", False))
+
     @property
     def viewer(self) -> ndv.ArrayViewer:
         return self._viewer
@@ -41,7 +46,7 @@ class LivePreview(QObject):
     @ensure_main_thread
     def _on_snap(self) -> None:
         """Update the viewer when an image is snapped."""
-        if self._mmc.mda.is_running():
+        if self._mda_running:
             return
         self._viewer.data = self._mmc.getImage()
 
