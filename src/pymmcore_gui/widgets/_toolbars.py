@@ -56,11 +56,16 @@ class ShuttersToolbar(QToolBar):
     ) -> None:
         super().__init__("Shutters", parent)
         self.mmc = mmc
+        # store all shutters widgets so that can be deleted when a new configuration is
+        # loaded
+        self._wdg: list[ShuttersWidget] = []
         self.mmc.events.systemConfigurationLoaded.connect(self._on_cfg_loaded)
         self._on_cfg_loaded()
 
     def _on_cfg_loaded(self) -> None:
-        # self._clear()
+        # delete all current shutter widgets and actions if any
+        self._clear_shutter_toolbar()
+
         shutters = self.mmc.getLoadedDevicesOfType(DeviceType.ShutterDevice)  # pyright: ignore [reportArgumentType]
         if not shutters:
             return
@@ -77,12 +82,14 @@ class ShuttersToolbar(QToolBar):
             s = ShuttersWidget(shutter, autoshutter=idx == len(shutters_devs) - 1)
             s.button_text_open = shutter
             s.button_text_closed = shutter
-            # s.icon_color_open = ()
-            # s.icon_color_closed = ()
             self.addWidget(s)
+            self._wdg.append(s)
 
-    # def _clear(self) -> None:
-    #     """Delete toolbar action."""
-    #     while self.actions():
-    #         action = self.actions()[0]
-    #         self.removeAction(action)
+    def _clear_shutter_toolbar(self) -> None:
+        """Delete all shutter widgets and actions in the toolbar."""
+        while self._wdg:
+            wdg = self._wdg.pop()
+            wdg.deleteLater()
+        while self.actions():
+            action = self.actions()[0]
+            self.removeAction(action)
