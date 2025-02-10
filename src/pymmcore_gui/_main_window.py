@@ -22,7 +22,7 @@ from pymmcore_gui.actions._core_qaction import QCoreAction
 from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
 from ._ndv_viewers import NDVViewersManager
-from ._preview_viewer import LivePreview
+from .widgets._preview_viewer import LivePreview
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
 from .widgets._toolbars import OCToolBar, ShuttersToolbar

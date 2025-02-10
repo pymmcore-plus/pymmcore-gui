@@ -21,13 +21,17 @@ class LivePreview(QObject):
         # timer id for live preview
         self._live_timer_id: int | None = None
 
-        self.live_view: bool = False
+        # used to avoid starting live view when the exposure or configuration is changed
+        # and ContinuousSequenceAcquisition is not running (see _restart_live)
+        self._live_view: bool = False
+
+        # keep track of whether mda is running in a robust way
         self._mda_running: bool = False
 
         self._viewer = ndv.ArrayViewer()
         self._viewer.show()
 
-        # connections
+        # core connections
         ev = self._mmc.events
         ev.imageSnapped.connect(self._on_snap)
         ev.continuousSequenceAcquisitionStarted.connect(self._start_live_viewer)
@@ -35,6 +39,7 @@ class LivePreview(QObject):
         ev.exposureChanged.connect(self._restart_live)
         ev.configSet.connect(self._restart_live)
 
+        # mda connections
         ev_mda = self._mmc.mda.events
         ev_mda.sequenceStarted.connect(lambda: setattr(self, "_mda_running", True))
         ev_mda.sequenceFinished.connect(lambda: setattr(self, "_mda_running", False))
@@ -53,14 +58,14 @@ class LivePreview(QObject):
     @ensure_main_thread
     def _start_live_viewer(self) -> None:
         """Start the live viewer."""
-        self.live_view = True
+        self._live_view = True
         interval = int(self._mmc.getExposure())
         self._live_timer_id = self.startTimer(interval, Qt.TimerType.PreciseTimer)
 
     def _stop_live_viewer(self, cameraLabel: str) -> None:
         """Stop the live viewer."""
-        if self.live_view and self._live_timer_id is not None:
-            self.live_view = False
+        if self._live_view and self._live_timer_id is not None:
+            self._live_view = False
             self.killTimer(self._live_timer_id)
             self._live_timer_id = None
 
@@ -82,7 +87,7 @@ class LivePreview(QObject):
 
     def _restart_live(self, exposure: float) -> None:
         """Restart live view with new exposure or new configuration is set."""
-        if not self.live_view:
+        if not self._live_view:
             return
         self._mmc.stopSequenceAcquisition()
         self._mmc.startContinuousSequenceAcquisition()
