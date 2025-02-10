@@ -18,7 +18,7 @@ import pytest
 from pymmcore_plus import CMMCorePlus, configure_logging
 from pymmcore_plus.core import _mmcore_plus
 
-from pymmcore_gui import settings
+from pymmcore_gui import _app, settings
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -34,6 +34,11 @@ if TYPE_CHECKING:
 TEST_CONFIG = str(Path(__file__).parent / "test_config.cfg")
 
 configure_logging(stderr_level="CRITICAL")
+
+
+@pytest.fixture(scope="session")
+def qapp_cls() -> type[QApplication]:
+    return _app.MMQApplication
 
 
 # to create a new CMMCorePlus() for every test
