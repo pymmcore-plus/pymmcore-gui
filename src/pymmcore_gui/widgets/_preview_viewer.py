@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 import ndv
+from ndv import ArrayViewer
+from ndv.models._data_wrapper import ArrayLikeWrapper
 from pymmcore_plus import CMMCorePlus
 from qtpy.QtCore import QObject, Qt, QTimerEvent
 from superqt.utils import ensure_main_thread
@@ -10,6 +12,42 @@ from superqt.utils import ensure_main_thread
 if TYPE_CHECKING:
     import numpy as np
     from qtpy.QtWidgets import QWidget
+
+
+class PreviewDataWrapper(ArrayLikeWrapper):
+    """Override the data wrapper to add a setter for the data."""
+
+    def __init__(self, data: Any) -> None:
+        super().__init__(data)
+
+    @property
+    def data(self) -> Any:
+        return self._data
+
+    @data.setter
+    def data(self, data: Any) -> None:
+        print("setting data")
+        self._data = data
+        # self.clear_cache()
+
+
+class PreviewArrayViewer(ArrayViewer):
+    """Override the ArrayViewer to add a method to set the data.
+
+    This could replece the data `setter` property since the method needs the `update`
+    argument to be passed.
+    """
+
+    def setData(self, data: Any, update: bool = False) -> None:
+        """Set the data to be displayed."""
+        if data is None:
+            return
+        elif update and self._data_model.data_wrapper is not None:
+            wrapper = cast(PreviewDataWrapper, self._data_model.data_wrapper)
+            wrapper.data = data
+        else:
+            self._data_model.data_wrapper = PreviewDataWrapper(data)
+        self._fully_synchronize_view()
 
 
 class LivePreview(QObject):
@@ -28,7 +66,7 @@ class LivePreview(QObject):
         # keep track of whether mda is running in a robust way
         self._mda_running: bool = False
 
-        self._viewer = ndv.ArrayViewer()
+        self._viewer = PreviewArrayViewer()
         self._viewer.show()
 
         # core connections
@@ -53,7 +91,7 @@ class LivePreview(QObject):
         """Update the viewer when an image is snapped."""
         if self._mda_running:
             return
-        self._viewer.data = self._mmc.getImage()
+        self._viewer.setData(self._mmc.getImage(), update=True)
 
     @ensure_main_thread
     def _start_live_viewer(self) -> None:
@@ -75,11 +113,11 @@ class LivePreview(QObject):
             if self._mmc.getRemainingImageCount() == 0:
                 return
             try:
-                self._viewer.data = self._mmc.getLastImage()
+                self._viewer.setData(self._mmc.getLastImage(), update=True)
             except (RuntimeError, IndexError):
                 # circular buffer empty
                 return
-        self._viewer.data = data
+        self._viewer.setData(data, update=True)
 
     def timerEvent(self, a0: QTimerEvent | None) -> None:
         """Handle the timer event by updating the viewer (on gui thread)."""
