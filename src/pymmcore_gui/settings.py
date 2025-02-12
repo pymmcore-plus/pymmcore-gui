@@ -75,6 +75,10 @@ class MMGuiUserPrefsSource(PydanticBaseSettingsSource):
         return None, "", False  # pragma: no cover
 
 
+def _default_widgets() -> set[WidgetAction]:
+    return {WidgetAction.CONFIG_GROUPS, WidgetAction.MDA_WIDGET}
+
+
 class WindowSettingsV1(BaseSettings):
     """Settings related to window positioning and geometry."""
 
@@ -82,7 +86,7 @@ class WindowSettingsV1(BaseSettings):
     window_state: Base64Bytes | None = None
     open_widgets: Annotated[
         set[WidgetAction], WrapSerializer(lambda v, h: sorted(h(v)))
-    ] = Field(default_factory=set)
+    ] = Field(default_factory=_default_widgets)
 
 
 class SettingsV1(BaseSettings):

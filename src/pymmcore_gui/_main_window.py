@@ -85,11 +85,6 @@ MenuDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QMenu]
 class MicroManagerGUI(QMainWindow):
     """Micro-Manager minimal GUI."""
 
-    DEFAULT_WIDGETS = (
-        WidgetAction.CONFIG_GROUPS,
-        WidgetAction.STAGE_CONTROL,
-        WidgetAction.MDA_WIDGET,
-    )
     # Toolbars are a mapping of strings to either a list of ActionKeys or a callable
     # that takes a CMMCorePlus instance and QMainWindow and returns a QToolBar.
     TOOLBARS: Mapping[str, ToolDictValue] = {
@@ -220,12 +215,12 @@ class MicroManagerGUI(QMainWindow):
 
     def _restore_state(self) -> None:
         """Restore the state of the window from settings."""
-        keys = settings.window.open_widgets or self.DEFAULT_WIDGETS
+        keys = settings.window.open_widgets
         for key in keys:
             self.get_widget(key)
         if geo := settings.window.geometry:
             self.restoreGeometry(geo)
-        if state := settings.window.window_state:
+        if settings.window.open_widgets and (state := settings.window.window_state):
 
             def _restore_later() -> None:
                 self.restoreState(state)
@@ -238,11 +233,12 @@ class MicroManagerGUI(QMainWindow):
     def _save_state(self) -> None:
         """Save the state of the window to settings."""
         settings.window.geometry = self.saveGeometry().data()
-        settings.window.window_state = self.saveState().data()
-        settings.window.open_widgets.clear()
-        settings.window.open_widgets.update(
-            {key for key, widget in self._action_widgets.items() if widget.isVisible()}
-        )
+        op = {key for key, widget in self._action_widgets.items() if widget.isVisible()}
+        settings.window.open_widgets = op
+        if op:
+            settings.window.window_state = self.saveState().data()
+        else:
+            settings.window.window_state = None
         settings.flush()
 
     @property
