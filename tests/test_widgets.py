@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
-from pymmcore_gui.widgets._pygfx_image import PygfxImagePreview
+from pymmcore_gui.widgets.image_preview._pygfx_image import PygfxImagePreview
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
