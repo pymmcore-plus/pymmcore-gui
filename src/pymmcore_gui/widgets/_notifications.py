@@ -24,7 +24,7 @@ icon = {
 
 class NotificationToast(QWidget):
     WIDTH = 400  # Fixed width for consistency
-    RIGHT_MARGIN = 30  # Margin from screen edges
+    MARGIN = 30  # Margin from window edges
     DURATION: int = 10  # Default duration in seconds
 
     def __init__(

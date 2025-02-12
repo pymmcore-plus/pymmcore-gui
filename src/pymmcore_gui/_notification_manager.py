@@ -128,14 +128,12 @@ class NotificationManager(QObject):
         spacing = 8  # Extra spacing between notifications
         parent_rect = parent.rect()
         target_x = (
-            parent_rect.right()
-            - NotificationToast.WIDTH
-            - NotificationToast.RIGHT_MARGIN
+            parent_rect.right() - NotificationToast.WIDTH - NotificationToast.MARGIN
         )
-        bottom = parent_rect.bottom()
+        bottom = parent_rect.bottom() - NotificationToast.MARGIN
         for idx, widget in enumerate(self._notification_widgets):
             # Compute y using the cumulative offset and the widget's own height.
             target_y = bottom - offset - widget.height()
-            target_pos = QPoint(target_x, target_y)
+            target_pos = parent.mapToGlobal(QPoint(target_x, target_y))
             widget.reposition(target_pos, animate=animate and bool(idx))
             offset += widget.height() + spacing
