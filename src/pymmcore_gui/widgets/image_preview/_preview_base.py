@@ -37,6 +37,8 @@ class _ImagePreviewBase(QWidget):
         ev.sequenceAcquisitionStopped.connect(self._on_streaming_stop)
         ev.exposureChanged.connect(self._on_exposure_changed)
         ev.systemConfigurationLoaded.connect(self._on_system_config_loaded)
+        ev.roiSet.connect(self._on_roi_set)
+        ev.propertyChanged.connect(self._on_property_changed)
 
         self._mmc = core
 
@@ -94,4 +96,10 @@ class _ImagePreviewBase(QWidget):
             self._timer_id = None
 
     def _on_system_config_loaded(self) -> None:
+        pass
+
+    def _on_roi_set(self) -> None:
+        pass
+
+    def _on_property_changed(self, dev: str, prop: str, value: str) -> None:
         pass
