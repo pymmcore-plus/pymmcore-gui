@@ -45,12 +45,11 @@ def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path) -> None:
     assert isinstance(sh_toolbar, ShuttersToolbar)
 
     # in our test cfg we have 3 shutters
-    assert len(sh_toolbar._wdg) == 3
+    assert sh_toolbar.layout().count() == 3
     assert len(sh_toolbar.actions()) == 3
 
     # loading default cfg
     gui._mmc.loadSystemConfiguration()
-    print(gui._mmc.getLoadedDevicesOfType(DeviceType.Shutter))
     # in our test cfg we have 2 shutters
-    assert len(sh_toolbar._wdg) == 2
+    assert sh_toolbar.layout().count() == 2
     assert len(sh_toolbar.actions()) == 2
