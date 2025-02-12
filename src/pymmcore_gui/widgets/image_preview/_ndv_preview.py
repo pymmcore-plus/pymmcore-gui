@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -77,33 +78,27 @@ class NDVPreview(_ImagePreviewBase):
             self._setup_viewer()
 
 
-def _get_scope_img(shape: tuple[int, int], dtype: np.typing.DTypeLike) -> np.ndarray:
-    """Return a sample image from the scope."""
+@cache
+def _scope_img_numpy() -> np.ndarray:
     resources = Path(__file__).parent.parent.parent / "resources"
     qimage = QImage(str(resources / "logo.png"))
     qimage = qimage.convertToFormat(QImage.Format.Format_RGBA8888)
     width, height = qimage.width(), qimage.height()
     ptr = qimage.bits()
-    ptr.setsize(qimage.sizeInBytes())
+    ptr.setsize(qimage.sizeInBytes())  # type: ignore [union-attr]
     ary = np.array(ptr).reshape(height, width, 4)
-    ary = np.mean(ary, axis=-1)
+    return np.mean(ary, axis=-1)  # type: ignore [no-any-return]
 
-    img = resize_nearest_neighbor(ary, shape).astype(dtype)
+
+def _get_scope_img(shape: tuple[int, int], dtype: np.typing.DTypeLike) -> np.ndarray:
+    """Get an adorable little image of the logo to place on the canvas."""
+    ary = _scope_img_numpy()
+    img = _resize_nearest_neighbor(ary, shape).astype(dtype)
     return img
 
 
-def resize_nearest_neighbor(arr: np.ndarray, new_shape: tuple[int, int]) -> np.ndarray:
-    """
-    Rescale a 2D numpy array using nearest neighbor interpolation.
-
-    Args:
-        arr: Input 2D array of shape (M, N).
-        new_shape: Desired output shape (new_M, new_N).
-
-    Returns
-    -------
-        A rescaled numpy array of shape new_shape.
-    """
+def _resize_nearest_neighbor(arr: np.ndarray, new_shape: tuple[int, int]) -> np.ndarray:
+    """Rescale a 2D numpy array using nearest neighbor interpolation."""
     old_M, old_N = arr.shape
     new_M, new_N = new_shape
 
