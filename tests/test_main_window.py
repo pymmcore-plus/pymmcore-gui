@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pymmcore_plus import DeviceType
 from pymmcore_widgets import MDAWidget
 from PyQt6.QtWidgets import QApplication, QDialog, QDockWidget
 
