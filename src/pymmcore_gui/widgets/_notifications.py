@@ -52,7 +52,7 @@ class NotificationToast(QWidget):
                 background-color: none;
                 border: none;
                 background: none;
-                font-size: 24px;
+                font-size: 18px;
             }
             QPushButton#closeButton:hover {
                 color: #ff5555;
@@ -89,7 +89,7 @@ class NotificationToast(QWidget):
 
         self.close_button = QPushButton("✕")
         self.close_button.setObjectName("closeButton")
-        self.close_button.setFixedSize(30, 30)
+        self.close_button.setFixedSize(28, 28)
         self.close_button.clicked.connect(self.remove_notification)
 
         top_layout = QHBoxLayout()
