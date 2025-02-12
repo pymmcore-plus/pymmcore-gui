@@ -37,7 +37,7 @@ class NDVPreview(_ImagePreviewBase):
 
     def set_data(self, data: np.ndarray) -> None:
         # FIXME: need better public method to determine readiness.
-        if self._viewer._dtype is not None:
+        if self._viewer.dtype is not None:
             self._viewer.update_data(data)
 
     def _on_system_config_loaded(self) -> None:
