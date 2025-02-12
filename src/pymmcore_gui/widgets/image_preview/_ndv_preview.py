@@ -87,7 +87,7 @@ def _scope_img_numpy() -> np.ndarray:
     ptr = qimage.bits()
     ptr.setsize(qimage.sizeInBytes())  # type: ignore [union-attr]
     ary = np.array(ptr).reshape(height, width, 4)
-    return np.mean(ary, axis=-1)  # type: ignore [no-any-return]
+    return np.mean(ary, axis=-1)
 
 
 def _get_scope_img(shape: tuple[int, int], dtype: np.typing.DTypeLike) -> np.ndarray:

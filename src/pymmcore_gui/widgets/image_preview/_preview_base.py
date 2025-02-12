@@ -23,6 +23,7 @@ class _ImagePreviewBase(QWidget):
         self._timer_id: int | None = None  # timer for streaming
 
         self.use_with_mda = use_with_mda
+        self._is_mda_running: bool = False
         self._mmc: CMMCorePlus | None = mmcore
         self.attach(mmcore)
 
@@ -30,6 +31,7 @@ class _ImagePreviewBase(QWidget):
         """Attach this widget to events in `core`."""
         if self._mmc is not None:
             self.detach()
+
         ev = core.events
         ev.imageSnapped.connect(self._on_image_snapped)
         ev.continuousSequenceAcquisitionStarted.connect(self._on_streaming_start)
@@ -39,6 +41,12 @@ class _ImagePreviewBase(QWidget):
         ev.systemConfigurationLoaded.connect(self._on_system_config_loaded)
         ev.roiSet.connect(self._on_roi_set)
         ev.propertyChanged.connect(self._on_property_changed)
+        core.mda.events.sequenceStarted.connect(
+            lambda: setattr(self, "_is_mda_running", True)
+        )
+        core.mda.events.sequenceFinished.connect(
+            lambda: setattr(self, "_is_mda_running", False)
+        )
 
         self._mmc = core
 
@@ -79,7 +87,7 @@ class _ImagePreviewBase(QWidget):
     def _on_image_snapped(self) -> None:
         if (core := self._mmc) is None:
             return  # pragma: no cover
-        if not self.use_with_mda and core.mda.is_running():
+        if not self.use_with_mda and self._is_mda_running:
             return  # pragma: no cover
 
         last = core.getImage()

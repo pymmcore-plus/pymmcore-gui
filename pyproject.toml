@@ -96,8 +96,6 @@ repository = "https://github.com/tlambert03/pymmcore-gui"
 line-length = 88
 target-version = "py310"
 src = ["src"]
-fix = true
-unsafe-fixes = true
 
 # https://docs.astral.sh/ruff/rules
 [tool.ruff.lint]

@@ -30,45 +30,45 @@ repos:
         args: [--fix, --unsafe-fixes]
       - id: ruff-format
 
-  # - repo: https://github.com/pre-commit/mirrors-mypy
-  #   rev: v1.14.1
-  #   hooks:
-  #     - id: mypy
-  #       files: "^src/"
-  #       # The dependencies are listed here in a somewhat unusual way...
-  #       # pre-commit.ci has a strict limit of 250MB for the entire environment
-  #       # which is much smaller than all of the transitive dependencies of this repo
-  #       # so we use --no-deps, and then add just enough to make sure we cover all of
-  #       # our typing use cases.  Note also the custom PyQt6-stubs repo.
-  #       additional_dependencies:
-  #         - "--no-deps"
-  #         # required for mypy
-  #         - mypy
-  #         - typing_extensions
-  #         - mypy_extensions
-  #         # required for mypy to find the installed packages
-  #         - cmap
-  #         - git+https://github.com/tlambert03/PyQt6-stubs.git@v6.7.3
-  #         - iconify
-  #         - ipykernel
-  #         - ipython
-  #         - ndv
-  #         - pygfx
-  #         - pydantic
-  #         - pydantic_core
-  #         - pymmcore
-  #         - pymmcore-plus>=0.13.2
-  #         - pymmcore-widgets
-  #         - pyyaml
-  #         - qtconsole
-  #         - rich
-  #         - superqt
-  #         - tifffile
-  #         - tqdm
-  #         - traitlets
-  #         - types-Pygments
-  #         - types-PyYAML
-  #         - zarr<3.0
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.1
+    hooks:
+      - id: mypy
+        files: "^src/"
+        # The dependencies are listed here in a somewhat unusual way...
+        # pre-commit.ci has a strict limit of 250MB for the entire environment
+        # which is much smaller than all of the transitive dependencies of this repo
+        # so we use --no-deps, and then add just enough to make sure we cover all of
+        # our typing use cases.  Note also the custom PyQt6-stubs repo.
+        additional_dependencies:
+          - "--no-deps"
+          # required for mypy
+          - mypy
+          - typing_extensions
+          - mypy_extensions
+          # required for mypy to find the installed packages
+          - cmap
+          - git+https://github.com/tlambert03/PyQt6-stubs.git@v6.7.3
+          - iconify
+          - ipykernel
+          - ipython
+          - ndv
+          - pygfx
+          - pydantic
+          - pydantic_core
+          - pymmcore
+          - pymmcore-plus>=0.13.2
+          - pymmcore-widgets
+          - pyyaml
+          - qtconsole
+          - rich
+          - superqt
+          - tifffile
+          - tqdm
+          - traitlets
+          - types-Pygments
+          - types-PyYAML
+          - zarr<3.0
 
   # as an alternative to that annoying list of packages,
   # pyright can use a virtual environment to find the installed packages
