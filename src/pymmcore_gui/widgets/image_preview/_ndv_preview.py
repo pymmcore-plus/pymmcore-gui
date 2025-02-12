@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
+import numpy as np
 from ndv import StreamingViewer
+from PyQt6.QtGui import QImage
 from PyQt6.QtWidgets import QVBoxLayout, QWidget
 
 from pymmcore_gui.widgets.image_preview._preview_base import _ImagePreviewBase
 
 if TYPE_CHECKING:
-    import numpy as np
     import rendercanvas.qt
     from pymmcore_plus import CMMCorePlus
 
@@ -40,17 +42,26 @@ class NDVPreview(_ImagePreviewBase):
         if self._viewer.dtype is not None:
             self._viewer.update_data(data)
 
-    def _on_system_config_loaded(self) -> None:
+    def _setup_viewer(self) -> None:
         if (core := self._mmc) is not None:
             if bits := core.getImageBitDepth():
                 img_width = core.getImageWidth()
                 img_height = core.getImageHeight()
+                shape = (img_width, img_height)
                 np_dtype = f"uint{bits}"
-                self._viewer.setup((img_width, img_height), np_dtype, 1)
+                self._viewer.setup(shape, np_dtype, 1)
+                self._viewer.update_data(_get_scope_img(shape, np_dtype))
+                try:
+                    self._viewer._handles[0].set_clims((0, 2000))
+                except Exception:
+                    pass  # :)
+
+    def _on_system_config_loaded(self) -> None:
+        self._setup_viewer()
 
     def _on_roi_set(self) -> None:
         """Reconfigure the viewer when a Camera ROI is set."""
-        self._on_system_config_loaded()
+        self._setup_viewer()
 
     def _on_property_changed(self, dev: str, prop: str, value: str) -> None:
         """Reconfigure the viewer when a Camera property is changed."""
@@ -58,9 +69,55 @@ class NDVPreview(_ImagePreviewBase):
             return
         # if we change camera, reconfigure the viewer
         if dev == "Core" and prop == "Camera":
-            self._on_system_config_loaded()
+            self._setup_viewer()
         # if any property related to the camera is changed, reconfigure the viewer
         # e.g. bit depth, binning, etc.
         # Maybe be more strict about which properties trigger a reconfigure?
         elif dev == self._mmc.getCameraDevice():
-            self._on_system_config_loaded()
+            self._setup_viewer()
+
+
+def _get_scope_img(shape: tuple[int, int], dtype: np.typing.DTypeLike) -> np.ndarray:
+    """Return a sample image from the scope."""
+    resources = Path(__file__).parent.parent.parent / "resources"
+    qimage = QImage(str(resources / "logo.png"))
+    qimage = qimage.convertToFormat(QImage.Format.Format_RGBA8888)
+    width, height = qimage.width(), qimage.height()
+    ptr = qimage.bits()
+    ptr.setsize(qimage.sizeInBytes())
+    ary = np.array(ptr).reshape(height, width, 4)
+    ary = np.mean(ary, axis=-1)
+
+    img = resize_nearest_neighbor(ary, shape).astype(dtype)
+    return img
+
+
+def resize_nearest_neighbor(arr: np.ndarray, new_shape: tuple[int, int]) -> np.ndarray:
+    """
+    Rescale a 2D numpy array using nearest neighbor interpolation.
+
+    Args:
+        arr: Input 2D array of shape (M, N).
+        new_shape: Desired output shape (new_M, new_N).
+
+    Returns
+    -------
+        A rescaled numpy array of shape new_shape.
+    """
+    old_M, old_N = arr.shape
+    new_M, new_N = new_shape
+
+    # Compute the ratio between the old and new dimensions.
+    row_ratio: float = old_M / new_M
+    col_ratio: float = old_N / new_N
+
+    # Compute the indices for the new array using nearest neighbor interpolation.
+    row_indices: np.ndarray = (np.arange(new_M) * row_ratio).astype(int)
+    col_indices: np.ndarray = (np.arange(new_N) * col_ratio).astype(int)
+
+    # Ensure indices are within bounds
+    row_indices = np.clip(row_indices, 0, old_M - 1)
+    col_indices = np.clip(col_indices, 0, old_N - 1)
+
+    # Use np.ix_ to generate the 2D index arrays for advanced indexing
+    return arr[np.ix_(row_indices, col_indices)]

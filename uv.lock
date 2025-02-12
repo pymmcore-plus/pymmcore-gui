@@ -762,8 +762,8 @@ wheels = [
 
 [[package]]
 name = "ndv"
-version = "0.2.2.dev28+g617d5d4"
-source = { git = "https://github.com/tlambert03/ndv.git?rev=streaming#617d5d453b941c32280ea962786d42ea9168fa06" }
+version = "0.2.2.dev29+g0bf5983"
+source = { git = "https://github.com/tlambert03/ndv.git?rev=streaming#0bf59834308fde442cb45340c62c1e63fc2cc2a6" }
 dependencies = [
     { name = "cmap" },
     { name = "numpy" },
