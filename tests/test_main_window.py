@@ -44,11 +44,12 @@ def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path) -> None:
     assert isinstance(sh_toolbar, ShuttersToolbar)
 
     # in our test cfg we have 3 shutters
-    assert sh_toolbar.layout().count() == 3
+    assert sh_toolbar.layout().count() == 3  # pyright: ignore
     assert len(sh_toolbar.actions()) == 3
 
     # loading default cfg
     gui._mmc.loadSystemConfiguration()
     # in our test cfg we have 2 shutters
-    assert sh_toolbar.layout().count() == 2
+    assert sh_toolbar.layout().count() == 2  # pyright: ignore
     assert len(sh_toolbar.actions()) == 2
+
