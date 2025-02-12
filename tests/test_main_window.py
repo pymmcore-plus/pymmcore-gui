@@ -52,4 +52,3 @@ def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path) -> None:
     # in our test cfg we have 2 shutters
     assert sh_toolbar.layout().count() == 2  # pyright: ignore
     assert len(sh_toolbar.actions()) == 2
-
