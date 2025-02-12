@@ -57,7 +57,7 @@ class NDVPreview(_ImagePreviewBase):
         if self._mmc is None:
             return
         # if we change camera, reconfigure the viewer
-        if dev =="Core" and prop == "Camera":
+        if dev == "Core" and prop == "Camera":
             self._on_system_config_loaded()
         # if any property related to the camera is changed, reconfigure the viewer
         # e.g. bit depth, binning, etc.
