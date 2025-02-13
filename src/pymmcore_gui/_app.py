@@ -91,7 +91,6 @@ def main() -> MMQApplication:
     except Exception as e:
         print(f"Failed to load system configuration: {e}")
 
-    win.showMaximized()
     win.show()
 
     splsh = "_PYI_SPLASH_IPC" in os.environ and importlib.util.find_spec("pyi_splash")

@@ -183,12 +183,12 @@ class MicroManagerGUI(QMainWindow):
 
         layout = QVBoxLayout(central_wdg)
         layout.addWidget(self._img_preview)
+        self._restore_state()
 
     @property
     def nm(self) -> NotificationManager:
         """A callable that can be used to show a message in the status bar."""
         return self._notification_manager
-        self._restore_state()
 
     @property
     def mmcore(self) -> CMMCorePlus:
