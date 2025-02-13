@@ -196,30 +196,37 @@ class MicroManagerGUI(QMainWindow):
 
     def _restore_state(self) -> None:
         """Restore the state of the window from settings."""
-        keys = settings.window.open_widgets
-        for key in keys:
+        initial_widgets = settings.window.initial_widgets
+        # we need to create the widgets first, before calling restoreState.
+        for key in initial_widgets:
             self.get_widget(key)
+        # restore position and size of the main window
         if geo := settings.window.geometry:
             self.restoreGeometry(geo)
-        if settings.window.open_widgets and (state := settings.window.window_state):
+
+        # restore state of toolbars and dockwidgets, but only after event loop start
+        # https://forum.qt.io/post/794120
+        if initial_widgets and (state := settings.window.window_state):
 
             def _restore_later() -> None:
                 self.restoreState(state)
-                for key in keys:
+                for key in initial_widgets:
                     self.get_action(key).setChecked(True)
 
-            # https://forum.qt.io/post/794120
             QTimer.singleShot(0, _restore_later)
 
     def _save_state(self) -> None:
         """Save the state of the window to settings."""
+        # save position and size of the main window
         settings.window.geometry = self.saveGeometry().data()
+        # remember which widgets are open, and preserve their state.
         op = {key for key, widget in self._action_widgets.items() if widget.isVisible()}
-        settings.window.open_widgets = op
+        settings.window.initial_widgets = op
         if op:
             settings.window.window_state = self.saveState().data()
         else:
             settings.window.window_state = None
+        # write to disk
         settings.flush()
 
     @property

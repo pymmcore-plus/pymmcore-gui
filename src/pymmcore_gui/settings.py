@@ -78,17 +78,23 @@ class MMGuiUserPrefsSource(PydanticBaseSettingsSource):
 
 
 def _default_widgets() -> set[WidgetAction]:
+    """The default set widgets that open on launch."""
     return {WidgetAction.CONFIG_GROUPS, WidgetAction.MDA_WIDGET}
+
+
+# set of widgets that are sorted when serialized
+InitialWidgets = Annotated[set[WidgetAction], WrapSerializer(lambda v, h: sorted(h(v)))]
 
 
 class WindowSettingsV1(BaseSettings):
     """Settings related to window positioning and geometry."""
 
     geometry: Base64Bytes | None = None
+    """Position and size of the main window. Restored with .restoreGeometry()"""
     window_state: Base64Bytes | None = None
-    open_widgets: Annotated[
-        set[WidgetAction], WrapSerializer(lambda v, h: sorted(h(v)))
-    ] = Field(default_factory=_default_widgets)
+    """State of main window's toolbars and dockwidgets. Restored with .restoreState()"""
+    initial_widgets: InitialWidgets = Field(default_factory=_default_widgets)
+    """Set of widgets to load on startup."""
 
 
 class SettingsV1(BaseSettings):
