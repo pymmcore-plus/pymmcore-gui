@@ -137,24 +137,8 @@ class MicroManagerGUI(QMainWindow):
         # the wrapping QDockWidget for widgets that are associated with a QAction
         self._dock_widgets = WeakValueDictionary[ActionKey, QDockWidget]()
 
-        # get global CMMCorePlus instance and setup configuration
-        self._mmc = mmc = mmcore or CMMCorePlus.instance()
-        mmc.events.systemConfigurationLoaded.connect(self._on_system_config_loaded)
-
-        # 1. if config is given, load it
-        # 2. then check whether the last used config is set and load it
-        # 3. if no config is set, load the demo config
-        if config is None:
-            if (last := settings.last_config) and last.is_file():
-                config = last
-            else:
-                config = "MMConfig_demo.cfg"
-        try:
-            mmc.loadSystemConfiguration(config)
-        except Exception as e:
-            logger.warning(
-                "Failed to load configuration file %s: %s", config, e, exc_info=True
-            )
+        # get global CMMCorePlus instance
+        self._mmc = mmcore or CMMCorePlus.instance()
 
         self._img_preview = PygfxImagePreview(self, mmcore=self._mmc)
         self._viewers_manager = NDVViewersManager(self, self._mmc)
