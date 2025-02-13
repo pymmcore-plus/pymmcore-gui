@@ -210,7 +210,7 @@ class MicroManagerGUI(QMainWindow):
 
             def _restore_later() -> None:
                 self.restoreState(state)
-                for key in initial_widgets:
+                for key in self._open_widgets():
                     self.get_action(key).setChecked(True)
 
             QTimer.singleShot(0, _restore_later)
@@ -220,14 +220,19 @@ class MicroManagerGUI(QMainWindow):
         # save position and size of the main window
         settings.window.geometry = self.saveGeometry().data()
         # remember which widgets are open, and preserve their state.
-        op = {key for key, widget in self._action_widgets.items() if widget.isVisible()}
-        settings.window.initial_widgets = op
-        if op:
+        settings.window.initial_widgets = open_ = self._open_widgets()
+        if open_:
             settings.window.window_state = self.saveState().data()
         else:
             settings.window.window_state = None
-        # write to disk
-        settings.flush()
+        # write to disk, blocking up to 5 seconds
+        settings.flush(timeout=5000)
+
+    def _open_widgets(self) -> set[WidgetAction]:
+        """Return the set of open widgets."""
+        return {
+            key for key, widget in self._action_widgets.items() if widget.isVisible()
+        }
 
     @property
     def mmcore(self) -> CMMCorePlus:

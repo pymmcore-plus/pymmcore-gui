@@ -1,5 +1,6 @@
 import json
 import os
+import threading
 import warnings
 from pathlib import Path
 from typing import Annotated, Any, Literal, cast
@@ -20,6 +21,18 @@ APP_NAME = "pymmcore-gui"
 USER_DATA_DIR = Path(user_data_dir(appname=APP_NAME))
 USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
 SETTINGS_FILE_NAME = USER_DATA_DIR / "pmm_settings.json"
+
+
+class BaseMMSettings(BaseSettings):
+    """Config shared across all settings subclasses."""
+
+    model_config = SettingsConfigDict(
+        # don't fail if an extra key is present.  just ignore it
+        # (this is important for backwards compatibility)
+        # note: this could also be "include", if we want an older version of the app
+        # to be able to open a newer version's settings file, without losing data
+        extra="ignore",
+    )
 
 
 class MMGuiUserPrefsSource(PydanticBaseSettingsSource):
@@ -86,7 +99,7 @@ def _default_widgets() -> set[WidgetAction]:
 InitialWidgets = Annotated[set[WidgetAction], WrapSerializer(lambda v, h: sorted(h(v)))]
 
 
-class WindowSettingsV1(BaseSettings):
+class WindowSettingsV1(BaseMMSettings):
     """Settings related to window positioning and geometry."""
 
     geometry: Base64Bytes | None = None
@@ -97,8 +110,13 @@ class WindowSettingsV1(BaseSettings):
     """Set of widgets to load on startup."""
 
 
-class SettingsV1(BaseSettings):
+class SettingsV1(BaseMMSettings):
     """Global settings for the PyMMCore GUI."""
+
+    model_config = SettingsConfigDict(
+        # Prefix for all environment variables. e.g. PMM_<key>=<value>
+        env_prefix="PMM_",
+    )
 
     version: Literal["1.0"] = "1.0"
     window: WindowSettingsV1 = Field(default_factory=WindowSettingsV1)
@@ -115,12 +133,6 @@ class SettingsV1(BaseSettings):
         return int(major), int(minor), ".".join(rest)
 
     # ----------------------- Configurations -----------------------
-
-    model_config = SettingsConfigDict(
-        # Prefix for all environment variables. e.g. PMM_<key>=<value>
-        env_prefix="PMM_",
-        extra="ignore",
-    )
 
     @classmethod
     def settings_customise_sources(
@@ -155,8 +167,19 @@ class SettingsV1(BaseSettings):
             file_secret_settings,
         )
 
-    def flush(self) -> None:
-        """Write the settings to disk."""
+    def flush(self, timeout: float | None = None) -> None:
+        """Write the settings to disk.
+
+        If `timeout` is not None, block until the write is complete, or until the
+        timeout is reached.
+        """
+        # write in another thread, so we don't block the main thread
+        thread = threading.Thread(target=self._write_settings)
+        thread.start()
+        if timeout:
+            thread.join(timeout)
+
+    def _write_settings(self) -> None:
         json_str = self.model_dump_json(indent=2, exclude_defaults=True)
         SETTINGS_FILE_NAME.write_text(json_str, errors="ignore")
 
