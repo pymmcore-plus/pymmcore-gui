@@ -29,7 +29,6 @@ from ._ndv_viewers import NDVViewersManager
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
 from .settings import settings
-from .widgets._pygfx_image import PygfxImagePreview
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 from .widgets.image_preview._ndv_preview import NDVPreview
 
