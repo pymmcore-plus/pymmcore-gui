@@ -36,8 +36,6 @@ def test_viewers_manager(mmcore: CMMCorePlus, qtbot: QtBot) -> None:
     with qtbot.waitSignal(dummy.destroyed, timeout=1000):
         dummy.deleteLater()
     QApplication.processEvents()
-    QApplication.processEvents()
-    gc.collect()
     gc.collect()
     if len(manager):
         for viewer in manager.viewers():
