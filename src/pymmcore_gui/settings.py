@@ -1,13 +1,15 @@
 import json
+import os
 import warnings
 from pathlib import Path
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, cast
 
 from platformdirs import user_data_dir
 from pydantic import Base64Bytes, Field, WrapSerializer
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
+    EnvSettingsSource,
     PydanticBaseSettingsSource,
     SettingsConfigDict,
 )
@@ -130,6 +132,15 @@ class SettingsV1(BaseSettings):
         then environment variables, then dotenv files, then the user settings from
         SETTINGS_FILE, then file secrets).
         """
+        if "PYTEST_VERSION" in os.environ:
+            # we're running in tests...
+            # don't load the user settings, and change env-prefix
+            # I started by using a fixture in conftest.py, to patch this method
+            # but it's difficult to ensure that it always gets patched in time
+            # this is more guaranteed to work
+            cast("EnvSettingsSource", env_settings).env_prefix = "PMM_TEST_"
+            return (init_settings, env_settings)
+
         return (
             init_settings,
             env_settings,
@@ -144,5 +155,4 @@ class SettingsV1(BaseSettings):
         SETTINGS_FILE_NAME.write_text(json_str, errors="ignore")
 
 
-Settings = SettingsV1
 settings = SettingsV1()
