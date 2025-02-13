@@ -4,17 +4,17 @@ from unittest.mock import patch
 import pytest
 from pydantic_settings import BaseSettings
 
-from pymmcore_gui.settings import MMGuiUserPrefsSource, Settings
+from pymmcore_gui.settings import MMGuiUserPrefsSource, SettingsV1
 
 
 def test_settings() -> None:
-    settings = Settings()
+    settings = SettingsV1()
     assert settings.version == "1.0"
     assert settings.version_tuple == (1, 0, "")
 
     # settings ignores unrecognized fields
     # (this is important for backwards compatibility)
-    v = Settings(random_value="asdf")  # pyright: ignore[reportCallIssue]
+    v = SettingsV1(random_value="asdf")  # pyright: ignore[reportCallIssue]
     assert not hasattr(v, "random_value")
 
 

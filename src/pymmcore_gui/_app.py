@@ -7,7 +7,6 @@ import os
 import sys
 import traceback
 from contextlib import suppress
-from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 from PyQt6.QtCore import pyqtSignal
@@ -15,7 +14,8 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
 from superqt.utils import WorkerBase
 
-from pymmcore_gui import MicroManagerGUI, __version__
+from pymmcore_gui import __version__
+from pymmcore_gui._main_window import ICON, MicroManagerGUI
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -28,8 +28,6 @@ APP_VERSION = __version__
 ORG_NAME = "pymmcore-plus"
 ORG_DOMAIN = "pymmcore-plus"
 APP_ID = f"{ORG_DOMAIN}.{ORG_NAME}.{APP_NAME}.{APP_VERSION}"
-RESOURCES = Path(__file__).parent / "resources"
-ICON = RESOURCES / ("icon.ico" if sys.platform.startswith("win") else "logo.png")
 IS_FROZEN = getattr(sys, "frozen", False)
 
 
@@ -75,7 +73,7 @@ def parse_args(args: Sequence[str] = ()) -> argparse.Namespace:
     return parser.parse_args(args)
 
 
-def main() -> None:
+def main() -> MMQApplication:
     """Run the Micro-Manager GUI."""
     args = parse_args()
 
@@ -83,7 +81,6 @@ def main() -> None:
     _install_excepthook()
 
     win = MicroManagerGUI()
-    win.setWindowIcon(QIcon(str(ICON)))
 
     # FIXME: be better...
     try:
@@ -105,6 +102,14 @@ def main() -> None:
         pyi_splash.close()
 
     app.exec()
+
+    # NOTE:
+    # the fact that we're returning the app instance after exec() is a little odd.
+    # it's there for testing so that `test_app::test_main_app` can retain a reference
+    # to the application for the scope of the test.
+    # I also tried retaining a global app reference within this module, but that led
+    # to consistent segfaults for reasons I don't understand.
+    return app
 
 
 # ------------------- Custom excepthook -------------------

@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import logging
+import sys
+from collections.abc import Callable
 from enum import Enum
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast, overload
 from weakref import WeakValueDictionary
 
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets import ConfigWizard
-from PyQt6.QtCore import QEvent, QObject, Qt
-from PyQt6.QtGui import QAction
+from PyQt6.QtCore import QEvent, QObject, Qt, QTimer
+from PyQt6.QtGui import QAction, QCloseEvent, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
     QDockWidget,
@@ -29,11 +33,12 @@ from ._ndv_viewers import NDVViewersManager
 from ._notification_manager import NotificationManager
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
+from .settings import settings
 from .widgets._pygfx_image import PygfxImagePreview
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping
+    from collections.abc import Mapping
 
     from pymmcore_widgets import (
         CameraRoiWidget,
@@ -51,6 +56,12 @@ if TYPE_CHECKING:
     from pymmcore_gui.widgets._stage_control import StagesControlWidget
 
     from ._app import MMQApplication
+
+
+logger = logging.getLogger("pymmcore_gui")
+
+RESOURCES = Path(__file__).parent / "resources"
+ICON = RESOURCES / ("icon.ico" if sys.platform.startswith("win") else "logo.png")
 
 
 class Menu(str, Enum):
@@ -75,14 +86,16 @@ class Toolbar(str, Enum):
         return str(self.value)
 
 
+ToolDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QToolBar]
+MenuDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QMenu]
+
+
 class MicroManagerGUI(QMainWindow):
     """Micro-Manager minimal GUI."""
 
     # Toolbars are a mapping of strings to either a list of ActionKeys or a callable
     # that takes a CMMCorePlus instance and QMainWindow and returns a QToolBar.
-    TOOLBARS: Mapping[
-        str, list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QToolBar]
-    ] = {
+    TOOLBARS: Mapping[str, ToolDictValue] = {
         Toolbar.CAMERA_ACTIONS: [
             CoreAction.SNAP,
             CoreAction.TOGGLE_LIVE,
@@ -99,9 +112,7 @@ class MicroManagerGUI(QMainWindow):
     }
     # Menus are a mapping of strings to either a list of ActionKeys or a callable
     # that takes a CMMCorePlus instance and QMainWindow and returns a QMenu.
-    MENUS: Mapping[
-        str, list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QMenu]
-    ] = {
+    MENUS: Mapping[str, MenuDictValue] = {
         Menu.PYMM_GUI: [WidgetAction.ABOUT],
         Menu.WINDOW: [
             WidgetAction.CONSOLE,
@@ -119,6 +130,7 @@ class MicroManagerGUI(QMainWindow):
     def __init__(self, *, mmcore: CMMCorePlus | None = None) -> None:
         super().__init__()
         self.setWindowTitle("Mike")
+        self.setWindowIcon(QIcon(str(ICON)))
         self.setObjectName("MicroManagerGUI")
 
         # Serves to cache created QAction objects so that they can be re-used
@@ -127,12 +139,12 @@ class MicroManagerGUI(QMainWindow):
         # toolbars.
         self._qactions = WeakValueDictionary[ActionKey, QAction]()
         # widgets that are associated with a QAction
-        self._action_widgets = WeakValueDictionary[ActionKey, QWidget]()
+        self._action_widgets = WeakValueDictionary[WidgetAction, QWidget]()
         # the wrapping QDockWidget for widgets that are associated with a QAction
         self._dock_widgets = WeakValueDictionary[ActionKey, QDockWidget]()
 
         # get global CMMCorePlus instance
-        self._mmc = mmc = mmcore or CMMCorePlus.instance()
+        self._mmc = mmcore or CMMCorePlus.instance()
 
         self._img_preview = PygfxImagePreview(self, mmcore=self._mmc)
         self._viewers_manager = NDVViewersManager(self, self._mmc)
@@ -155,36 +167,14 @@ class MicroManagerGUI(QMainWindow):
         # MENUS ====================================
         # To add menus or menu items, add them to the MENUS dict above
 
-        mb = cast("QMenuBar", self.menuBar())
         for name, entry in self.MENUS.items():
-            if callable(entry):
-                menu = entry(mmc, self)
-                mb.addMenu(menu)
-            else:
-                menu = cast("QMenu", mb.addMenu(name))
-                for action in entry:
-                    menu.addAction(self.get_action(action))
+            self._add_menubar(name, entry)
 
         # TOOLBARS =================================
         # To add toolbars or toolbar items, add them to the TOOLBARS dict above
 
         for name, tb_entry in self.TOOLBARS.items():
-            if callable(tb_entry):
-                tb = tb_entry(mmc, self)
-                self.addToolBar(tb)
-            else:
-                tb = cast("QToolBar", self.addToolBar(name))
-                for action in tb_entry:
-                    tb.addAction(self.get_action(action))
-
-        # populate with default widgets ...
-        # eventually this should be configurable and restored from a config file
-        for key in (
-            WidgetAction.CONFIG_GROUPS,
-            WidgetAction.STAGE_CONTROL,
-            WidgetAction.MDA_WIDGET,
-        ):
-            self.get_widget(key)
+            self._add_toolbar(name, tb_entry)
 
         # LAYOUT ======================================
 
@@ -194,44 +184,15 @@ class MicroManagerGUI(QMainWindow):
         layout = QVBoxLayout(central_wdg)
         layout.addWidget(self._img_preview)
 
-    def _on_exception(self, exc: BaseException) -> None:
-        """Show a notification when an exception is raised."""
-        see_tb = "See traceback"
-
-        def _open_traceback(choice: str | None) -> None:
-            if choice == see_tb:
-                log = self.get_widget(WidgetAction.EXCEPTION_LOG)
-                log.show_exception(exc)
-                log.show()
-
-        self._notification_manager.show_error_message(
-            str(exc), see_tb, on_action=_open_traceback
-        )
-
     @property
     def nm(self) -> NotificationManager:
         """A callable that can be used to show a message in the status bar."""
         return self._notification_manager
+        self._restore_state()
 
     @property
     def mmcore(self) -> CMMCorePlus:
         return self._mmc
-
-    def get_action(self, key: ActionKey, create: bool = True) -> QAction:
-        """Create a QAction from this key."""
-        if key not in self._qactions:
-            if not create:  # pragma: no cover
-                raise KeyError(
-                    f"Action {key} has not been created yet, and 'create' is False"
-                )
-            # create and cache it
-            info: WidgetActionInfo[QWidget] = WidgetActionInfo.for_key(key)
-            self._qactions[key] = action = info.to_qaction(self._mmc, self)
-            # connect WidgetActions to toggle their widgets
-            if isinstance(action.key, WidgetAction):
-                action.triggered.connect(self._toggle_action_widget)
-
-        return self._qactions[key]
 
     # TODO: it's possible this could be expressed using Generics...
     # which would avoid the need for the manual overloads
@@ -288,12 +249,14 @@ class MicroManagerGUI(QMainWindow):
                     f"Widget {key} has not been created yet, and 'create' is False"
                 )
             widget = key.create_widget(self)
+            widget.setObjectName(key.name)
             self._action_widgets[key] = widget
 
             # If a dock area is specified, wrap the widget in a QDockWidget.
             if (dock_area := key.dock_area()) is not None:
                 dock = QDockWidget(key.value, self)
                 dock.setWidget(widget)
+                dock.setObjectName(f"docked_{key.name}")
                 self._link_widget_to_action(dock, key)
                 self._dock_widgets[key] = dock
                 self.addDockWidget(dock_area, dock)
@@ -330,6 +293,109 @@ class MicroManagerGUI(QMainWindow):
                 "or it is not owned by a dock widget"
             )
         return self._dock_widgets[key]
+
+    def get_action(self, key: ActionKey, create: bool = True) -> QAction:
+        """Create a QAction from this key."""
+        if key not in self._qactions:
+            if not create:  # pragma: no cover
+                raise KeyError(
+                    f"Action {key} has not been created yet, and 'create' is False"
+                )
+            # create and cache it
+            info: WidgetActionInfo[QWidget] = WidgetActionInfo.for_key(key)
+            self._qactions[key] = action = info.to_qaction(self._mmc, self)
+            # connect WidgetActions to toggle their widgets
+            if isinstance(action.key, WidgetAction):
+                action.triggered.connect(self._toggle_action_widget)
+
+        return self._qactions[key]
+
+    # -------------------------- Private -----------------------------------------
+
+    def _on_exception(self, exc: BaseException) -> None:
+        """Show a notification when an exception is raised."""
+        see_tb = "See traceback"
+
+        def _open_traceback(choice: str | None) -> None:
+            if choice == see_tb:
+                log = self.get_widget(WidgetAction.EXCEPTION_LOG)
+                log.show_exception(exc)
+                log.show()
+
+        self._notification_manager.show_error_message(
+            str(exc), see_tb, on_action=_open_traceback
+        )
+
+    def _on_system_config_loaded(self) -> None:
+        if cfg := self._mmc.systemConfigurationFile():
+            settings.last_config = Path(cfg)
+        else:
+            settings.last_config = None
+        settings.flush()
+
+    def _add_toolbar(self, name: str, tb_entry: ToolDictValue) -> None:
+        if callable(tb_entry):
+            tb = tb_entry(self._mmc, self)
+            self.addToolBar(tb)
+        else:
+            tb = cast("QToolBar", self.addToolBar(name))
+            for action in tb_entry:
+                tb.addAction(self.get_action(action))
+        tb.setObjectName(name)
+
+    def _add_menubar(self, name: str, menu_entry: MenuDictValue) -> None:
+        mb = cast("QMenuBar", self.menuBar())
+        if callable(menu_entry):
+            menu = menu_entry(self._mmc, self)
+            mb.addMenu(menu)
+        else:
+            menu = cast("QMenu", mb.addMenu(name))
+            for action in menu_entry:
+                menu.addAction(self.get_action(action))
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+        self._save_state()
+        return super().closeEvent(a0)
+
+    def _restore_state(self) -> None:
+        """Restore the state of the window from settings."""
+        initial_widgets = settings.window.initial_widgets
+        # we need to create the widgets first, before calling restoreState.
+        for key in initial_widgets:
+            self.get_widget(key)
+        # restore position and size of the main window
+        if geo := settings.window.geometry:
+            self.restoreGeometry(geo)
+
+        # restore state of toolbars and dockwidgets, but only after event loop start
+        # https://forum.qt.io/post/794120
+        if initial_widgets and (state := settings.window.window_state):
+
+            def _restore_later() -> None:
+                self.restoreState(state)
+                for key in self._open_widgets():
+                    self.get_action(key).setChecked(True)
+
+            QTimer.singleShot(0, _restore_later)
+
+    def _save_state(self) -> None:
+        """Save the state of the window to settings."""
+        # save position and size of the main window
+        settings.window.geometry = self.saveGeometry().data()
+        # remember which widgets are open, and preserve their state.
+        settings.window.initial_widgets = open_ = self._open_widgets()
+        if open_:
+            settings.window.window_state = self.saveState().data()
+        else:
+            settings.window.window_state = None
+        # write to disk, blocking up to 5 seconds
+        settings.flush(timeout=5000)
+
+    def _open_widgets(self) -> set[WidgetAction]:
+        """Return the set of open widgets."""
+        return {
+            key for key, widget in self._action_widgets.items() if widget.isVisible()
+        }
 
     def _link_widget_to_action(self, widget: QWidget, key: WidgetAction) -> None:
         """Sets up the two-way link between a widget and its associated QAction."""
