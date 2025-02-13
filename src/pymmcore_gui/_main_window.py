@@ -119,9 +119,7 @@ class MicroManagerGUI(QMainWindow):
         ],
     }
 
-    def __init__(
-        self, *, mmcore: CMMCorePlus | None = None, config: str | Path | None = None
-    ) -> None:
+    def __init__(self, *, mmcore: CMMCorePlus | None = None) -> None:
         super().__init__()
         self.setWindowTitle("Mike")
         self.setWindowIcon(QIcon(str(ICON)))
@@ -161,7 +159,6 @@ class MicroManagerGUI(QMainWindow):
         self.setCentralWidget(central_wdg)
 
         layout = QVBoxLayout(central_wdg)
-        self._img_preview = PygfxImagePreview(self, mmcore=self._mmc)
         layout.addWidget(self._img_preview)
 
         self._restore_state()
