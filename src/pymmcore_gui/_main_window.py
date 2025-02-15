@@ -82,6 +82,24 @@ ToolDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QToolBar]
 MenuDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QMenu]
 
 
+class ViewersDockingArea(QMainWindow):
+    """Docking area for the viewers."""
+
+    def __init__(
+        self, parent: QWidget | None = None, *, mmcore: CMMCorePlus | None = None
+    ):
+        super().__init__(parent)
+        self.setWindowTitle("Viewers")
+
+        # get global CMMCorePlus instance
+        self._mmc = mmcore or CMMCorePlus.instance()
+
+        _img_preview = NDVPreview(self, mmcore=self._mmc)
+        self._img_preview_dock = QDockWidget("Preview")
+        self._img_preview_dock.setWidget(_img_preview)
+        self._img_preview_dock.setAllowedAreas(Qt.DockWidgetArea.TopDockWidgetArea)
+        self.addDockWidget(Qt.DockWidgetArea.TopDockWidgetArea, self._img_preview_dock)
+
 class MicroManagerGUI(QMainWindow):
     """Micro-Manager minimal GUI."""
 
@@ -138,7 +156,7 @@ class MicroManagerGUI(QMainWindow):
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
 
-        self._img_preview = NDVPreview(self, mmcore=self._mmc)
+        # self._img_preview = NDVPreview(self, mmcore=self._mmc)
         self._viewers_manager = NDVViewersManager(self, self._mmc)
 
         # MENUS ====================================
@@ -156,10 +174,15 @@ class MicroManagerGUI(QMainWindow):
         # LAYOUT ======================================
 
         central_wdg = QWidget(self)
+        central_wdg_layout = QVBoxLayout(central_wdg)
+        central_wdg_layout.setContentsMargins(0, 0, 0, 0)
+        self._viewer_docking_area = ViewersDockingArea(self, mmcore=self._mmc)
+        central_wdg_layout.addWidget(self._viewer_docking_area)
         self.setCentralWidget(central_wdg)
 
-        layout = QVBoxLayout(central_wdg)
-        layout.addWidget(self._img_preview)
+        # central_wdg = QWidget(self)
+        # layout = QVBoxLayout(central_wdg)
+        # layout.addWidget(self._img_preview)
 
         self._restore_state()
 
@@ -412,7 +435,9 @@ class _CloseEventFilter(QObject):
         super().__init__()
         self._action = action
 
-    def eventFilter(self, watched: QObject | None, event: QEvent | None) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def eventFilter(
+        self, watched: QObject | None, event: QEvent | None
+    ) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
         if event and event.type() in (QEvent.Type.Close, QEvent.Type.HideToParent):
             # Instead of destroying, simply hide the widget and update the action.
             event.ignore()
