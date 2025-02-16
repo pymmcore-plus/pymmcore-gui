@@ -20,6 +20,8 @@ if TYPE_CHECKING:
     from pymmcore_plus.metadata import FrameMetaV1, SummaryMetaV1
     from useq import MDASequence
 
+    from ._main_window import MicroManagerGUI
+
 
 # NOTE: we make this a QObject mostly so that the lifetime of this object is tied to
 # the lifetime of the parent QMainWindow.  If inheriting from QObject is removed in
@@ -135,14 +137,22 @@ class NDVViewersManager(QObject):
         ndv_viewer = ndv.ArrayViewer()
         q_viewer = cast("QWidget", ndv_viewer.widget())
 
-        if isinstance(par := self.parent(), QWidget):
-            q_viewer.setParent(par)
-
         sha = str(sequence.uid)[:8]
         q_viewer.setObjectName(f"ndv-{sha}")
         q_viewer.setWindowTitle(f"MDA {sha}")
-        q_viewer.setWindowFlags(Qt.WindowType.Dialog)
-        q_viewer.show()
+
+        # the parent should be a MicroManagerGUI instance, here adding the viewer to
+        # MicroManagerGUI.viewer_tab_wdg
+        if (par := self.parent()) and hasattr(par, "viewer_dock_area"):
+            par = cast("MicroManagerGUI", par)
+            q_viewer.setParent(par.viewer_dock_area)
+            par.viewer_dock_area.add_viewer(q_viewer, f"MDA {sha}", tabify=True)
+        else:
+            if isinstance(par, QWidget):
+                q_viewer.setParent(par)
+            q_viewer.setWindowFlags(Qt.WindowType.Dialog)
+            q_viewer.show()
+
         return ndv_viewer
 
     def __repr__(self) -> str:  # pragma: no cover
