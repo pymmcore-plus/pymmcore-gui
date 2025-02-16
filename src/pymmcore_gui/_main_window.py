@@ -447,7 +447,7 @@ class _CloseEventFilter(QObject):
         super().__init__()
         self._action = action
 
-    def eventFilter( # pyright: ignore[reportIncompatibleMethodOverride]
+    def eventFilter(  # pyright: ignore[reportIncompatibleMethodOverride]
         self, watched: QObject | None, event: QEvent | None
     ) -> bool:
         if event and event.type() in (QEvent.Type.Close, QEvent.Type.HideToParent):
