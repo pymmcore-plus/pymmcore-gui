@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ._action_info import ActionInfo, ActionKey
+from superqt import QIconifyIcon
 
 if TYPE_CHECKING:
     from ._core_qaction import QCoreAction
@@ -43,7 +44,10 @@ def _init_toggle_live(action: QCoreAction) -> None:
     mmc = action.mmc
 
     def _on_change() -> None:
-        action.setChecked(mmc.isSequenceRunning())
+        _is_running = mmc.isSequenceRunning()
+        action.setChecked(_is_running)
+        _icon = "mdi:video-off-outline" if _is_running else "mdi:video-outline"
+        action.setIcon(QIconifyIcon(_icon))
 
     mmc.events.sequenceAcquisitionStarted.connect(_on_change)
     mmc.events.continuousSequenceAcquisitionStarted.connect(_on_change)
