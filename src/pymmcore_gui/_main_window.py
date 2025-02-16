@@ -13,19 +13,24 @@ from pymmcore_widgets import ConfigWizard
 from PyQt6.QtCore import QEvent, QObject, Qt, QTimer
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon
 from PyQt6.QtWidgets import (
+    QApplication,
     QDockWidget,
     QMainWindow,
     QMenu,
     QMenuBar,
+    QPushButton,
+    QStatusBar,
     QToolBar,
     QVBoxLayout,
     QWidget,
 )
+from superqt import QIconifyIcon
 
 from pymmcore_gui.actions._core_qaction import QCoreAction
 from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
 from ._ndv_viewers import NDVViewersManager
+from ._notification_manager import NotificationManager
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
 from .settings import settings
@@ -49,6 +54,9 @@ if TYPE_CHECKING:
     from pymmcore_gui.widgets._exception_log import ExceptionLog
     from pymmcore_gui.widgets._mm_console import MMConsole
     from pymmcore_gui.widgets._stage_control import StagesControlWidget
+
+    from ._app import MMQApplication
+
 
 logger = logging.getLogger("pymmcore_gui")
 
@@ -140,6 +148,21 @@ class MicroManagerGUI(QMainWindow):
 
         self._img_preview = PygfxImagePreview(self, mmcore=self._mmc)
         self._viewers_manager = NDVViewersManager(self, self._mmc)
+        self._notification_manager = NotificationManager(self)
+        if app := QApplication.instance():
+            if hasattr(app, "exceptionRaised"):
+                cast("MMQApplication", app).exceptionRaised.connect(self._on_exception)
+
+        # Status bar -----------------------------------------
+
+        self._status_bar = QStatusBar(self)
+        self._status_bar.setMaximumHeight(26)
+        self.setStatusBar(self._status_bar)
+
+        self.bell_button = QPushButton("")
+        self.bell_button.setIcon(QIconifyIcon("codicon:bell"))
+        self.bell_button.setFlat(True)  # Make it blend nicely
+        self._status_bar.addPermanentWidget(self.bell_button)
 
         # MENUS ====================================
         # To add menus or menu items, add them to the MENUS dict above
@@ -160,99 +183,16 @@ class MicroManagerGUI(QMainWindow):
 
         layout = QVBoxLayout(central_wdg)
         layout.addWidget(self._img_preview)
-
         self._restore_state()
 
-    def _on_system_config_loaded(self) -> None:
-        if cfg := self._mmc.systemConfigurationFile():
-            settings.last_config = Path(cfg)
-        else:
-            settings.last_config = None
-        settings.flush()
-
-    def _add_toolbar(self, name: str, tb_entry: ToolDictValue) -> None:
-        if callable(tb_entry):
-            tb = tb_entry(self._mmc, self)
-            self.addToolBar(tb)
-        else:
-            tb = cast("QToolBar", self.addToolBar(name))
-            for action in tb_entry:
-                tb.addAction(self.get_action(action))
-        tb.setObjectName(name)
-
-    def _add_menubar(self, name: str, menu_entry: MenuDictValue) -> None:
-        mb = cast("QMenuBar", self.menuBar())
-        if callable(menu_entry):
-            menu = menu_entry(self._mmc, self)
-            mb.addMenu(menu)
-        else:
-            menu = cast("QMenu", mb.addMenu(name))
-            for action in menu_entry:
-                menu.addAction(self.get_action(action))
-
-    def closeEvent(self, a0: QCloseEvent | None) -> None:
-        self._save_state()
-        return super().closeEvent(a0)
-
-    def _restore_state(self) -> None:
-        """Restore the state of the window from settings."""
-        initial_widgets = settings.window.initial_widgets
-        # we need to create the widgets first, before calling restoreState.
-        for key in initial_widgets:
-            self.get_widget(key)
-        # restore position and size of the main window
-        if geo := settings.window.geometry:
-            self.restoreGeometry(geo)
-
-        # restore state of toolbars and dockwidgets, but only after event loop start
-        # https://forum.qt.io/post/794120
-        if initial_widgets and (state := settings.window.window_state):
-
-            def _restore_later() -> None:
-                self.restoreState(state)
-                for key in self._open_widgets():
-                    self.get_action(key).setChecked(True)
-
-            QTimer.singleShot(0, _restore_later)
-
-    def _save_state(self) -> None:
-        """Save the state of the window to settings."""
-        # save position and size of the main window
-        settings.window.geometry = self.saveGeometry().data()
-        # remember which widgets are open, and preserve their state.
-        settings.window.initial_widgets = open_ = self._open_widgets()
-        if open_:
-            settings.window.window_state = self.saveState().data()
-        else:
-            settings.window.window_state = None
-        # write to disk, blocking up to 5 seconds
-        settings.flush(timeout=5000)
-
-    def _open_widgets(self) -> set[WidgetAction]:
-        """Return the set of open widgets."""
-        return {
-            key for key, widget in self._action_widgets.items() if widget.isVisible()
-        }
+    @property
+    def nm(self) -> NotificationManager:
+        """A callable that can be used to show a message in the status bar."""
+        return self._notification_manager
 
     @property
     def mmcore(self) -> CMMCorePlus:
         return self._mmc
-
-    def get_action(self, key: ActionKey, create: bool = True) -> QAction:
-        """Create a QAction from this key."""
-        if key not in self._qactions:
-            if not create:  # pragma: no cover
-                raise KeyError(
-                    f"Action {key} has not been created yet, and 'create' is False"
-                )
-            # create and cache it
-            info: WidgetActionInfo[QWidget] = WidgetActionInfo.for_key(key)
-            self._qactions[key] = action = info.to_qaction(self._mmc, self)
-            # connect WidgetActions to toggle their widgets
-            if isinstance(action.key, WidgetAction):
-                action.triggered.connect(self._toggle_action_widget)
-
-        return self._qactions[key]
 
     # TODO: it's possible this could be expressed using Generics...
     # which would avoid the need for the manual overloads
@@ -353,6 +293,109 @@ class MicroManagerGUI(QMainWindow):
                 "or it is not owned by a dock widget"
             )
         return self._dock_widgets[key]
+
+    def get_action(self, key: ActionKey, create: bool = True) -> QAction:
+        """Create a QAction from this key."""
+        if key not in self._qactions:
+            if not create:  # pragma: no cover
+                raise KeyError(
+                    f"Action {key} has not been created yet, and 'create' is False"
+                )
+            # create and cache it
+            info: WidgetActionInfo[QWidget] = WidgetActionInfo.for_key(key)
+            self._qactions[key] = action = info.to_qaction(self._mmc, self)
+            # connect WidgetActions to toggle their widgets
+            if isinstance(action.key, WidgetAction):
+                action.triggered.connect(self._toggle_action_widget)
+
+        return self._qactions[key]
+
+    # -------------------------- Private -----------------------------------------
+
+    def _on_exception(self, exc: BaseException) -> None:
+        """Show a notification when an exception is raised."""
+        see_tb = "See traceback"
+
+        def _open_traceback(choice: str | None) -> None:
+            if choice == see_tb:
+                log = self.get_widget(WidgetAction.EXCEPTION_LOG)
+                log.show_exception(exc)
+                log.show()
+
+        self._notification_manager.show_error_message(
+            str(exc), see_tb, on_action=_open_traceback
+        )
+
+    def _on_system_config_loaded(self) -> None:
+        if cfg := self._mmc.systemConfigurationFile():
+            settings.last_config = Path(cfg)
+        else:
+            settings.last_config = None
+        settings.flush()
+
+    def _add_toolbar(self, name: str, tb_entry: ToolDictValue) -> None:
+        if callable(tb_entry):
+            tb = tb_entry(self._mmc, self)
+            self.addToolBar(tb)
+        else:
+            tb = cast("QToolBar", self.addToolBar(name))
+            for action in tb_entry:
+                tb.addAction(self.get_action(action))
+        tb.setObjectName(name)
+
+    def _add_menubar(self, name: str, menu_entry: MenuDictValue) -> None:
+        mb = cast("QMenuBar", self.menuBar())
+        if callable(menu_entry):
+            menu = menu_entry(self._mmc, self)
+            mb.addMenu(menu)
+        else:
+            menu = cast("QMenu", mb.addMenu(name))
+            for action in menu_entry:
+                menu.addAction(self.get_action(action))
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+        self._save_state()
+        return super().closeEvent(a0)
+
+    def _restore_state(self) -> None:
+        """Restore the state of the window from settings."""
+        initial_widgets = settings.window.initial_widgets
+        # we need to create the widgets first, before calling restoreState.
+        for key in initial_widgets:
+            self.get_widget(key)
+        # restore position and size of the main window
+        if geo := settings.window.geometry:
+            self.restoreGeometry(geo)
+
+        # restore state of toolbars and dockwidgets, but only after event loop start
+        # https://forum.qt.io/post/794120
+        if initial_widgets and (state := settings.window.window_state):
+
+            def _restore_later() -> None:
+                self.restoreState(state)
+                for key in self._open_widgets():
+                    self.get_action(key).setChecked(True)
+
+            QTimer.singleShot(0, _restore_later)
+
+    def _save_state(self) -> None:
+        """Save the state of the window to settings."""
+        # save position and size of the main window
+        settings.window.geometry = self.saveGeometry().data()
+        # remember which widgets are open, and preserve their state.
+        settings.window.initial_widgets = open_ = self._open_widgets()
+        if open_:
+            settings.window.window_state = self.saveState().data()
+        else:
+            settings.window.window_state = None
+        # write to disk, blocking up to 5 seconds
+        settings.flush(timeout=5000)
+
+    def _open_widgets(self) -> set[WidgetAction]:
+        """Return the set of open widgets."""
+        return {
+            key for key, widget in self._action_widgets.items() if widget.isVisible()
+        }
 
     def _link_widget_to_action(self, widget: QWidget, key: WidgetAction) -> None:
         """Sets up the two-way link between a widget and its associated QAction."""
