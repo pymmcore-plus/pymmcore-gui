@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from contextlib import suppress
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pygfx
 from cmap import Colormap
-from pymmcore_widgets import LiveButton
-from PyQt6.QtCore import QObject, QSize, Qt, QTimerEvent
+from PyQt6.QtCore import QObject, QSize
 from PyQt6.QtWidgets import QVBoxLayout, QWidget
+
+from ._preview_base import _ImagePreviewBase
 
 if TYPE_CHECKING:
     import rendercanvas.qt
@@ -23,7 +23,7 @@ else:
 _DEFAULT_WAIT = 10
 
 
-class PygfxImagePreview(QWidget):
+class PygfxImagePreview(_ImagePreviewBase):
     """A Widget that displays the last image snapped by active core.
 
     This widget will automatically update when the active core snaps an image, when the
@@ -67,14 +67,10 @@ class PygfxImagePreview(QWidget):
         use_with_mda: bool = False,
         mouse_wheel_sensitivity: float = 0.004,
     ):
-        super().__init__(parent)
-        self.use_with_mda = use_with_mda
-
-        self._mmc: CMMCorePlus | None = None
+        super().__init__(parent, mmcore, use_with_mda=use_with_mda)
 
         self._clims: tuple[float, float] | Literal["auto"] = "auto"
         self._cmap: Colormap = Colormap("gray")
-        self._timer_id: int | None = None  # timer for streaming
 
         # IMAGE NODE
 
@@ -112,8 +108,6 @@ class PygfxImagePreview(QWidget):
         self._controller.add_camera(self._camera)
         self._canvas.request_draw(self._draw_function)  # critical for showing
 
-        self.attach(mmcore)
-
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self._canvas)
@@ -123,30 +117,6 @@ class PygfxImagePreview(QWidget):
 
     def sizeHint(self) -> QSize:
         return self._canvas.sizeHint()
-
-    def attach(self, core: CMMCorePlus) -> None:
-        """Attach this widget to events in `core`."""
-        if self._mmc is not None:
-            self.detach()
-        ev = core.events
-        ev.imageSnapped.connect(self._on_image_snapped)
-        ev.continuousSequenceAcquisitionStarted.connect(self._on_streaming_start)
-        ev.sequenceAcquisitionStarted.connect(self._on_streaming_start)
-        ev.sequenceAcquisitionStopped.connect(self._on_streaming_stop)
-        ev.exposureChanged.connect(self._on_exposure_changed)
-        self._mmc = core
-
-    def detach(self) -> None:
-        """Detach this widget from events in `core`."""
-        if self._mmc is None:
-            return
-        with suppress(Exception):
-            ev, self._mmc = self._mmc.events, None
-            ev.imageSnapped.disconnect(self._on_image_snapped)
-            ev.continuousSequenceAcquisitionStarted.disconnect(self._on_streaming_start)
-            ev.sequenceAcquisitionStarted.disconnect(self._on_streaming_start)
-            ev.sequenceAcquisitionStopped.disconnect(self._on_streaming_stop)
-            ev.exposureChanged.disconnect(self._on_exposure_changed)
 
     @property
     def data(self) -> np.ndarray | None:
@@ -224,52 +194,3 @@ class PygfxImagePreview(QWidget):
     def _draw_function(self) -> None:
         self._renderer.render(self._scene, self._camera)
         self._renderer.request_draw()
-
-    def _on_exposure_changed(self, device: str, value: str) -> None:
-        # change timer interval
-        if self._timer_id is not None:
-            self.killTimer(self._timer_id)
-            self._timer_id = self.startTimer(int(value), Qt.TimerType.PreciseTimer)
-
-    def timerEvent(self, a0: QTimerEvent | None) -> None:
-        if (core := self._mmc) and core.getRemainingImageCount() > 0:
-            img = core.getLastImage()
-            self.set_data(img)
-
-    def _on_image_snapped(self) -> None:
-        if (core := self._mmc) is None:
-            return  # pragma: no cover
-        if not self.use_with_mda and core.mda.is_running():
-            return  # pragma: no cover
-
-        last = core.getImage()
-        self.set_data(last)
-
-    def _on_streaming_start(self) -> None:
-        if (core := self._mmc) is not None:
-            wait = int(core.getExposure()) or _DEFAULT_WAIT
-            self._timer_id = self.startTimer(wait, Qt.TimerType.PreciseTimer)
-
-    def _on_streaming_stop(self) -> None:
-        if self._timer_id is not None:
-            self.killTimer(self._timer_id)
-            self._timer_id = None
-
-
-if __name__ == "__main__":  # pragma: no cover
-    from pymmcore_plus import CMMCorePlus
-    from pymmcore_widgets import SnapButton
-    from PyQt6.QtWidgets import QApplication
-
-    core = CMMCorePlus()
-    core.loadSystemConfiguration()
-
-    app = QApplication([])
-    widget = PygfxImagePreview(None, core)
-    widget.show()
-    snap = SnapButton(parent=None, mmcore=core)
-    snap.show()
-    live = LiveButton(parent=None, mmcore=core)
-    live.show()
-
-    app.exec()
