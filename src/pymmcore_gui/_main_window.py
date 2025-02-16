@@ -17,9 +17,9 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QMenu,
     QMenuBar,
+    QTabBar,
     QTabWidget,
     QToolBar,
-    QVBoxLayout,
     QWidget,
 )
 
@@ -83,27 +83,28 @@ ToolDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QToolBar]
 MenuDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QMenu]
 
 
-class ViewersDockingArea(QMainWindow):
-    """Docking area for the viewers."""
+class ViewerTabWidget(QTabWidget):
+    """Tab widget with closable tabs."""
 
-    def __init__(
-        self, parent: QWidget | None = None, *, mmcore: CMMCorePlus | None = None
-    ):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
-        self.setWindowTitle("Viewers")
+        self.setTabsClosable(True)
+        self.setMovable(True)
+        self.tabCloseRequested.connect(self._close_tab)
 
-        self.setTabPosition(
-            Qt.DockWidgetArea.AllDockWidgetAreas, QTabWidget.TabPosition.North
-        )
+    def _close_tab(self, index: int) -> None:
+        """Close the tab at the given index."""
+        widget = self.widget(index)
+        self.removeTab(index)
+        if widget:
+            widget.deleteLater()
 
-        # get global CMMCorePlus instance
-        self._mmc = mmcore or CMMCorePlus.instance()
+    def make_tab_non_closable(self, index: int) -> None:
+        """Remove the close button from the tab at the given index."""
+        tabbar = cast(QTabBar, self.tabBar())
+        tabbar.setTabButton(index, QTabBar.ButtonPosition.RightSide, None)
+        tabbar.setTabButton(index, QTabBar.ButtonPosition.LeftSide, None)
 
-        _img_preview = NDVPreview(self, mmcore=self._mmc)
-        self._img_preview_dock = QDockWidget("Preview")
-        self._img_preview_dock.setWidget(_img_preview)
-        self._img_preview_dock.setAllowedAreas(Qt.DockWidgetArea.TopDockWidgetArea)
-        self.addDockWidget(Qt.DockWidgetArea.TopDockWidgetArea, self._img_preview_dock)
 
 class MicroManagerGUI(QMainWindow):
     """Micro-Manager minimal GUI."""
@@ -161,7 +162,6 @@ class MicroManagerGUI(QMainWindow):
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
 
-        # self._img_preview = NDVPreview(self, mmcore=self._mmc)
         self._viewers_manager = NDVViewersManager(self, self._mmc)
 
         # MENUS ====================================
@@ -178,16 +178,11 @@ class MicroManagerGUI(QMainWindow):
 
         # LAYOUT ======================================
 
-        central_wdg = QWidget(self)
-        central_wdg_layout = QVBoxLayout(central_wdg)
-        central_wdg_layout.setContentsMargins(0, 0, 0, 0)
-        self._viewers_docking_area = ViewersDockingArea(self, mmcore=self._mmc)
-        central_wdg_layout.addWidget(self._viewers_docking_area)
-        self.setCentralWidget(central_wdg)
-
-        # central_wdg = QWidget(self)
-        # layout = QVBoxLayout(central_wdg)
-        # layout.addWidget(self._img_preview)
+        self.viewer_tab_wdg = ViewerTabWidget(self)
+        self._img_preview = NDVPreview(self, mmcore=self._mmc)
+        self.viewer_tab_wdg.addTab(self._img_preview, "Preview")
+        self.viewer_tab_wdg.make_tab_non_closable(0)
+        self.setCentralWidget(self.viewer_tab_wdg)
 
         self._restore_state()
 
@@ -440,9 +435,7 @@ class _CloseEventFilter(QObject):
         super().__init__()
         self._action = action
 
-    def eventFilter(
-        self, watched: QObject | None, event: QEvent | None
-    ) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def eventFilter(self, watched: QObject | None, event: QEvent | None) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
         if event and event.type() in (QEvent.Type.Close, QEvent.Type.HideToParent):
             # Instead of destroying, simply hide the widget and update the action.
             event.ignore()

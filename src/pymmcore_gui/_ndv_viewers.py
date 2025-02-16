@@ -1,17 +1,12 @@
 from __future__ import annotations
 
-from ast import main
 import warnings
 from typing import TYPE_CHECKING, cast
 from weakref import WeakValueDictionary
 
 import ndv
 from pymmcore_plus.mda.handlers import TensorStoreHandler
-from PyQt6.QtCore import QObject, Qt, QTimer
-from PyQt6.QtWidgets import QDockWidget, QWidget, QMainWindow
-
-
-
+from PyQt6.QtCore import QObject, QTimer
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -22,7 +17,9 @@ if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
     from pymmcore_plus.mda import SupportsFrameReady
     from pymmcore_plus.metadata import FrameMetaV1, SummaryMetaV1
+    from PyQt6.QtWidgets import QWidget
     from useq import MDASequence
+
     from ._main_window import MicroManagerGUI
 
 
@@ -137,28 +134,19 @@ class NDVViewersManager(QObject):
 
     def _create_ndv_viewer(self, sequence: MDASequence) -> ndv.ArrayViewer:
         """Create a new ndv viewer with no data."""
+        main_win = cast("MicroManagerGUI", self.parent())
+
         ndv_viewer = ndv.ArrayViewer()
         q_viewer = cast("QWidget", ndv_viewer.widget())
+        q_viewer.setParent(main_win)
 
         sha = str(sequence.uid)[:8]
         q_viewer.setObjectName(f"ndv-{sha}")
         q_viewer.setWindowTitle(f"MDA {sha}")
 
-        _main_window = cast("MicroManagerGUI", self.parent())
-        dock_area = _main_window._viewers_docking_area
-        dock_widget = QDockWidget(f"MDA {sha}", _main_window)
-        q_viewer.setParent(dock_widget)
-        dock_widget.setWidget(q_viewer)
-
-        if existing_docks := dock_area.findChildren(QDockWidget):
-            # Tabify with the most recently added dock widget
-            dock_area.tabifyDockWidget(existing_docks[-1], dock_widget)
-            # select the newly added dock widget
-            dock_widget.show()
-            dock_widget.raise_()
-        else:
-            # Add the first dock widget normally
-            dock_area.addDockWidget(Qt.DockWidgetArea.TopDockWidgetArea, dock_widget)
+        # add the viewer to the main window tab widget
+        main_win.viewer_tab_wdg.addTab(q_viewer, f"MDA {sha}")
+        main_win.viewer_tab_wdg.setCurrentWidget(q_viewer)
 
         return ndv_viewer
 
