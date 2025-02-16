@@ -21,6 +21,7 @@ class OCToolBar(QToolBar):
         mmc.events.configGroupChanged.connect(self._refresh)
         mmc.events.channelGroupChanged.connect(self._refresh)
         mmc.events.configSet.connect(self._on_config_set)
+        mmc.events.propertyChanged.connect(self._on_property_changed)
 
         self._refresh()
 
@@ -28,6 +29,10 @@ class OCToolBar(QToolBar):
         if group == self.mmc.getChannelGroup():
             for action in self.actions():
                 action.setChecked(action.text() == config)
+
+    def _on_property_changed(self, device: str, property: str, value: str) -> None:
+        if device == "Core" and property == "ChannelGroup":
+            self._refresh()
 
     def _refresh(self) -> None:
         """Clear and refresh with all settings in current channel group."""
