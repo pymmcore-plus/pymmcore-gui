@@ -447,9 +447,7 @@ class _CloseEventFilter(QObject):
         super().__init__()
         self._action = action
 
-    def eventFilter(
-        self, watched: QObject | None, event: QEvent | None
-    ) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def eventFilter(self, watched: QObject | None, event: QEvent | None) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
         if event and event.type() in (QEvent.Type.Close, QEvent.Type.HideToParent):
             # Instead of destroying, simply hide the widget and update the action.
             event.ignore()
