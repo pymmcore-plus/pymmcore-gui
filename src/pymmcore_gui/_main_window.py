@@ -17,8 +17,9 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QMenu,
     QMenuBar,
+    QTabBar,
+    QTabWidget,
     QToolBar,
-    QVBoxLayout,
     QWidget,
 )
 
@@ -82,6 +83,29 @@ ToolDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QToolBar]
 MenuDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QMenu]
 
 
+class ViewerTabWidget(QTabWidget):
+    """Tab widget with closable tabs."""
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setTabsClosable(True)
+        self.setMovable(True)
+        self.tabCloseRequested.connect(self._close_tab)
+
+    def _close_tab(self, index: int) -> None:
+        """Close the tab at the given index."""
+        widget = self.widget(index)
+        self.removeTab(index)
+        if widget:
+            widget.deleteLater()
+
+    def make_tab_non_closable(self, index: int) -> None:
+        """Remove the close button from the tab at the given index."""
+        tabbar = cast(QTabBar, self.tabBar())
+        tabbar.setTabButton(index, QTabBar.ButtonPosition.RightSide, None)
+        tabbar.setTabButton(index, QTabBar.ButtonPosition.LeftSide, None)
+
+
 class MicroManagerGUI(QMainWindow):
     """Micro-Manager minimal GUI."""
 
@@ -138,7 +162,6 @@ class MicroManagerGUI(QMainWindow):
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
 
-        self._img_preview = NDVPreview(self, mmcore=self._mmc)
         self._viewers_manager = NDVViewersManager(self, self._mmc)
 
         # MENUS ====================================
@@ -155,11 +178,11 @@ class MicroManagerGUI(QMainWindow):
 
         # LAYOUT ======================================
 
-        central_wdg = QWidget(self)
-        self.setCentralWidget(central_wdg)
-
-        layout = QVBoxLayout(central_wdg)
-        layout.addWidget(self._img_preview)
+        self.viewer_tab_wdg = ViewerTabWidget(self)
+        self._img_preview = NDVPreview(self, mmcore=self._mmc)
+        self.viewer_tab_wdg.addTab(self._img_preview, "Preview")
+        self.viewer_tab_wdg.make_tab_non_closable(0)
+        self.setCentralWidget(self.viewer_tab_wdg)
 
         self._restore_state()
 
