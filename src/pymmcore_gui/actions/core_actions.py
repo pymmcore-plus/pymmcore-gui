@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._action_info import ActionInfo, ActionKey
 from superqt import QIconifyIcon
+
+from ._action_info import ActionInfo, ActionKey
 
 if TYPE_CHECKING:
     from ._core_qaction import QCoreAction

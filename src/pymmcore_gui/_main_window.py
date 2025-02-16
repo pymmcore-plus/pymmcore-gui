@@ -74,6 +74,7 @@ SS_TOOLBUTTON = """
     }
 """
 
+
 class Menu(str, Enum):
     """Menu names."""
 
