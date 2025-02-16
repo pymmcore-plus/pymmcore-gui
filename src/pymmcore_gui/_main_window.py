@@ -61,13 +61,16 @@ SS_TOOLBUTTON = """
         max-height: 35px;
     }
     QToolButton:checked {
-        background-color: rgba(51, 170, 51, 255);
+        background-color: rgba(0, 174, 0, 255);
+        border: 2px solid rgba(0, 174, 0, 255);
     }
     QToolButton:checked:hover {
-        background-color: rgba(51, 170, 51, 180);
+        background-color: rgba(0, 174, 0, 80);
+        border: 2px solid rgba(0, 174, 0, 80);
     }
     QToolButton:!checked:hover {
-        background-color: rgba(102, 102, 102, 100);
+        background-color: rgba(0, 174, 0, 80);
+        border: 2px solid rgba(0, 174, 0, 100);
     }
 """
 
