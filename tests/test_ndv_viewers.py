@@ -12,11 +12,17 @@ from useq import MDASequence
 from pymmcore_gui._ndv_viewers import NDVViewersManager
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from pymmcore_plus import CMMCorePlus
     from pytestqt.qtbot import QtBot
 
 
-def test_viewers_manager(mmcore: CMMCorePlus, qtbot: QtBot) -> None:
+# "test.ome.zarr" still fails because of call-order issues
+@pytest.mark.parametrize("fname", ["test.ome.tiff", None])
+def test_viewers_manager(
+    fname: str, mmcore: CMMCorePlus, qtbot: QtBot, tmp_path: Path
+) -> None:
     """Ensure that the viewers manager creates and cleans up viewers during MDA."""
     dummy = QWidget()
     manager = NDVViewersManager(dummy, mmcore)
@@ -30,6 +36,7 @@ def test_viewers_manager(mmcore: CMMCorePlus, qtbot: QtBot) -> None:
             channels=["DAPI", "FITC"],  # pyright: ignore
             z_plan=useq.ZRangeAround(range=4, step=1),
         ),
+        output=(tmp_path / fname) if fname else None,
     )
     assert len(manager) == 1
 
@@ -37,7 +44,10 @@ def test_viewers_manager(mmcore: CMMCorePlus, qtbot: QtBot) -> None:
         dummy.deleteLater()
     QApplication.processEvents()
     gc.collect()
-    if len(manager):
+    # only checking for strong references when WE have created the datahandler.
+    # otherwise... the NDV datawrapper itself may be holding a strong ref?
+    # need to look into this...
+    if fname is None and len(manager):
         for viewer in manager.viewers():
             if "vispy" in type(viewer._canvas).__name__.lower():
                 # don't even bother... vispy is a mess of hard references
