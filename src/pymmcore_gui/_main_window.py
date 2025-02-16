@@ -86,11 +86,16 @@ MenuDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QMenu]
 class ViewerTabWidget(QTabWidget):
     """Tab widget with closable tabs."""
 
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(
+        self, parent: QWidget | None = None, *, mmcore: CMMCorePlus | None = None
+    ):
         super().__init__(parent)
         self.setTabsClosable(True)
         self.setMovable(True)
+        self._mmc = mmcore or CMMCorePlus.instance()
+
         self.tabCloseRequested.connect(self._close_tab)
+        self._mmc.events.continuousSequenceAcquisitionStarted.connect(self._on_live)
 
     def _close_tab(self, index: int) -> None:
         """Close the tab at the given index."""
@@ -104,6 +109,16 @@ class ViewerTabWidget(QTabWidget):
         tabbar = cast(QTabBar, self.tabBar())
         tabbar.setTabButton(index, QTabBar.ButtonPosition.RightSide, None)
         tabbar.setTabButton(index, QTabBar.ButtonPosition.LeftSide, None)
+
+    def _on_live(self) -> None:
+        """Set the tab to the Preview tab when live acquisition starts."""
+        # set the tab to the Preview tab
+        for i in range(self.count()):
+            if self.tabText(i) == "Preview":
+                self.setCurrentIndex(i)
+                break
+
+
 
 
 class MicroManagerGUI(QMainWindow):
@@ -178,7 +193,7 @@ class MicroManagerGUI(QMainWindow):
 
         # LAYOUT ======================================
 
-        self.viewer_tab_wdg = ViewerTabWidget(self)
+        self.viewer_tab_wdg = ViewerTabWidget(self, mmcore=self._mmc)
         self._img_preview = NDVPreview(self, mmcore=self._mmc)
         self.viewer_tab_wdg.addTab(self._img_preview, "Preview")
         self.viewer_tab_wdg.make_tab_non_closable(0)
@@ -435,7 +450,9 @@ class _CloseEventFilter(QObject):
         super().__init__()
         self._action = action
 
-    def eventFilter(self, watched: QObject | None, event: QEvent | None) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def eventFilter(
+        self, watched: QObject | None, event: QEvent | None
+    ) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
         if event and event.type() in (QEvent.Type.Close, QEvent.Type.HideToParent):
             # Instead of destroying, simply hide the widget and update the action.
             event.ignore()
