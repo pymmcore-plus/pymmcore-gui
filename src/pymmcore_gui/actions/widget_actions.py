@@ -197,7 +197,7 @@ show_console = WidgetActionInfo(
 show_property_browser = WidgetActionInfo(
     key=WidgetAction.PROP_BROWSER,
     shortcut="Ctrl+Shift+P",
-    icon="mdi:view-headline",
+    icon="mdi:view-sequential",
     create_widget=create_property_browser,
     dock_area=None,
 )
@@ -228,7 +228,7 @@ show_camera_roi = WidgetActionInfo(
 show_config_groups = WidgetActionInfo(
     key=WidgetAction.CONFIG_GROUPS,
     shortcut="Ctrl+Shift+G",
-    icon="mdi:format-list-bulleted",
+    icon="mdi:view-list",
     create_widget=create_config_groups,
     dock_area=Qt.DockWidgetArea.LeftDockWidgetArea,
 )
