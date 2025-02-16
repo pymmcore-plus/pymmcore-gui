@@ -56,7 +56,7 @@ snap_action = ActionInfo(
     key=CoreAction.SNAP,
     shortcut="Ctrl+K",
     auto_repeat=True,
-    icon="mdi-light:camera",
+    icon="mdi:camera-outline",
     on_triggered=snap_image,
 )
 

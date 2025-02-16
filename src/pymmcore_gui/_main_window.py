@@ -97,6 +97,7 @@ class MicroManagerGUI(QMainWindow):
         Toolbar.WIDGETS: [
             WidgetAction.CONSOLE,
             WidgetAction.PROP_BROWSER,
+            WidgetAction.CONFIG_GROUPS,
             WidgetAction.MDA_WIDGET,
             WidgetAction.STAGE_CONTROL,
             WidgetAction.CAMERA_ROI,
