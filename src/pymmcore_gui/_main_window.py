@@ -55,6 +55,21 @@ logger = logging.getLogger("pymmcore_gui")
 RESOURCES = Path(__file__).parent / "resources"
 ICON = RESOURCES / ("icon.ico" if sys.platform.startswith("win") else "logo.png")
 
+SS_TOOLBUTTON = """
+    QToolButton {
+        min-height: 35px;
+        max-height: 35px;
+    }
+    QToolButton:checked {
+        background-color: rgba(51, 170, 51, 255);
+    }
+    QToolButton:checked:hover {
+        background-color: rgba(51, 170, 51, 180);
+    }
+    QToolButton:!checked:hover {
+        background-color: rgba(102, 102, 102, 100);
+    }
+"""
 
 class Menu(str, Enum):
     """Menu names."""
@@ -180,6 +195,7 @@ class MicroManagerGUI(QMainWindow):
             for action in tb_entry:
                 tb.addAction(self.get_action(action))
         tb.setObjectName(name)
+        tb.setStyleSheet(SS_TOOLBUTTON)
 
     def _add_menubar(self, name: str, menu_entry: MenuDictValue) -> None:
         mb = cast("QMenuBar", self.menuBar())
