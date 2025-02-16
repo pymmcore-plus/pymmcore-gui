@@ -84,7 +84,7 @@ MenuDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QMenu]
 
 
 class ViewerTabWidget(QTabWidget):
-    """Tab widget with closable tabs."""
+    """Tab widget with closable tabs for ndv image viewers."""
 
     def __init__(
         self, parent: QWidget | None = None, *, mmcore: CMMCorePlus | None = None
@@ -112,7 +112,6 @@ class ViewerTabWidget(QTabWidget):
 
     def _on_live(self) -> None:
         """Set the tab to the Preview tab when live acquisition starts."""
-        # set the tab to the Preview tab
         for i in range(self.count()):
             if self.tabText(i) == "Preview":
                 self.setCurrentIndex(i)
