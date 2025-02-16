@@ -176,8 +176,8 @@ class MicroManagerGUI(QMainWindow):
         central_wdg = QWidget(self)
         central_wdg_layout = QVBoxLayout(central_wdg)
         central_wdg_layout.setContentsMargins(0, 0, 0, 0)
-        self._viewer_docking_area = ViewersDockingArea(self, mmcore=self._mmc)
-        central_wdg_layout.addWidget(self._viewer_docking_area)
+        self._viewers_docking_area = ViewersDockingArea(self, mmcore=self._mmc)
+        central_wdg_layout.addWidget(self._viewers_docking_area)
         self.setCentralWidget(central_wdg)
 
         # central_wdg = QWidget(self)
