@@ -447,20 +447,22 @@ class _CloseEventFilter(QObject):
         super().__init__()
         self._action = action
 
-    def eventFilter(self, a0: QObject | None, a1: QEvent | None) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
-        if a1 and a1.type() in (QEvent.Type.Close, QEvent.Type.HideToParent):
+    def eventFilter( # pyright: ignore[reportIncompatibleMethodOverride]
+        self, watched: QObject | None, event: QEvent | None
+    ) -> bool:
+        if event and event.type() in (QEvent.Type.Close, QEvent.Type.HideToParent):
             # Instead of destroying, simply hide the widget and update the action.
-            a1.ignore()
+            event.ignore()
             try:
                 self._action.setChecked(False)
             except RuntimeError:
                 return True
-            if isinstance(a0, QWidget):
+            if isinstance(watched, QWidget):
                 # prefer hiding/showing the dock widget, since this will also hide/show
                 # the inner widget.
-                if isinstance(par := a0.parent(), QDockWidget):
+                if isinstance(par := watched.parent(), QDockWidget):
                     par.hide()
                 else:
-                    a0.hide()
+                    watched.hide()
             return True  # Prevent further processing (do not destroy the widget)
         return False
