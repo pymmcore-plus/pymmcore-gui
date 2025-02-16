@@ -17,7 +17,6 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QMenu,
     QMenuBar,
-    QTabBar,
     QTabWidget,
     QToolBar,
     QWidget,
@@ -25,13 +24,13 @@ from PyQt6.QtWidgets import (
 
 from pymmcore_gui.actions._core_qaction import QCoreAction
 from pymmcore_gui.actions.widget_actions import WidgetActionInfo
+from pymmcore_gui.widgets.image_preview._ndv_preview import NDVPreview
 
 from ._ndv_viewers import NDVViewersManager
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
 from .settings import settings
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
-from .widgets.image_preview._ndv_preview import NDVPreview
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -83,27 +82,41 @@ ToolDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QToolBar]
 MenuDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QMenu]
 
 
-class ViewerTabWidget(QTabWidget):
-    """Tab widget with closable tabs."""
+class ViewersDockingArea(QMainWindow):
+    """Docking area for the viewers."""
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
-        self.setTabsClosable(True)
-        self.setMovable(True)
-        self.tabCloseRequested.connect(self._close_tab)
+        self.setWindowTitle("Viewers")
 
-    def _close_tab(self, index: int) -> None:
-        """Close the tab at the given index."""
-        widget = self.widget(index)
-        self.removeTab(index)
-        if widget:
-            widget.deleteLater()
+        self.setTabPosition(
+            Qt.DockWidgetArea.AllDockWidgetAreas, QTabWidget.TabPosition.North
+        )
 
-    def make_tab_non_closable(self, index: int) -> None:
-        """Remove the close button from the tab at the given index."""
-        tabbar = cast(QTabBar, self.tabBar())
-        tabbar.setTabButton(index, QTabBar.ButtonPosition.RightSide, None)
-        tabbar.setTabButton(index, QTabBar.ButtonPosition.LeftSide, None)
+    def add_viewer(
+        self, viewer: QWidget, title: str, tabify: bool = True, close_btn: bool = True
+    ) -> None:
+        dock = QDockWidget(title, self)
+        dock.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
+        dock.setWidget(viewer)
+
+        # tabify the dock widget with the previous one if tabify is True
+        dock_widgets = self.findChildren(QDockWidget)
+        if len(dock_widgets) > 1 and tabify:
+            self.tabifyDockWidget(dock_widgets[-2], dock)
+        else:
+            self.addDockWidget(Qt.DockWidgetArea.TopDockWidgetArea, dock)
+
+        # remove the close button from the title bar if close_btn is False
+        if not close_btn:
+            dock.setFeatures(
+                QDockWidget.DockWidgetFeature.DockWidgetFloatable
+                | QDockWidget.DockWidgetFeature.DockWidgetMovable
+            )
+
+        # set the newly added dock widget as the current dock widget
+        dock.show()
+        dock.raise_()
 
 
 class MicroManagerGUI(QMainWindow):
@@ -178,11 +191,11 @@ class MicroManagerGUI(QMainWindow):
 
         # LAYOUT ======================================
 
-        self.viewer_tab_wdg = ViewerTabWidget(self)
-        self._img_preview = NDVPreview(self, mmcore=self._mmc)
-        self.viewer_tab_wdg.addTab(self._img_preview, "Preview")
-        self.viewer_tab_wdg.make_tab_non_closable(0)
-        self.setCentralWidget(self.viewer_tab_wdg)
+        self.viewer_dock_area = ViewersDockingArea()
+        self.setCentralWidget(self.viewer_dock_area)
+
+        self._img_preview = NDVPreview(self.viewer_dock_area, mmcore=self._mmc)
+        self.viewer_dock_area.add_viewer(self._img_preview, "Preview", close_btn=False)
 
         self._restore_state()
 
