@@ -7,6 +7,8 @@ from weakref import WeakValueDictionary
 import ndv
 from pymmcore_plus.mda.handlers import TensorStoreHandler
 from PyQt6.QtCore import QObject, QTimer
+from PyQt6.QtWidgets import QWidget
+from qtpy.QtCore import Qt
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -17,10 +19,9 @@ if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
     from pymmcore_plus.mda import SupportsFrameReady
     from pymmcore_plus.metadata import FrameMetaV1, SummaryMetaV1
-    from PyQt6.QtWidgets import QWidget
     from useq import MDASequence
 
-    from ._main_window import MicroManagerGUI
+    from pymmcore_gui._main_window import MicroManagerGUI
 
 
 # NOTE: we make this a QObject mostly so that the lifetime of this object is tied to
@@ -134,19 +135,25 @@ class NDVViewersManager(QObject):
 
     def _create_ndv_viewer(self, sequence: MDASequence) -> ndv.ArrayViewer:
         """Create a new ndv viewer with no data."""
-        main_win = cast("MicroManagerGUI", self.parent())
-
         ndv_viewer = ndv.ArrayViewer()
         q_viewer = cast("QWidget", ndv_viewer.widget())
-        q_viewer.setParent(main_win)
+
+        if isinstance(par := self.parent(), QWidget):
+            q_viewer.setParent(par)
 
         sha = str(sequence.uid)[:8]
         q_viewer.setObjectName(f"ndv-{sha}")
         q_viewer.setWindowTitle(f"MDA {sha}")
 
-        # add the viewer to the main window tab widget
-        main_win.viewer_tab_wdg.addTab(q_viewer, f"MDA {sha}")
-        main_win.viewer_tab_wdg.setCurrentWidget(q_viewer)
+        # the parent should be a MicroManagerGUI instance, here adding the viewer to
+        # MicroManagerGUI.viewer_tab_wdg
+        if par and hasattr(par, "viewer_tab_wdg"):
+            par = cast("MicroManagerGUI", par)
+            par.viewer_tab_wdg.addTab(q_viewer, f"MDA {sha}")
+            par.viewer_tab_wdg.setCurrentWidget(q_viewer)
+        else:
+            q_viewer.setWindowFlags(Qt.WindowType.Dialog)
+            q_viewer.show()
 
         return ndv_viewer
 
