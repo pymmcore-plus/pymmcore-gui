@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from ast import main
 import warnings
 from typing import TYPE_CHECKING, cast
 from weakref import WeakValueDictionary
@@ -7,7 +8,10 @@ from weakref import WeakValueDictionary
 import ndv
 from pymmcore_plus.mda.handlers import TensorStoreHandler
 from PyQt6.QtCore import QObject, Qt, QTimer
-from PyQt6.QtWidgets import QDockWidget, QWidget
+from PyQt6.QtWidgets import QDockWidget, QWidget, QMainWindow
+
+
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -19,7 +23,6 @@ if TYPE_CHECKING:
     from pymmcore_plus.mda import SupportsFrameReady
     from pymmcore_plus.metadata import FrameMetaV1, SummaryMetaV1
     from useq import MDASequence
-
     from ._main_window import MicroManagerGUI
 
 
@@ -143,10 +146,19 @@ class NDVViewersManager(QObject):
 
         _main_window = cast("MicroManagerGUI", self.parent())
         dock_area = _main_window._viewers_docking_area
-        dock_widget = QDockWidget(f"MDA {sha}")
+        dock_widget = QDockWidget(f"MDA {sha}", _main_window)
         q_viewer.setParent(dock_widget)
         dock_widget.setWidget(q_viewer)
-        dock_area.addDockWidget(Qt.DockWidgetArea.TopDockWidgetArea, dock_widget)
+
+        if existing_docks := dock_area.findChildren(QDockWidget):
+            # Tabify with the most recently added dock widget
+            dock_area.tabifyDockWidget(existing_docks[-1], dock_widget)
+            # select the newly added dock widget
+            dock_widget.show()
+            dock_widget.raise_()
+        else:
+            # Add the first dock widget normally
+            dock_area.addDockWidget(Qt.DockWidgetArea.TopDockWidgetArea, dock_widget)
 
         return ndv_viewer
 

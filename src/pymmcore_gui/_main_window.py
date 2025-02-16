@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QMenu,
     QMenuBar,
+    QTabWidget,
     QToolBar,
     QVBoxLayout,
     QWidget,
@@ -90,6 +91,10 @@ class ViewersDockingArea(QMainWindow):
     ):
         super().__init__(parent)
         self.setWindowTitle("Viewers")
+
+        self.setTabPosition(
+            Qt.DockWidgetArea.AllDockWidgetAreas, QTabWidget.TabPosition.North
+        )
 
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()

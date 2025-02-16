@@ -1,43 +1,90 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QDockWidget, QTextEdit, QWidget, QVBoxLayout
-import sys
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QPoint, Qt
+from PyQt6.QtGui import QCursor, QMouseEvent
+from PyQt6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QTabBar,
+    QTabWidget,
+    QWidget,
+)
 
-class InnerMainWindow(QMainWindow):
-    def __init__(self, parent=None):
+
+class DockableTabWidget(QTabWidget):
+    """Tab widget that allows undocking tabs into floating dock widgets."""
+
+    def __init__(self, main_window):
+        super().__init__()
+        self.main_window = main_window
+        self.setTabsClosable(True)
+        self.setMovable(True)
+        self.setTabBar(DockableTabBar(self))  # Use custom tab bar
+
+    def undock_tab(self, widget: QWidget | None) -> None:
+        """Remove the tab and create a dock widget."""
+        index = self.indexOf(widget)
+        if index >= 0 and index < self.count() and widget:
+            title = self.tabText(index)
+            # remove the tab
+            self.removeTab(index)
+            # convert the widget into a dialog window
+            widget.setWindowFlags(Qt.WindowType.Dialog)
+            widget.setWindowTitle(title)
+            widget.show()
+            # move the dialog window to the cursor position
+            widget.move(QCursor.pos())
+
+
+class DockableTabBar(QTabBar):
+    """Custom tab bar to detect dragging of tabs."""
+
+    def __init__(self, parent: DockableTabWidget) -> None:
         super().__init__(parent)
-        self.top_dock = QDockWidget("Top Dock", self)
-        self.top_dock.setWidget(QTextEdit("Top Dock Content"))
-        self.addDockWidget(Qt.DockWidgetArea.TopDockWidgetArea, self.top_dock)
+        self._tabwidget: DockableTabWidget = parent
+        self._current_tab_info: tuple[QWidget | None, QPoint] | None = None
 
-class OuterMainWindow(QMainWindow):
+    def mousePressEvent(self, a0: QMouseEvent | None) -> None:
+        """Detect if a tab is being clicked."""
+        if a0 is None or a0.buttons() != Qt.MouseButton.LeftButton:
+            return None
+        # get the tab widget at the mouse position
+        tab_index = self.tabAt(a0.pos())
+        widget = self._tabwidget.widget(tab_index) if tab_index >= 0 else None
+        self._current_tab_info = (widget, a0.pos())
+        super().mousePressEvent(a0)
+
+    def mouseMoveEvent(self, a0: QMouseEvent | None) -> None:
+        """Initiate undocking when dragging a tab."""
+        if (
+            a0 is None
+            or a0.buttons() != Qt.MouseButton.LeftButton
+            or self._current_tab_info is None
+        ):
+            return None
+
+        # if the mouse is moved more than the drag distance, start undocking
+        widget, start_pos = self._current_tab_info
+        distance = (a0.pos() - start_pos).manhattanLength()
+        if distance > QApplication.startDragDistance():
+            self._tabwidget.undock_tab(widget)
+
+
+class MainWindow(QMainWindow):
+    """Main application window."""
+
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("Dockable Tabs in QTabWidget")
+        self.resize(800, 600)
+        self.central_tabs = DockableTabWidget(self)
+        self.setCentralWidget(self.central_tabs)
+        # add tabs
+        for i in range(3):
+            tab = QWidget()
+            self.central_tabs.addTab(tab, f"Tab {i+1}")
 
-        # Create the inner main window
-        self.inner_main_window = InnerMainWindow(self)
-
-        # Wrap inner main window in a QWidget to set as central widget
-        container = QWidget(self)
-        layout = QVBoxLayout()
-        layout.addWidget(self.inner_main_window)
-        container.setLayout(layout)
-        self.setCentralWidget(container)
-
-        # Add dockable widgets to outer main window
-        self.left_dock = QDockWidget("Left Dock", self)
-        self.left_dock.setWidget(QTextEdit("Left Dock Content"))
-        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.left_dock)
-
-        self.right_dock = QDockWidget("Right Dock", self)
-        self.right_dock.setWidget(QTextEdit("Right Dock Content"))
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.right_dock)
-
-        self.bottom_dock = QDockWidget("Bottom Dock", self)
-        self.bottom_dock.setWidget(QTextEdit("Bottom Dock Content"))
-        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.bottom_dock)
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    main_window = OuterMainWindow()
-    main_window.show()
-    sys.exit(app.exec())
+    app = QApplication([])
+    window = MainWindow()
+    window.show()
+    app.exec()
