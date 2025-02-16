@@ -119,8 +119,6 @@ class ViewerTabWidget(QTabWidget):
                 break
 
 
-
-
 class MicroManagerGUI(QMainWindow):
     """Micro-Manager minimal GUI."""
 
