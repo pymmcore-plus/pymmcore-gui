@@ -137,9 +137,6 @@ class NDVViewersManager(QObject):
         ndv_viewer = ndv.ArrayViewer()
         q_viewer = cast("QWidget", ndv_viewer.widget())
 
-        if isinstance(par := self.parent(), QWidget):
-            q_viewer.setParent(par)
-
         sha = str(sequence.uid)[:8]
         q_viewer.setObjectName(f"ndv-{sha}")
         q_viewer.setWindowTitle(f"MDA {sha}")
@@ -147,6 +144,7 @@ class NDVViewersManager(QObject):
         _main_window = cast("MicroManagerGUI", self.parent())
         dock_area = _main_window._viewers_docking_area
         dock_widget = QDockWidget(f"MDA {sha}")
+        q_viewer.setParent(dock_widget)
         dock_widget.setWidget(q_viewer)
         dock_area.addDockWidget(Qt.DockWidgetArea.TopDockWidgetArea, dock_widget)
 
