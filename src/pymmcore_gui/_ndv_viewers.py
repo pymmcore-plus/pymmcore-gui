@@ -6,8 +6,9 @@ from weakref import WeakValueDictionary
 
 import ndv
 from pymmcore_plus.mda.handlers import TensorStoreHandler
-from PyQt6.QtCore import QObject, Qt, QTimer
+from PyQt6.QtCore import QObject, QTimer
 from PyQt6.QtWidgets import QWidget
+from qtpy.QtCore import Qt
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -19,6 +20,8 @@ if TYPE_CHECKING:
     from pymmcore_plus.mda import SupportsFrameReady
     from pymmcore_plus.metadata import FrameMetaV1, SummaryMetaV1
     from useq import MDASequence
+
+    from pymmcore_gui._main_window import MicroManagerGUI
 
 
 # NOTE: we make this a QObject mostly so that the lifetime of this object is tied to
@@ -141,8 +144,17 @@ class NDVViewersManager(QObject):
         sha = str(sequence.uid)[:8]
         q_viewer.setObjectName(f"ndv-{sha}")
         q_viewer.setWindowTitle(f"MDA {sha}")
-        q_viewer.setWindowFlags(Qt.WindowType.Dialog)
-        q_viewer.show()
+
+        # the parent should be a MicroManagerGUI instance, here adding the viewer to
+        # MicroManagerGUI.viewer_tab_wdg
+        if par and hasattr(par, "viewer_tab_wdg"):
+            par = cast("MicroManagerGUI", par)
+            par.viewer_tab_wdg.addTab(q_viewer, f"MDA {sha}")
+            par.viewer_tab_wdg.setCurrentWidget(q_viewer)
+        else:
+            q_viewer.setWindowFlags(Qt.WindowType.Dialog)
+            q_viewer.show()
+
         return ndv_viewer
 
     def __repr__(self) -> str:  # pragma: no cover
