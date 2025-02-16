@@ -22,15 +22,16 @@ class OCToolBar(QToolBar):
         mmc.events.channelGroupChanged.connect(self._refresh)
         mmc.events.configSet.connect(self._on_config_set)
         mmc.events.propertyChanged.connect(self._on_property_changed)
-
         self._refresh()
 
     def _on_config_set(self, group: str, config: str) -> None:
+        """Update the checked action when a new config is set."""
         if group == self.mmc.getChannelGroup():
             for action in self.actions():
                 action.setChecked(action.text() == config)
 
     def _on_property_changed(self, device: str, property: str, value: str) -> None:
+        """Refresh the widget when the ChannelGroup property is changed."""
         if device == "Core" and property == "ChannelGroup":
             self._refresh()
 
