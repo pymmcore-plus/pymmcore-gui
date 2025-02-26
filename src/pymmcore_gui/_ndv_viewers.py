@@ -142,7 +142,13 @@ class NDVViewersManager(QObject):
         q_viewer.setObjectName(f"ndv-{sha}")
         q_viewer.setWindowTitle(f"MDA {sha}")
         q_viewer.setWindowFlags(Qt.WindowType.Dialog)
-        q_viewer.show()
+
+        import PyQt6Ads as QtAds
+
+        main = self.parent()
+        dw = QtAds.CDockWidget(f"ndv-{sha}", main)
+        dw.setWidget(q_viewer)
+        main.dock_manager.addDockWidget(QtAds.DockWidgetArea.CenterDockWidgetArea, dw)
         return ndv_viewer
 
     def __repr__(self) -> str:  # pragma: no cover
