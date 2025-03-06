@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast, overload
 from weakref import WeakValueDictionary
 
+import PyQt6Ads as QtAds
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets import ConfigWizard
 from PyQt6.QtCore import QEvent, QObject, Qt, QTimer
@@ -18,9 +19,9 @@ from PyQt6.QtWidgets import (
     QMenu,
     QMenuBar,
     QToolBar,
-    QVBoxLayout,
     QWidget,
 )
+from PyQt6Ads import CDockManager, CDockWidget
 
 from pymmcore_gui.actions._core_qaction import QCoreAction
 from pymmcore_gui.actions.widget_actions import WidgetActionInfo
@@ -35,6 +36,7 @@ from .widgets._toolbars import OCToolBar, ShuttersToolbar
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    import ndv
     from pymmcore_widgets import (
         CameraRoiWidget,
         ConfigWizard,
@@ -44,6 +46,7 @@ if TYPE_CHECKING:
         PixelConfigurationWidget,
         PropertyBrowser,
     )
+    from useq import MDASequence
 
     from pymmcore_gui.widgets._about_widget import AboutWidget
     from pymmcore_gui.widgets._exception_log import ExceptionLog
@@ -140,6 +143,7 @@ class MicroManagerGUI(QMainWindow):
 
         self._img_preview = PygfxImagePreview(self, mmcore=self._mmc)
         self._viewers_manager = NDVViewersManager(self, self._mmc)
+        self._viewers_manager.viewerCreated.connect(self._on_viewer_created)
 
         # MENUS ====================================
         # To add menus or menu items, add them to the MENUS dict above
@@ -155,11 +159,19 @@ class MicroManagerGUI(QMainWindow):
 
         # LAYOUT ======================================
 
-        central_wdg = QWidget(self)
-        self.setCentralWidget(central_wdg)
+        # Create the dock manager. Because the parent parameter is a QMainWindow
+        # the dock manager registers itself as the central widget.
+        # It controls *all* widgets that are owned by the QMainWindow (both those that
+        # are docked and floating).
+        CDockManager.setConfigFlag(
+            CDockManager.eConfigFlag.DockAreaHasCloseButton, False
+        )
+        self.dock_manager = CDockManager(self)
 
-        layout = QVBoxLayout(central_wdg)
-        layout.addWidget(self._img_preview)
+        central = CDockWidget("Viewers", self)
+        central.setFeature(CDockWidget.DockWidgetFeature.NoTab, True)
+        central.setWidget(self._img_preview)
+        self._central_dock_area = self.dock_manager.setCentralWidget(central)
 
         self._restore_state()
 
@@ -314,12 +326,13 @@ class MicroManagerGUI(QMainWindow):
 
             # If a dock area is specified, wrap the widget in a QDockWidget.
             if (dock_area := key.dock_area()) is not None:
-                dock = QDockWidget(key.value, self)
+                dock = CDockWidget(key.value, self)
                 dock.setWidget(widget)
                 dock.setObjectName(f"docked_{key.name}")
                 self._link_widget_to_action(dock, key)
                 self._dock_widgets[key] = dock
-                self.addDockWidget(dock_area, dock)
+                dock_area = QtAds.DockWidgetArea.RightDockWidgetArea
+                self.dock_manager.addDockWidget(dock_area, dock)
             else:
                 self._link_widget_to_action(widget, key)
 
@@ -399,6 +412,21 @@ class MicroManagerGUI(QMainWindow):
         widget.setVisible(checked)
         if checked:
             widget.raise_()
+
+    def _on_viewer_created(
+        self, ndv_viewer: ndv.ArrayViewer, sequence: MDASequence
+    ) -> None:
+        q_viewer = cast("QWidget", ndv_viewer.widget())
+        q_viewer.setParent(self)
+
+        sha = str(sequence.uid)[:8]
+        q_viewer.setObjectName(f"ndv-{sha}")
+        q_viewer.setWindowTitle(f"MDA {sha}")
+        q_viewer.setWindowFlags(Qt.WindowType.Dialog)
+
+        dw = CDockWidget(f"ndv-{sha}", self)
+        dw.setWidget(q_viewer)
+        self.dock_manager.addDockWidgetTabToArea(dw, self._central_dock_area)
 
 
 class _CloseEventFilter(QObject):
