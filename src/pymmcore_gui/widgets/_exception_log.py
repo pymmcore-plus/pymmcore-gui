@@ -206,6 +206,18 @@ class ExceptionLog(QWidget):
         text_area.moveCursor(QTextCursor.MoveOperation.Start)
         self._copy_btn.setEnabled(True)
 
+    def show_exception(self, exc: BaseException) -> None:
+        """Show the exception in the log."""
+        try:
+            exc_inf = next(info for info in self.exception_log if info[1] is exc)
+        except StopIteration:
+            return
+
+        details = _format_exception(exc_inf)
+        self._traceback_area.setText(details)
+        self._traceback_area.moveCursor(QTextCursor.MoveOperation.Start)
+        self._copy_btn.setEnabled(True)
+
     def copy_to_clipboard(self) -> None:
         """Copy the selected exception to the clipboard."""
         if clipboard := QApplication.clipboard():
