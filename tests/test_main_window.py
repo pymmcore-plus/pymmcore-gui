@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pymmcore_widgets import MDAWidget
-from PyQt6.QtWidgets import QApplication, QDialog, QDockWidget
+from PyQt6.QtWidgets import QApplication, QDialog
+from PyQt6Ads import CDockWidget
 
 from pymmcore_gui import CoreAction, MicroManagerGUI, WidgetAction
 from pymmcore_gui._main_window import Toolbar
@@ -31,7 +32,7 @@ def test_main_window(qtbot: QtBot, qapp: QApplication) -> None:
         assert c_action in gui._qactions
 
     assert isinstance(gui.get_widget(WidgetAction.MDA_WIDGET), MDAWidget)
-    assert isinstance(gui.get_dock_widget(WidgetAction.MDA_WIDGET), QDockWidget)
+    assert isinstance(gui.get_dock_widget(WidgetAction.MDA_WIDGET), CDockWidget)
 
 
 def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path) -> None:
