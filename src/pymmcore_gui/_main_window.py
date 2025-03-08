@@ -214,6 +214,7 @@ class MicroManagerGUI(QMainWindow):
         # we need to create the widgets first, before calling restoreState.
         for key in initial_widgets:
             self.get_widget(key)
+
         # restore position and size of the main window
         if geo := settings.window.geometry:
             self.restoreGeometry(geo)
@@ -223,7 +224,7 @@ class MicroManagerGUI(QMainWindow):
         if initial_widgets and (state := settings.window.window_state):
 
             def _restore_later() -> None:
-                self.restoreState(state)
+                self.dock_manager.restoreState(state)
                 for key in self._open_widgets():
                     self.get_action(key).setChecked(True)
 
@@ -236,7 +237,7 @@ class MicroManagerGUI(QMainWindow):
         # remember which widgets are open, and preserve their state.
         settings.window.initial_widgets = open_ = self._open_widgets()
         if open_:
-            settings.window.window_state = self.saveState().data()
+            settings.window.window_state = self.dock_manager.saveState().data()
         else:
             settings.window.window_state = None
         # write to disk, blocking up to 5 seconds
