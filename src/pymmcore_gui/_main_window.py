@@ -8,10 +8,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast, overload
 from weakref import WeakValueDictionary
 
-import PyQt6Ads as QtAds
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets import ConfigWizard
-from PyQt6.QtCore import QEvent, QObject, Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon
 from PyQt6.QtWidgets import (
     QDockWidget,
@@ -21,7 +20,7 @@ from PyQt6.QtWidgets import (
     QToolBar,
     QWidget,
 )
-from PyQt6Ads import CDockManager, CDockWidget
+from PyQt6Ads import CDockManager, CDockWidget, SideBarLocation
 
 from pymmcore_gui.actions._core_qaction import QCoreAction
 from pymmcore_gui.actions.widget_actions import WidgetActionInfo
@@ -136,7 +135,7 @@ class MicroManagerGUI(QMainWindow):
         # widgets that are associated with a QAction
         self._action_widgets = WeakValueDictionary[WidgetAction, QWidget]()
         # the wrapping QDockWidget for widgets that are associated with a QAction
-        self._dock_widgets = WeakValueDictionary[ActionKey, QDockWidget]()
+        self._dock_widgets = WeakValueDictionary[ActionKey, CDockWidget]()
 
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
@@ -165,6 +164,10 @@ class MicroManagerGUI(QMainWindow):
         # are docked and floating).
         CDockManager.setConfigFlag(
             CDockManager.eConfigFlag.DockAreaHasCloseButton, False
+        )
+        CDockManager.setConfigFlag(CDockManager.eConfigFlag.OpaqueSplitterResize, True)
+        CDockManager.setAutoHideConfigFlag(
+            CDockManager.eAutoHideFlag.AutoHideFeatureEnabled, True
         )
         self.dock_manager = CDockManager(self)
 
@@ -324,17 +327,21 @@ class MicroManagerGUI(QMainWindow):
             widget.setObjectName(key.name)
             self._action_widgets[key] = widget
 
-            # If a dock area is specified, wrap the widget in a QDockWidget.
-            if (dock_area := key.dock_area()) is not None:
-                dock = CDockWidget(key.value, self)
-                dock.setWidget(widget)
-                dock.setObjectName(f"docked_{key.name}")
-                self._link_widget_to_action(dock, key)
-                self._dock_widgets[key] = dock
-                dock_area = QtAds.DockWidgetArea.RightDockWidgetArea
-                self.dock_manager.addDockWidget(dock_area, dock)
+            action = self.get_action(key)
+            dock = CDockWidget(key.value, self)
+            dock.setWidget(widget)
+            dock.setObjectName(f"docked_{key.name}")
+            dock.setToggleViewAction(action)
+            dock.setIcon(action.icon())
+            self._dock_widgets[key] = dock
+            if (area := key.dock_area()) is None:
+                self.dock_manager.addDockWidgetFloating(dock)
+            elif isinstance(area, SideBarLocation):
+                print("here")
+                self.dock_manager.addAutoHideDockWidget(area, dock)
+                print("here2")
             else:
-                self._link_widget_to_action(widget, key)
+                self.dock_manager.addDockWidget(area, dock)
 
             # Set the action checked since the widget is now “open.”
             if (action := self._qactions.get(key)) is not None:
@@ -367,27 +374,6 @@ class MicroManagerGUI(QMainWindow):
             )
         return self._dock_widgets[key]
 
-    def _link_widget_to_action(self, widget: QWidget, key: WidgetAction) -> None:
-        """Sets up the two-way link between a widget and its associated QAction."""
-        # When the action is toggled, show or hide the widget.
-        action: QAction = self.get_action(key)
-
-        # Ensure the widget does not get deleted on close.
-        widget.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
-        inner_widget: QWidget | None = None
-        if isinstance(widget, QDockWidget) and (inner_widget := widget.widget()):
-            inner_widget.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
-
-        # Install an event filter so that "closing" the widget
-        # simply hides it and updates the action toggle state.
-        if not hasattr(widget, "_close_filter"):
-            # it's important to store the event filter on the widget, otherwise
-            # it will be garbage collected and the event filter will stop working
-            widget._close_filter = ef = _CloseEventFilter(action)  # type: ignore
-            widget.installEventFilter(ef)
-            if inner_widget is not None:
-                inner_widget.installEventFilter(ef)
-
     def _toggle_action_widget(self, checked: bool) -> None:
         """Callback that toggles the visibility of a widget.
 
@@ -417,7 +403,6 @@ class MicroManagerGUI(QMainWindow):
         self, ndv_viewer: ndv.ArrayViewer, sequence: MDASequence
     ) -> None:
         q_viewer = cast("QWidget", ndv_viewer.widget())
-        q_viewer.setParent(self)
 
         sha = str(sequence.uid)[:8]
         q_viewer.setObjectName(f"ndv-{sha}")
@@ -427,33 +412,3 @@ class MicroManagerGUI(QMainWindow):
         dw = CDockWidget(f"ndv-{sha}", self)
         dw.setWidget(q_viewer)
         self.dock_manager.addDockWidgetTabToArea(dw, self._central_dock_area)
-
-
-class _CloseEventFilter(QObject):
-    """Event filter that intercepts close events and hides the widget instead.
-
-    This is installed on widgets that are associated with a QAction, so that closing
-    the widget will simply hide it and update the action toggle state.
-    """
-
-    def __init__(self, action: QAction) -> None:
-        super().__init__()
-        self._action = action
-
-    def eventFilter(self, watched: QObject | None, event: QEvent | None) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
-        if event and event.type() in (QEvent.Type.Close, QEvent.Type.HideToParent):
-            # Instead of destroying, simply hide the widget and update the action.
-            event.ignore()
-            try:
-                self._action.setChecked(False)
-            except RuntimeError:
-                return True
-            if isinstance(watched, QWidget):
-                # prefer hiding/showing the dock widget, since this will also hide/show
-                # the inner widget.
-                if isinstance(par := watched.parent(), QDockWidget):
-                    par.hide()
-                else:
-                    watched.hide()
-            return True  # Prevent further processing (do not destroy the widget)
-        return False

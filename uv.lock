@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -720,7 +721,7 @@ name = "ml-dtypes"
 version = "0.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy" },
+    { name = "numpy", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/32/49/6e67c334872d2c114df3020e579f3718c333198f8312290e09ec0216703a/ml_dtypes-0.5.1.tar.gz", hash = "sha256:ac5b58559bb84a95848ed6984eb8013249f90b6bab62aa5acbad876e256002c9", size = 698772 }
 wheels = [
@@ -1497,7 +1498,7 @@ requires-dist = [
     { name = "pymmcore-plus", extras = ["cli"], specifier = ">=0.13.2" },
     { name = "pymmcore-widgets", specifier = ">=0.9.0" },
     { name = "pyqt6", specifier = "==6.7.1" },
-    { name = "pyqt6ads", specifier = ">=4.4.0" },
+    { name = "pyqt6ads", specifier = ">=4.4.0.post1" },
     { name = "pyright", specifier = ">=1.1.393" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "qtconsole", specifier = ">=5.6.1" },
@@ -1687,18 +1688,18 @@ wheels = [
 
 [[package]]
 name = "pyqt6ads"
-version = "4.4.0"
+version = "4.4.0.post1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyqt6" },
     { name = "pyqt6-sip" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/93/ba/0ea1587c06d604ef3d8a726ba61130de1df2593a55ed9cb8c761f109b73f/pyqt6ads-4.4.0.tar.gz", hash = "sha256:d2062879cba49af05bc2a8767c8462b8718362d48a9c4c394922e20e7cf82b9d", size = 51474211 }
+sdist = { url = "https://files.pythonhosted.org/packages/76/cd/e133e91048173ee3af788875ecc6f50109b1a07a5b3213f8c958fedee1a2/pyqt6ads-4.4.0.post1.tar.gz", hash = "sha256:dccf954b3eb802d9046c0a1ec732c6c555844d1316c47fd419276f3a421cf0b1", size = 50826811 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/51/65/a9aef416c8710c2bf54ebea292b72ac8ce9a6c473b2005fc69da10519aed/pyqt6ads-4.4.0-cp39-abi3-macosx_10_14_x86_64.whl", hash = "sha256:b6b3a39240485a2451893895e718e7292377143a615ed13dcc29706a4185cb80", size = 360894 },
-    { url = "https://files.pythonhosted.org/packages/79/78/6233726e9307cc293105ab4539f0d76de8686d4edafeac29f8cec6d16210/pyqt6ads-4.4.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:1f1230edd376526e0c6cf380852866b2481c5f02694e1d5a8026c9b974ef7ba0", size = 343507 },
-    { url = "https://files.pythonhosted.org/packages/ba/71/8981b74a1d6293880891f75647f1374198989cd6a9b5328086224cdcbf2f/pyqt6ads-4.4.0-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:4c4fee13d3b6f8c1e3ab8f5601696ea4416d6bfe3fc50563839d217c52e1a590", size = 440273 },
-    { url = "https://files.pythonhosted.org/packages/d3/4d/15e596751704a95b15e10d05df588b9e3330cdec8136a72ea6ff2c871ba8/pyqt6ads-4.4.0-cp39-abi3-win_amd64.whl", hash = "sha256:6de38f79ed09212c48dd894515265c5b155c056d4eaa14e35d1ad03244198bdb", size = 392059 },
+    { url = "https://files.pythonhosted.org/packages/a8/b9/6ffd86087c92f0d258b392215bcc00b4295dfae945f3e8acd48f28a1cfc3/pyqt6ads-4.4.0.post1-cp39-abi3-macosx_10_14_x86_64.whl", hash = "sha256:d6c5d3859a157bd3b89927b34ce42d584bb06501e3e33da9fe4ed51a0d5cce3f", size = 364929 },
+    { url = "https://files.pythonhosted.org/packages/cd/cc/351ca7b343d66d2ccc20f36f0de89a8032e1d09da9ec72ed55d8a5e122c6/pyqt6ads-4.4.0.post1-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:177b56cab7346e01058a2590b2afa0b7ebd8495289619125206d74c624c96686", size = 347225 },
+    { url = "https://files.pythonhosted.org/packages/39/16/9641d76132f4b05df71c684e25ce70c74f837ab22e289e7ad55ddd9a9efa/pyqt6ads-4.4.0.post1-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:0ebc037521e957158c1d4b635a03a633b21b9a3b9af81c5b226c3557f06f1265", size = 444161 },
+    { url = "https://files.pythonhosted.org/packages/9a/51/c24f43109a07e16375c9a66c8ed20ed97bead39b97d152bb5266bbb4791b/pyqt6ads-4.4.0.post1-cp39-abi3-win_amd64.whl", hash = "sha256:9f7f7694ca048ed5e0b45ca7c2f1a15b17ea51f2add9ceaeb3cd65a46ad5a0f7", size = 395505 },
 ]
 
 [[package]]
@@ -2157,8 +2158,8 @@ name = "tensorstore"
 version = "0.1.72"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ml-dtypes" },
-    { name = "numpy" },
+    { name = "ml-dtypes", marker = "python_full_version < '3.13'" },
+    { name = "numpy", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/07/33/ac84a84b9b3931c63883933290ba017892685f6af4ca722d61d65d36f328/tensorstore-0.1.72.tar.gz", hash = "sha256:763d7f6898711783f199c8226a9c0b259546f5c6d9b4dc0ad3c9e39627060022", size = 6749622 }
 wheels = [
