@@ -13,7 +13,6 @@ from pymmcore_widgets import ConfigWizard
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon
 from PyQt6.QtWidgets import (
-    QDockWidget,
     QMainWindow,
     QMenu,
     QMenuBar,
@@ -337,19 +336,16 @@ class MicroManagerGUI(QMainWindow):
             if (area := key.dock_area()) is None:
                 self.dock_manager.addDockWidgetFloating(dock)
             elif isinstance(area, SideBarLocation):
-                print("here")
                 self.dock_manager.addAutoHideDockWidget(area, dock)
-                print("here2")
             else:
                 self.dock_manager.addDockWidget(area, dock)
 
             # Set the action checked since the widget is now “open.”
-            if (action := self._qactions.get(key)) is not None:
-                action.setChecked(True)
+            action.setChecked(True)
 
         return self._action_widgets[key]
 
-    def get_dock_widget(self, key: WidgetAction) -> QDockWidget:
+    def get_dock_widget(self, key: WidgetAction) -> CDockWidget:
         """Get the QDockWidget for `key`.
 
         Note, you can also get the QDockWidget by calling `get_widget(key)`, and then
