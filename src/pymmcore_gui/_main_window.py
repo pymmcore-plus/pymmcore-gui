@@ -31,7 +31,7 @@ from .settings import settings
 
 try:
     from .widgets._pygfx_image import PygfxImagePreview as ImagePreview
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     from pymmcore_widgets import ImagePreview
 
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
