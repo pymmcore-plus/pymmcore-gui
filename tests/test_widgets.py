@@ -5,8 +5,6 @@ from unittest.mock import patch
 
 import pytest
 
-
-
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
     from pytestqt.qtbot import QtBot
