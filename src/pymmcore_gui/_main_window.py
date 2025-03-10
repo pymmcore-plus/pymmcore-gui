@@ -28,7 +28,12 @@ from ._ndv_viewers import NDVViewersManager
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
 from .settings import settings
-from .widgets._pygfx_image import PygfxImagePreview
+
+try:
+    from .widgets._pygfx_image import PygfxImagePreview as ImagePreview
+except ImportError:
+    from pymmcore_widgets import ImagePreview
+
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
@@ -134,12 +139,13 @@ class MicroManagerGUI(QMainWindow):
         # widgets that are associated with a QAction
         self._action_widgets = WeakValueDictionary[WidgetAction, QWidget]()
         # the wrapping QDockWidget for widgets that are associated with a QAction
-        self._dock_widgets = WeakValueDictionary[ActionKey, CDockWidget]()
+        self._dock_widgets = WeakValueDictionary[WidgetAction, CDockWidget]()
 
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
 
-        self._img_preview = PygfxImagePreview(self, mmcore=self._mmc)
+        self._img_preview = ImagePreview(self, mmcore=self._mmc)
+        self._img_preview.setObjectName("ImagePreview")
         self._viewers_manager = NDVViewersManager(self, self._mmc)
         self._viewers_manager.viewerCreated.connect(self._on_viewer_created)
 
@@ -170,12 +176,13 @@ class MicroManagerGUI(QMainWindow):
         )
         self.dock_manager = CDockManager(self)
 
-        central = CDockWidget("Viewers", self)
-        central.setFeature(CDockWidget.DockWidgetFeature.NoTab, True)
-        central.setWidget(self._img_preview)
-        self._central_dock_area = self.dock_manager.setCentralWidget(central)
+        self._central = CDockWidget("Viewers", self)
+        self._central.setFeature(CDockWidget.DockWidgetFeature.NoTab, True)
+        self._central.setWidget(self._img_preview)
+        self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
         self._restore_state()
+        # print(self._central_dock_area)
 
     def _on_system_config_loaded(self) -> None:
         if cfg := self._mmc.systemConfigurationFile():
@@ -223,12 +230,10 @@ class MicroManagerGUI(QMainWindow):
         # https://forum.qt.io/post/794120
         if initial_widgets and (state := settings.window.window_state):
 
-            def _restore_later() -> None:
-                self.dock_manager.restoreState(state)
-                for key in self._open_widgets():
-                    self.get_action(key).setChecked(True)
-
-            QTimer.singleShot(0, _restore_later)
+            self.dock_manager.restoreState(state)
+            for key in self._open_widgets():
+                self.get_action(key).setChecked(True)
+            self._central_dock_area = self.dock_manager.centralWidget().dockAreaWidget()
 
     def _save_state(self) -> None:
         """Save the state of the window to settings."""
@@ -246,7 +251,9 @@ class MicroManagerGUI(QMainWindow):
     def _open_widgets(self) -> set[WidgetAction]:
         """Return the set of open widgets."""
         return {
-            key for key, widget in self._action_widgets.items() if widget.isVisible()
+            key
+            for key, widget in self._dock_widgets.items()
+            if widget.toggleViewAction().isChecked()
         }
 
     @property
@@ -406,6 +413,6 @@ class MicroManagerGUI(QMainWindow):
         q_viewer.setWindowTitle(f"MDA {sha}")
         q_viewer.setWindowFlags(Qt.WindowType.Dialog)
 
-        dw = CDockWidget(f"ndv-{sha}", self)
+        dw = CDockWidget(f"ndv-{sha}")
         dw.setWidget(q_viewer)
         self.dock_manager.addDockWidgetTabToArea(dw, self._central_dock_area)
