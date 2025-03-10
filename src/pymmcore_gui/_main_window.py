@@ -10,7 +10,7 @@ from weakref import WeakValueDictionary
 
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets import ConfigWizard
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction, QCloseEvent, QIcon
 from PyQt6.QtWidgets import (
     QMainWindow,
@@ -229,7 +229,6 @@ class MicroManagerGUI(QMainWindow):
         # restore state of toolbars and dockwidgets, but only after event loop start
         # https://forum.qt.io/post/794120
         if initial_widgets and (state := settings.window.window_state):
-
             self.dock_manager.restoreState(state)
             for key in self._open_widgets():
                 self.get_action(key).setChecked(True)
