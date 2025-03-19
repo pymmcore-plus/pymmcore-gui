@@ -80,6 +80,8 @@ class MMGuiUserPrefsSource(PydanticBaseSettingsSource):
 
     def __call__(self) -> dict[str, Any]:
         """Return Settings values for this source."""
+        if os.getenv("MMGUI_NO_SETTINGS"):
+            return {}
         return self._read_settings()
 
     def get_field_value(
@@ -173,6 +175,8 @@ class SettingsV1(BaseMMSettings):
         If `timeout` is not None, block until the write is complete, or until the
         timeout is reached.
         """
+        if os.getenv("MMGUI_NO_SETTINGS"):
+            return
         # write in another thread, so we don't block the main thread
         thread = threading.Thread(target=self._write_settings)
         thread.start()

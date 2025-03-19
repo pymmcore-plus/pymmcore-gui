@@ -10,8 +10,8 @@ from weakref import WeakValueDictionary
 
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets import ConfigWizard
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction, QCloseEvent, QIcon
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QAction, QCloseEvent, QGuiApplication, QIcon
 from PyQt6.QtWidgets import (
     QMainWindow,
     QMenu,
@@ -32,9 +32,9 @@ from .settings import settings
 try:
     from .widgets._pygfx_image import PygfxImagePreview as ImagePreview
 except ImportError:
-    from pymmcore_widgets import ImagePreview
+    from pymmcore_widgets import ImagePreview  # type: ignore
 
-from .widgets._toolbars import OCToolBar, ShuttersToolbar
+from .widgets._toolbars import OCToolBar
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -99,7 +99,7 @@ class MicroManagerGUI(QMainWindow):
             CoreAction.TOGGLE_LIVE,
         ],
         Toolbar.OPTICAL_CONFIGS: OCToolBar,
-        Toolbar.SHUTTERS: ShuttersToolbar,
+        # Toolbar.SHUTTERS: ShuttersToolbar,
         Toolbar.WIDGETS: [
             WidgetAction.CONSOLE,
             WidgetAction.PROP_BROWSER,
@@ -181,8 +181,15 @@ class MicroManagerGUI(QMainWindow):
         self._central.setWidget(self._img_preview)
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
-        self._restore_state()
-        # print(self._central_dock_area)
+        if screen := QGuiApplication.primaryScreen():
+            percent = 0.9
+            geo = screen.availableGeometry()
+            geo.setSize(geo.size() * percent)
+            margin = (1 - percent) / 2
+            geo.translate(int(geo.width() * margin), int(geo.height() * margin))
+            self.setGeometry(geo)
+
+        QTimer.singleShot(0, self._restore_state)
 
     def _on_system_config_loaded(self) -> None:
         if cfg := self._mmc.systemConfigurationFile():
@@ -215,8 +222,13 @@ class MicroManagerGUI(QMainWindow):
         self._save_state()
         return super().closeEvent(a0)
 
-    def _restore_state(self) -> None:
-        """Restore the state of the window from settings."""
+    def _restore_state(self, show: bool = False) -> None:
+        """Restore the state of the window from settings (or load default state).
+
+        show is added as a convenience here because it may be a common use case to
+        restore the state in a single shot timer and (only) then show the window.
+        This avoids the window flashing on the screen before it is properly positioned.
+        """
         initial_widgets = settings.window.initial_widgets
         # we need to create the widgets first, before calling restoreState.
         for key in initial_widgets:
@@ -225,6 +237,14 @@ class MicroManagerGUI(QMainWindow):
         # restore position and size of the main window
         if geo := settings.window.geometry:
             self.restoreGeometry(geo)
+        elif screen := QGuiApplication.primaryScreen():
+            # if no geometry is saved, center the window taking up 90% of the screen
+            percent = 0.9
+            ageo = screen.availableGeometry()
+            ageo.setSize(ageo.size() * percent)
+            margin = (1 - percent) / 2
+            ageo.translate(int(ageo.width() * margin), int(ageo.height() * margin))
+            self.setGeometry(ageo)
 
         # restore state of toolbars and dockwidgets, but only after event loop start
         # https://forum.qt.io/post/794120
@@ -233,6 +253,8 @@ class MicroManagerGUI(QMainWindow):
             for key in self._open_widgets():
                 self.get_action(key).setChecked(True)
             self._central_dock_area = self.dock_manager.centralWidget().dockAreaWidget()
+        if show:
+            self.show()
 
     def _save_state(self) -> None:
         """Save the state of the window to settings."""

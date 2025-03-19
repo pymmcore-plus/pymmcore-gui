@@ -7,7 +7,6 @@ from PyQt6.QtWidgets import QApplication, QDialog
 from PyQt6Ads import CDockWidget
 
 from pymmcore_gui import CoreAction, MicroManagerGUI, WidgetAction
-from pymmcore_gui._main_window import Toolbar
 from pymmcore_gui.widgets._toolbars import ShuttersToolbar
 
 if TYPE_CHECKING:
@@ -40,9 +39,7 @@ def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path) -> None:
     gui = MicroManagerGUI()
     qtbot.addWidget(gui)
 
-    sh_toolbar = gui.TOOLBARS[Toolbar.SHUTTERS](gui._mmc, gui)  # type: ignore
-    assert sh_toolbar is not None
-    assert isinstance(sh_toolbar, ShuttersToolbar)
+    sh_toolbar = ShuttersToolbar(gui._mmc, gui)
 
     # in our test cfg we have 3 shutters
     assert sh_toolbar.layout().count() == 3  # pyright: ignore

@@ -9,7 +9,7 @@ import traceback
 from contextlib import suppress
 from typing import TYPE_CHECKING, cast
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
 from superqt.utils import WorkerBase
@@ -81,6 +81,7 @@ def main() -> MMQApplication:
     _install_excepthook()
 
     win = MicroManagerGUI()
+    QTimer.singleShot(0, lambda: win._restore_state(True))
 
     # FIXME: be better...
     try:
@@ -90,8 +91,6 @@ def main() -> MMQApplication:
             win.mmcore.loadSystemConfiguration()
     except Exception as e:
         print(f"Failed to load system configuration: {e}")
-
-    win.show()
 
     splsh = "_PYI_SPLASH_IPC" in os.environ and importlib.util.find_spec("pyi_splash")
     if splsh:  # pragma: no cover
