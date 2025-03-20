@@ -12,6 +12,8 @@ from pymmcore_gui.widgets._toolbars import ShuttersToolbar
 if TYPE_CHECKING:
     from pytestqt.qtbot import QtBot
 
+    from pymmcore_gui.settings import Settings
+
 
 def test_main_window(qtbot: QtBot, qapp: QApplication) -> None:
     gui = MicroManagerGUI()
@@ -50,3 +52,26 @@ def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path) -> None:
     # in our test cfg we have 2 shutters
     assert sh_toolbar.layout().count() == 2  # pyright: ignore
     assert len(sh_toolbar.actions()) == 2
+
+
+def test_save_restore_state(
+    qtbot: QtBot, qapp: QApplication, settings: Settings
+) -> None:
+    gui = MicroManagerGUI()
+    qtbot.addWidget(gui)
+    qapp.processEvents()  # force the initial _restore_state to run.
+
+    # the thing we're going to restore
+    assert WidgetAction.STAGE_CONTROL not in gui._open_widgets()
+
+    # save the state
+    assert not settings.window.geometry
+    gui._save_state()
+    assert settings.window.geometry
+
+    # add a widget
+    gui.get_widget(WidgetAction.STAGE_CONTROL)
+    assert WidgetAction.STAGE_CONTROL in gui._open_widgets()
+    # restore the state
+    gui._restore_state()
+    assert WidgetAction.STAGE_CONTROL not in gui._open_widgets()

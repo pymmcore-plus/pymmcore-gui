@@ -27,7 +27,7 @@ from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 from ._ndv_viewers import NDVViewersManager
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
-from .settings import settings
+from .settings import Settings
 
 try:
     from .widgets._pygfx_image import PygfxImagePreview as ImagePreview
@@ -181,17 +181,10 @@ class MicroManagerGUI(QMainWindow):
         self._central.setWidget(self._img_preview)
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
-        if screen := QGuiApplication.primaryScreen():
-            percent = 0.9
-            geo = screen.availableGeometry()
-            geo.setSize(geo.size() * percent)
-            margin = (1 - percent) / 2
-            geo.translate(int(geo.width() * margin), int(geo.height() * margin))
-            self.setGeometry(geo)
-
         QTimer.singleShot(0, self._restore_state)
 
     def _on_system_config_loaded(self) -> None:
+        settings = Settings.instance()
         if cfg := self._mmc.systemConfigurationFile():
             settings.last_config = Path(cfg)
         else:
@@ -229,6 +222,7 @@ class MicroManagerGUI(QMainWindow):
         restore the state in a single shot timer and (only) then show the window.
         This avoids the window flashing on the screen before it is properly positioned.
         """
+        settings = Settings.instance()
         initial_widgets = settings.window.initial_widgets
         # we need to create the widgets first, before calling restoreState.
         for key in initial_widgets:
@@ -248,24 +242,30 @@ class MicroManagerGUI(QMainWindow):
 
         # restore state of toolbars and dockwidgets, but only after event loop start
         # https://forum.qt.io/post/794120
-        if initial_widgets and (state := settings.window.window_state):
+        if initial_widgets and (state := settings.window.dock_manager_state):
             self.dock_manager.restoreState(state)
             for key in self._open_widgets():
                 self.get_action(key).setChecked(True)
-            self._central_dock_area = self.dock_manager.centralWidget().dockAreaWidget()
+            if wdg := self.dock_manager.centralWidget():
+                self._central_dock_area = wdg.dockAreaWidget()
+
         if show:
             self.show()
 
     def _save_state(self) -> None:
         """Save the state of the window to settings."""
         # save position and size of the main window
+        settings = Settings.instance()
         settings.window.geometry = self.saveGeometry().data()
         # remember which widgets are open, and preserve their state.
         settings.window.initial_widgets = open_ = self._open_widgets()
         if open_:
-            settings.window.window_state = self.dock_manager.saveState().data()
+            # note that dock_manager.saveState mostly replaces QMainWindow.saveState
+            # the one thing it doesn't capture is the Toolbar state.
+            # so we will need to add that separately if that is desired.
+            settings.window.dock_manager_state = self.dock_manager.saveState().data()
         else:
-            settings.window.window_state = None
+            settings.window.dock_manager_state = None
         # write to disk, blocking up to 5 seconds
         settings.flush(timeout=5000)
 
@@ -274,7 +274,7 @@ class MicroManagerGUI(QMainWindow):
         return {
             key
             for key, widget in self._dock_widgets.items()
-            if widget.toggleViewAction().isChecked()
+            if (action := widget.toggleViewAction()) and action.isChecked()
         }
 
     @property

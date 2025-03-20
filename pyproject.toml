@@ -148,6 +148,7 @@ ignore_missing_imports = true
 include = ["src", "tests"]
 pythonVersion = "3.10"
 enableExperimentalFeatures = true
+reportMissingImports = false
 verboseOutput = true
 venv = ".venv"
 

@@ -21,6 +21,7 @@ APP_NAME = "pymmcore-gui"
 USER_DATA_DIR = Path(user_data_dir(appname=APP_NAME))
 USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
 SETTINGS_FILE_NAME = USER_DATA_DIR / "pmm_settings.json"
+TESTING = "PYTEST_VERSION" in os.environ
 
 
 class BaseMMSettings(BaseSettings):
@@ -80,7 +81,7 @@ class MMGuiUserPrefsSource(PydanticBaseSettingsSource):
 
     def __call__(self) -> dict[str, Any]:
         """Return Settings values for this source."""
-        if os.getenv("MMGUI_NO_SETTINGS"):
+        if os.getenv("MMGUI_NO_SETTINGS"):  # pragma: no cover
             return {}
         return self._read_settings()
 
@@ -108,6 +109,8 @@ class WindowSettingsV1(BaseMMSettings):
     """Position and size of the main window. Restored with .restoreGeometry()"""
     window_state: Base64Bytes | None = None
     """State of main window's toolbars and dockwidgets. Restored with .restoreState()"""
+    dock_manager_state: Base64Bytes | None = None
+    """State of dock_manager dockwidgets"""
     initial_widgets: InitialWidgets = Field(default_factory=_default_widgets)
     """Set of widgets to load on startup."""
 
@@ -137,6 +140,11 @@ class SettingsV1(BaseMMSettings):
     # ----------------------- Configurations -----------------------
 
     @classmethod
+    def instance(cls) -> "SettingsV1":
+        """Return the singleton instance of the settings."""
+        return _GLOBAL_SETTINGS
+
+    @classmethod
     def settings_customise_sources(
         cls,
         settings_cls: type[BaseSettings],
@@ -152,7 +160,7 @@ class SettingsV1(BaseMMSettings):
         then environment variables, then dotenv files, then the user settings from
         SETTINGS_FILE, then file secrets).
         """
-        if "PYTEST_VERSION" in os.environ:
+        if TESTING:
             # we're running in tests...
             # don't load the user settings, and change env-prefix
             # I started by using a fixture in conftest.py, to patch this method
@@ -175,7 +183,7 @@ class SettingsV1(BaseMMSettings):
         If `timeout` is not None, block until the write is complete, or until the
         timeout is reached.
         """
-        if os.getenv("MMGUI_NO_SETTINGS"):
+        if TESTING or os.getenv("MMGUI_NO_SETTINGS"):  # pragma: no cover
             return
         # write in another thread, so we don't block the main thread
         thread = threading.Thread(target=self._write_settings)
@@ -188,4 +196,5 @@ class SettingsV1(BaseMMSettings):
         SETTINGS_FILE_NAME.write_text(json_str, errors="ignore")
 
 
-settings = SettingsV1()
+Settings = SettingsV1
+_GLOBAL_SETTINGS = SettingsV1()
