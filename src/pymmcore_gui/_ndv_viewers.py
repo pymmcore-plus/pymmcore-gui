@@ -36,7 +36,7 @@ class NDVViewersManager(QObject):
     """
 
     viewerCreated = pyqtSignal(ndv.ArrayViewer, useq.MDASequence)
-    viewerDestroyed = pyqtSignal(object)
+    viewerDestroyed = pyqtSignal(str)
 
     def __init__(self, parent: QWidget, mmcore: CMMCorePlus):
         super().__init__(parent)

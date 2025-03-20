@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
+import useq
 from pymmcore_widgets import MDAWidget
 from PyQt6.QtWidgets import QApplication, QDialog
 from PyQt6Ads import CDockWidget
@@ -10,6 +11,7 @@ from pymmcore_gui import CoreAction, MicroManagerGUI, WidgetAction
 from pymmcore_gui.widgets._toolbars import ShuttersToolbar
 
 if TYPE_CHECKING:
+    from PyQt6Ads import CDockAreaWidget
     from pytestqt.qtbot import QtBot
 
     from pymmcore_gui.settings import Settings
@@ -75,3 +77,17 @@ def test_save_restore_state(
     # restore the state
     gui._restore_state()
     assert WidgetAction.STAGE_CONTROL not in gui._open_widgets()
+
+
+def test_ndv_viewers_in_main_window(qtbot: QtBot) -> None:
+    gui = MicroManagerGUI()
+    qtbot.addWidget(gui)
+    central_area = cast("CDockAreaWidget", gui._central_dock_area)
+    assert central_area.dockWidgetsCount() == 1
+    gui.mmcore.mda.run(
+        useq.MDASequence(
+            time_plan=useq.TIntervalLoops(interval=1, loops=2),  # pyright: ignore
+            channels=["DAPI", "FITC"],  #  pyright: ignore
+        ),
+    )
+    assert central_area.dockWidgetsCount() == 2
