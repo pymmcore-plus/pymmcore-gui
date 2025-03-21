@@ -6,10 +6,11 @@ import importlib.util
 import os
 import sys
 import traceback
+import warnings
 from contextlib import suppress
 from typing import TYPE_CHECKING, cast
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import QCoreApplication, QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
 from superqt.utils import WorkerBase
@@ -73,14 +74,25 @@ def parse_args(args: Sequence[str] = ()) -> argparse.Namespace:
     return parser.parse_args(args)
 
 
-def main() -> MMQApplication:
+def main() -> QCoreApplication:
     """Run the Micro-Manager GUI."""
     args = parse_args()
 
-    app = MMQApplication(sys.argv)
+    # Note: in practice this should almost never be None,
+    # but in the case of testing, it's conceivable that it could be.
+    if (app := QApplication.instance()) is None:
+        app = MMQApplication(sys.argv)
+    elif not isinstance(app, MMQApplication):  # pragma: no cover
+        warnings.warn(
+            "A QApplication instance already exists, but it is not MMQApplication. "
+            " This may cause unexpected behavior.",
+            stacklevel=2,
+        )
+
     _install_excepthook()
 
     win = MicroManagerGUI()
+    QTimer.singleShot(0, lambda: win._restore_state(True))
 
     # FIXME: be better...
     try:
@@ -90,8 +102,6 @@ def main() -> MMQApplication:
             win.mmcore.loadSystemConfiguration()
     except Exception as e:
         print(f"Failed to load system configuration: {e}")
-
-    win.show()
 
     splsh = "_PYI_SPLASH_IPC" in os.environ and importlib.util.find_spec("pyi_splash")
     if splsh:  # pragma: no cover
