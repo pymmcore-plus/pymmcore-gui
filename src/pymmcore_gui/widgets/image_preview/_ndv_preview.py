@@ -34,20 +34,21 @@ class _StreamingWrapper(ndv.DataWrapper):
         return 1
 
     def isel(self, index: Mapping[int, int | slice]) -> np.ndarray:
-        """Return a slice of the data as a numpy array."""
+        """Return a slice of the data as a numpy array, never empty in axis 0."""
         strm = self._streamer
         max_planes = strm._max_planes
         count = strm._count
         start = strm._start
 
-        if count < max_planes:
+        if count == 0:
+            # Return a dummy first frame to maintain correct ndim
+            ary = strm._data[:1]
+        elif count < max_planes:
             ary = strm._data[:count]
         else:
-            # Buffer is full; build circular index over first axis (time)
             idx = np.arange(start, start + max_planes) % max_planes
             ary = strm._data[idx]
 
-        # Translate the index mapping into a tuple of slices or ints
         idx_tuple = tuple(index.get(k, slice(None)) for k in range(ary.ndim))
         return ary[idx_tuple]
 
