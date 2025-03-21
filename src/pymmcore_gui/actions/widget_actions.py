@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Generic, TypeVar, cast
 from pymmcore_plus import CMMCorePlus
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
+from PyQt6Ads import DockWidgetArea, SideBarLocation
 
 from pymmcore_gui.actions._action_info import ActionKey
 
@@ -157,7 +158,7 @@ class WidgetAction(ActionKey):
             raise NotImplementedError(f"No constructor has been provided for {self!r}")
         return info.create_widget(parent)
 
-    def dock_area(self) -> Qt.DockWidgetArea | None:
+    def dock_area(self) -> DockWidgetArea | SideBarLocation | None:
         """Return the default dock area for this widget."""
         return WidgetActionInfo.for_key(self).dock_area
 
@@ -176,7 +177,9 @@ class WidgetActionInfo(ActionInfo, Generic[WT]):
     # function that can be called with (parent: QWidget) -> QWidget
     create_widget: Callable[[QWidget], WT] | None = None
     # Use None to indicate that the widget should not be docked
-    dock_area: Qt.DockWidgetArea | None = Qt.DockWidgetArea.RightDockWidgetArea
+    dock_area: DockWidgetArea | SideBarLocation | None = (
+        DockWidgetArea.RightDockWidgetArea
+    )
 
 
 show_about = WidgetActionInfo(
@@ -191,7 +194,7 @@ show_console = WidgetActionInfo(
     shortcut="Ctrl+Shift+C",
     icon="iconoir:terminal",
     create_widget=create_mm_console,
-    dock_area=Qt.DockWidgetArea.BottomDockWidgetArea,
+    dock_area=DockWidgetArea.BottomDockWidgetArea,
 )
 
 show_property_browser = WidgetActionInfo(
@@ -199,7 +202,7 @@ show_property_browser = WidgetActionInfo(
     shortcut="Ctrl+Shift+P",
     icon="mdi-light:format-list-bulleted",
     create_widget=create_property_browser,
-    dock_area=None,
+    dock_area=SideBarLocation.SideBarLeft,
 )
 
 show_install_devices = WidgetActionInfo(
@@ -222,7 +225,7 @@ show_camera_roi = WidgetActionInfo(
     shortcut="Ctrl+Shift+R",
     icon="material-symbols-light:screenshot-region-rounded",
     create_widget=create_camera_roi,
-    dock_area=Qt.DockWidgetArea.LeftDockWidgetArea,
+    dock_area=DockWidgetArea.LeftDockWidgetArea,
 )
 
 show_config_groups = WidgetActionInfo(
@@ -230,7 +233,7 @@ show_config_groups = WidgetActionInfo(
     shortcut="Ctrl+Shift+G",
     icon="mdi-light:format-list-bulleted",
     create_widget=create_config_groups,
-    dock_area=Qt.DockWidgetArea.LeftDockWidgetArea,
+    dock_area=DockWidgetArea.LeftDockWidgetArea,
 )
 
 show_pixel_config = WidgetActionInfo(
@@ -253,7 +256,7 @@ show_stage_control = WidgetActionInfo(
     shortcut="Ctrl+Shift+S",
     icon="fa:arrows",
     create_widget=create_stage_widget,
-    dock_area=Qt.DockWidgetArea.LeftDockWidgetArea,
+    dock_area=DockWidgetArea.LeftDockWidgetArea,
 )
 
 show_config_wizard = WidgetActionInfo(

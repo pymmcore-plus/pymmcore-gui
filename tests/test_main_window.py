@@ -1,16 +1,20 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
+import useq
 from pymmcore_widgets import MDAWidget
-from PyQt6.QtWidgets import QApplication, QDialog, QDockWidget
+from PyQt6.QtWidgets import QApplication, QDialog
+from PyQt6Ads import CDockWidget
 
 from pymmcore_gui import CoreAction, MicroManagerGUI, WidgetAction
-from pymmcore_gui._main_window import Toolbar
 from pymmcore_gui.widgets._toolbars import ShuttersToolbar
 
 if TYPE_CHECKING:
+    from PyQt6Ads import CDockAreaWidget
     from pytestqt.qtbot import QtBot
+
+    from pymmcore_gui.settings import Settings
 
 
 def test_main_window(qtbot: QtBot, qapp: QApplication) -> None:
@@ -31,7 +35,7 @@ def test_main_window(qtbot: QtBot, qapp: QApplication) -> None:
         assert c_action in gui._qactions
 
     assert isinstance(gui.get_widget(WidgetAction.MDA_WIDGET), MDAWidget)
-    assert isinstance(gui.get_dock_widget(WidgetAction.MDA_WIDGET), QDockWidget)
+    assert isinstance(gui.get_dock_widget(WidgetAction.MDA_WIDGET), CDockWidget)
 
 
 def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path) -> None:
@@ -39,9 +43,7 @@ def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path) -> None:
     gui = MicroManagerGUI()
     qtbot.addWidget(gui)
 
-    sh_toolbar = gui.TOOLBARS[Toolbar.SHUTTERS](gui._mmc, gui)  # type: ignore
-    assert sh_toolbar is not None
-    assert isinstance(sh_toolbar, ShuttersToolbar)
+    sh_toolbar = ShuttersToolbar(gui._mmc, gui)
 
     # in our test cfg we have 3 shutters
     assert sh_toolbar.layout().count() == 3  # pyright: ignore
@@ -52,3 +54,40 @@ def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path) -> None:
     # in our test cfg we have 2 shutters
     assert sh_toolbar.layout().count() == 2  # pyright: ignore
     assert len(sh_toolbar.actions()) == 2
+
+
+def test_save_restore_state(
+    qtbot: QtBot, qapp: QApplication, settings: Settings
+) -> None:
+    gui = MicroManagerGUI()
+    qtbot.addWidget(gui)
+    qapp.processEvents()  # force the initial _restore_state to run.
+
+    # the thing we're going to restore
+    assert WidgetAction.STAGE_CONTROL not in gui._open_widgets()
+
+    # save the state
+    assert not settings.window.geometry
+    gui._save_state()
+    assert settings.window.geometry
+
+    # add a widget
+    gui.get_widget(WidgetAction.STAGE_CONTROL)
+    assert WidgetAction.STAGE_CONTROL in gui._open_widgets()
+    # restore the state
+    gui._restore_state()
+    assert WidgetAction.STAGE_CONTROL not in gui._open_widgets()
+
+
+def test_ndv_viewers_in_main_window(qtbot: QtBot) -> None:
+    gui = MicroManagerGUI()
+    qtbot.addWidget(gui)
+    central_area = cast("CDockAreaWidget", gui._central_dock_area)
+    assert central_area.dockWidgetsCount() == 1
+    gui.mmcore.mda.run(
+        useq.MDASequence(
+            time_plan=useq.TIntervalLoops(interval=1, loops=2),  # pyright: ignore
+            channels=["DAPI", "FITC"],  #  pyright: ignore
+        ),
+    )
+    assert central_area.dockWidgetsCount() == 2
