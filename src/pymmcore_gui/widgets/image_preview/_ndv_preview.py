@@ -2,20 +2,110 @@ from __future__ import annotations
 
 from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypeGuard
 
+import ndv
 import numpy as np
-from ndv import StreamingViewer
+import numpy.typing as npt
 from PyQt6.QtGui import QImage
-from PyQt6.QtWidgets import QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QApplication, QVBoxLayout, QWidget
 
 from pymmcore_gui.widgets.image_preview._preview_base import _ImagePreviewBase
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     import rendercanvas.qt
     from pymmcore_plus import CMMCorePlus
 
     class QRenderWidget(rendercanvas.qt.QRenderWidget, QWidget): ...  # pyright: ignore [reportIncompatibleMethodOverride]
+
+
+class _StreamingWrapper(ndv.DataWrapper):
+    def __init__(self, streamer: Streamer):
+        super().__init__(streamer._data)
+        self._streamer = streamer
+
+    @classmethod
+    def supports(cls, obj: Any) -> TypeGuard[Any]:
+        return False
+
+    def guess_channel_axis(self) -> int:
+        return 1
+
+    def isel(self, index: Mapping[int, int | slice]) -> np.ndarray:
+        """Return a slice of the data as a numpy array."""
+        strm = self._streamer
+        max_planes = strm._max_planes
+        count = strm._count
+        start = strm._start
+
+        if count < max_planes:
+            ary = strm._data[:count]
+        else:
+            # Buffer is full; build circular index over first axis (time)
+            idx = np.arange(start, start + max_planes) % max_planes
+            ary = strm._data[idx]
+
+        # Translate the index mapping into a tuple of slices or ints
+        idx_tuple = tuple(index.get(k, slice(None)) for k in range(ary.ndim))
+        return ary[idx_tuple]
+
+
+class Streamer:
+    def __init__(
+        self,
+        viewer: ndv.ArrayViewer,
+        plane_shape: tuple[int, ...],
+        num_channels: int = 1,
+        max_planes: int = 100,
+        dtype: npt.DTypeLike = np.uint16,
+        *,
+        process_events_on_update: bool = True,
+    ) -> None:
+        self._plane_shape = plane_shape
+        self._max_planes = max_planes
+        self._num_channels = num_channels
+        self._data = np.zeros((max_planes, num_channels, *plane_shape), dtype=dtype)
+        self._wrapper = _StreamingWrapper(self)
+
+        self.viewer = viewer
+        self.process_events_on_update = process_events_on_update
+
+        self._start = 0  # index of the oldest frame in the buffer
+        self._count = 0  # number of valid frames
+        self._current_frame = -1  # logical time index for grouped channels
+
+        viewer.data = self._wrapper
+        viewer.display_model.channel_axis = 1
+        viewer._update_visible_sliders()  # BUG
+
+    def append(self, data: np.ndarray, channel: int = 0) -> None:
+        if channel == 0 or self._current_frame == -1:
+            self._start_new_frame()
+
+        if data.shape != self._plane_shape:
+            raise ValueError(f"Item must have shape {self._plane_shape}")
+        if not (0 <= channel < self._num_channels):
+            raise ValueError(f"Channel index {channel} out of range")
+
+        self._data[self._current_frame, channel] = data
+
+        self.viewer.display_model.current_index.update({0: self._count - 1})
+        if self.process_events_on_update:
+            QApplication.processEvents()
+
+    def _start_new_frame(self) -> None:
+        """Advance to a new logical timepoint (frame)."""
+        if self._count < self._max_planes:
+            self._current_frame = self._count
+            self._count += 1
+        else:
+            # Advance _start first, then compute new end-of-buffer index
+            self._start = (self._start + 1) % self._max_planes
+            self._current_frame = (
+                self._start + self._max_planes - 1
+            ) % self._max_planes
 
 
 class NDVPreview(_ImagePreviewBase):
@@ -27,7 +117,8 @@ class NDVPreview(_ImagePreviewBase):
         use_with_mda: bool = False,
     ):
         super().__init__(parent, mmcore, use_with_mda=use_with_mda)
-        self._viewer = StreamingViewer()
+        self._viewer = ndv.ArrayViewer()
+        self._streamer: Streamer | None = None
         qwdg = self._viewer.widget()
         qwdg.setParent(self)
 
@@ -39,9 +130,8 @@ class NDVPreview(_ImagePreviewBase):
         super().attach(core)
 
     def set_data(self, data: np.ndarray) -> None:
-        # FIXME: need better public method to determine readiness.
-        if self._viewer.dtype is not None:
-            self._viewer.update_data(data)
+        if self._streamer is not None:
+            self._streamer.append(data)
 
     def _setup_viewer(self) -> None:
         if (core := self._mmc) is not None:
@@ -50,12 +140,14 @@ class NDVPreview(_ImagePreviewBase):
                 img_height = core.getImageHeight()
                 shape = (img_width, img_height)
                 np_dtype = f"uint{bits}"
-                self._viewer.setup(shape, np_dtype, 1)
-                self._viewer.update_data(_get_scope_img(shape, np_dtype))
-                try:
-                    self._viewer._handles[0].set_clims((0, 2000))
-                except Exception:
-                    pass  # :)
+                self._streamer = Streamer(
+                    self._viewer, shape, max_planes=20, dtype=np_dtype
+                )
+                self._streamer.append(_get_scope_img(shape, np_dtype))
+                # try:
+                #     self._viewer._handles[0].set_clims((0, 2000))
+                # except Exception:
+                #     pass  # :)
 
     def _on_system_config_loaded(self) -> None:
         self._setup_viewer()

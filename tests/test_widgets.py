@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import patch
 
-from pymmcore_gui.widgets.image_preview._pygfx_image import PygfxImagePreview
+import pytest
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
@@ -11,6 +11,12 @@ if TYPE_CHECKING:
 
 
 def test_image_preview(mmcore: CMMCorePlus, qtbot: QtBot) -> None:
+    try:
+        from pymmcore_gui.widgets._pygfx_image import PygfxImagePreview
+    except ImportError:
+        pytest.skip("PygfxImagePreview not available")
+        return
+
     img_preview = PygfxImagePreview(None, mmcore)
     qtbot.addWidget(img_preview)
     assert img_preview.data is None
