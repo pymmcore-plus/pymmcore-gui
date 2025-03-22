@@ -13,18 +13,23 @@ from pymmcore_widgets import ConfigWizard
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QAction, QCloseEvent, QGuiApplication, QIcon
 from PyQt6.QtWidgets import (
+    QApplication,
     QMainWindow,
     QMenu,
     QMenuBar,
+    QPushButton,
+    QStatusBar,
     QToolBar,
     QWidget,
 )
 from PyQt6Ads import CDockManager, CDockWidget, SideBarLocation
+from superqt import QIconifyIcon
 
 from pymmcore_gui.actions._core_qaction import QCoreAction
 from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
 from ._ndv_viewers import NDVViewersManager
+from ._notification_manager import NotificationManager
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
 from .settings import Settings
@@ -55,6 +60,9 @@ if TYPE_CHECKING:
     from pymmcore_gui.widgets._exception_log import ExceptionLog
     from pymmcore_gui.widgets._mm_console import MMConsole
     from pymmcore_gui.widgets._stage_control import StagesControlWidget
+
+    from ._app import MMQApplication
+
 
 logger = logging.getLogger("pymmcore_gui")
 
@@ -148,6 +156,21 @@ class MicroManagerGUI(QMainWindow):
         self._img_preview.setObjectName("ImagePreview")
         self._viewers_manager = NDVViewersManager(self, self._mmc)
         self._viewers_manager.viewerCreated.connect(self._on_viewer_created)
+        self._notification_manager = NotificationManager(self)
+        if app := QApplication.instance():
+            if hasattr(app, "exceptionRaised"):
+                cast("MMQApplication", app).exceptionRaised.connect(self._on_exception)
+
+        # Status bar -----------------------------------------
+
+        self._status_bar = QStatusBar(self)
+        self._status_bar.setMaximumHeight(26)
+        self.setStatusBar(self._status_bar)
+
+        self.bell_button = QPushButton("")
+        self.bell_button.setIcon(QIconifyIcon("codicon:bell"))
+        self.bell_button.setFlat(True)  # Make it blend nicely
+        self._status_bar.addPermanentWidget(self.bell_button)
 
         # MENUS ====================================
         # To add menus or menu items, add them to the MENUS dict above
@@ -182,6 +205,11 @@ class MicroManagerGUI(QMainWindow):
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
         QTimer.singleShot(0, self._restore_state)
+
+    @property
+    def nm(self) -> NotificationManager:
+        """A callable that can be used to show a message in the status bar."""
+        return self._notification_manager
 
     def _on_system_config_loaded(self) -> None:
         settings = Settings.instance()
@@ -437,3 +465,17 @@ class MicroManagerGUI(QMainWindow):
         dw = CDockWidget(f"ndv-{sha}")
         dw.setWidget(q_viewer)
         self.dock_manager.addDockWidgetTabToArea(dw, self._central_dock_area)
+
+    def _on_exception(self, exc: BaseException) -> None:
+        """Show a notification when an exception is raised."""
+        see_tb = "See traceback"
+
+        def _open_traceback(choice: str | None) -> None:
+            if choice == see_tb:
+                log = self.get_widget(WidgetAction.EXCEPTION_LOG)
+                log.show_exception(exc)
+                log.show()
+
+        self._notification_manager.show_error_message(
+            str(exc), see_tb, on_action=_open_traceback
+        )
