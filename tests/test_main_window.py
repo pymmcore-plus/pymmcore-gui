@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
+from unittest.mock import patch
 
 import useq
 from pymmcore_widgets import MDAWidget
@@ -8,6 +9,8 @@ from PyQt6.QtWidgets import QApplication, QDialog
 from PyQt6Ads import CDockWidget
 
 from pymmcore_gui import CoreAction, MicroManagerGUI, WidgetAction
+from pymmcore_gui._app import MMQApplication
+from pymmcore_gui._notification_manager import NotificationManager
 from pymmcore_gui.widgets._toolbars import ShuttersToolbar
 
 if TYPE_CHECKING:
@@ -91,3 +94,18 @@ def test_ndv_viewers_in_main_window(qtbot: QtBot) -> None:
         ),
     )
     assert central_area.dockWidgetsCount() == 2
+
+
+def test_main_window_notifications(qtbot: QtBot) -> None:
+    """Test that notifications are created and removed correctly."""
+    gui = MicroManagerGUI()
+    qtbot.addWidget(gui)
+    assert isinstance(gui.nm, NotificationManager)
+
+    with patch.object(gui.nm, "show_error_message") as mock_show_error:
+        err = ValueError("Boom!")
+        app = QApplication.instance()
+        assert isinstance(app, MMQApplication)
+        app.exceptionRaised.emit(err)
+        mock_show_error.assert_called_once()
+        assert mock_show_error.call_args[0][0] == "Boom!"
