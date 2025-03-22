@@ -27,6 +27,7 @@ from superqt import QIconifyIcon
 
 from pymmcore_gui.actions._core_qaction import QCoreAction
 from pymmcore_gui.actions.widget_actions import WidgetActionInfo
+from pymmcore_gui.widgets.image_preview._ndv_preview import NDVPreview
 
 from ._ndv_viewers import NDVViewersManager
 from ._notification_manager import NotificationManager
@@ -37,7 +38,7 @@ from .settings import Settings
 try:
     from .widgets._pygfx_image import PygfxImagePreview as ImagePreview
 except ImportError:
-    from pymmcore_widgets import ImagePreview  # type: ignore
+    pass  # type: ignore
 
 from .widgets._toolbars import OCToolBar
 
@@ -152,7 +153,7 @@ class MicroManagerGUI(QMainWindow):
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
 
-        self._img_preview = ImagePreview(self, mmcore=self._mmc)
+        self._img_preview = NDVPreview(self, mmcore=self._mmc)
         self._img_preview.setObjectName("ImagePreview")
         self._viewers_manager = NDVViewersManager(self, self._mmc)
         self._viewers_manager.viewerCreated.connect(self._on_viewer_created)
