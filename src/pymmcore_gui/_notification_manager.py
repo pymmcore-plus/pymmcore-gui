@@ -92,7 +92,7 @@ class NotificationManager(QObject):
     def _show_notification_widget(self, notification: Notification) -> None:
         """Show a new notification toast."""
         if not isinstance(parent := self.parent(), QWidget):
-            return
+            return  # pragma: no cover
 
         widget = NotificationToast(notification, self, parent)
         self._notification_widgets.insert(0, widget)
@@ -122,7 +122,7 @@ class NotificationManager(QObject):
         """Animate notifications to their new positions based on cumulative heights."""
 
         if not isinstance(parent := self.parent(), QWidget):
-            return
+            return  # pragma: no cover
 
         offset = 0
         spacing = 8  # Extra spacing between notifications

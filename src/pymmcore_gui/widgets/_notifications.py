@@ -25,7 +25,7 @@ icon = {
 class NotificationToast(QWidget):
     WIDTH = 400  # Fixed width for consistency
     MARGIN = 30  # Margin from window edges
-    DURATION: int = 10  # Default duration in seconds
+    DURATION: float = 10  # Default duration in seconds
 
     def __init__(
         self,
@@ -104,6 +104,7 @@ class NotificationToast(QWidget):
         btn_layout.setContentsMargins(0, 0, 0, 0)
         for action in notification.actions:
             button = QPushButton(action)
+            button.setObjectName(action)
             button.clicked.connect(self._on_btn_clicked)
             btn_layout.addWidget(button, 0, Qt.AlignmentFlag.AlignRight)
 
@@ -127,7 +128,7 @@ class NotificationToast(QWidget):
         # Auto-dismiss timer
         self.auto_hide_timer = QTimer()
         self.auto_hide_timer.setSingleShot(True)
-        self.auto_hide_timer.setInterval(self.DURATION * 1000)
+        self.auto_hide_timer.setInterval(int(self.DURATION * 1000))
         self.auto_hide_timer.timeout.connect(self.fade_out)
         self.auto_hide_timer.start()
 
