@@ -96,8 +96,53 @@ def create_camera_roi(parent: QWidget) -> pmmw.CameraRoiWidget:
 def create_config_groups(parent: QWidget) -> pmmw.GroupPresetTableWidget:
     """Create the Config Groups widget."""
     from pymmcore_widgets import GroupPresetTableWidget
+    from PyQt6.QtWidgets import (
+        QHBoxLayout,
+        QLabel,
+        QPushButton,
+        QVBoxLayout,
+        QWidget,
+    )
 
-    return GroupPresetTableWidget(parent=parent, mmcore=_get_core(parent))
+    class _Customized(GroupPresetTableWidget):
+        def _add_groups_presets_buttons(self) -> QWidget:
+            self.groups_add_btn = QPushButton(text="+")
+            self.groups_add_btn.clicked.connect(self._add_group)
+            self.groups_remove_btn = QPushButton(text="-")
+            self.groups_remove_btn.clicked.connect(self._delete_group)
+            self.groups_edit_btn = QPushButton(text="Edit")
+            self.groups_edit_btn.clicked.connect(self._edit_group)
+
+            self.presets_add_btn = QPushButton(text="+")
+            self.presets_add_btn.clicked.connect(self._add_preset)
+            self.presets_remove_btn = QPushButton(text="-")
+            self.presets_remove_btn.clicked.connect(self._delete_preset)
+            self.presets_edit_btn = QPushButton(text="Edit")
+            self.presets_edit_btn.clicked.connect(self._edit_preset)
+
+            # groups
+            group_layout = QHBoxLayout()
+            group_layout.addWidget(QLabel("Group:"))
+            group_layout.addWidget(self.groups_add_btn)
+            group_layout.addWidget(self.groups_remove_btn)
+            group_layout.addWidget(self.groups_edit_btn)
+
+            preset_layout = QHBoxLayout()
+            preset_layout.addWidget(QLabel("Preset:"))
+            preset_layout.addWidget(self.presets_add_btn)
+            preset_layout.addWidget(self.presets_remove_btn)
+            preset_layout.addWidget(self.presets_edit_btn)
+
+            main_wdg = QWidget()
+            main_wdg_layout = QVBoxLayout(main_wdg)
+            main_wdg_layout.setSpacing(2)
+            main_wdg_layout.setContentsMargins(0, 0, 0, 0)
+            main_wdg_layout.addLayout(group_layout)
+            main_wdg_layout.addLayout(preset_layout)
+
+            return main_wdg
+
+    return _Customized(parent=parent, mmcore=_get_core(parent))
 
 
 def create_pixel_config(parent: QWidget) -> pmmw.PixelConfigurationWidget:
