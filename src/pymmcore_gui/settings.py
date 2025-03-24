@@ -126,6 +126,7 @@ class SettingsV1(BaseMMSettings):
     version: Literal["1.0"] = "1.0"
     window: WindowSettingsV1 = Field(default_factory=WindowSettingsV1)
     last_config: Path | None = None
+    last_save_directory: Path | None = None
 
     @property
     def version_tuple(self) -> tuple[int, int, str]:

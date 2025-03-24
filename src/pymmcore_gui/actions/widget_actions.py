@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Generic, TypeVar, cast
 
 from pymmcore_plus import CMMCorePlus, PropertyType
@@ -83,7 +84,23 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
     # from pymmcore_gui.widgets import _MDAWidget
     from pymmcore_widgets import MDAWidget
 
-    return MDAWidget(parent=parent, mmcore=_get_core(parent))
+    from pymmcore_gui.settings import Settings
+
+    wdg = MDAWidget(parent=parent, mmcore=_get_core(parent))
+    wdg.save_info.save_name.setText("qi.ome.tiff")
+    wdg.save_info.save_name.editingFinished.emit()
+
+    settings = Settings.instance()
+    if (dir := settings.last_save_directory) and dir.exists():
+        wdg.save_info.save_dir.setText(str(dir))
+
+    @wdg.save_info.save_dir.textChanged.connect
+    def _on_change(text: str):
+        if (path := Path(text)).exists():
+            settings.last_save_directory = path
+            settings.flush()
+
+    return wdg
 
 
 def create_camera_roi(parent: QWidget) -> pmmw.CameraRoiWidget:
