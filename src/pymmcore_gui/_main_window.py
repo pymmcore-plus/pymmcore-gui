@@ -148,11 +148,16 @@ class MicroManagerGUI(QMainWindow):
 
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
-        self._mmc.events.imageSnapped.connect(self._on_image_snapped)
-        self._mmc.events.sequenceAcquisitionStarted.connect(self._on_streaming_started)
-        self._mmc.events.continuousSequenceAcquisitionStarted.connect(
-            self._on_streaming_started
-        )
+
+        self._is_mda_running = False
+        mda_ev = self._mmc.mda.events
+        mda_ev.sequenceStarted.connect(lambda: setattr(self, "_is_mda_running", True))
+        mda_ev.sequenceFinished.connect(lambda: setattr(self, "_is_mda_running", False))
+
+        ev = self._mmc.events
+        ev.imageSnapped.connect(self._on_image_snapped)
+        ev.sequenceAcquisitionStarted.connect(self._on_streaming_started)
+        ev.continuousSequenceAcquisitionStarted.connect(self._on_streaming_started)
         self._img_preview: CDockWidget | None = None
 
         self._viewers_manager = NDVViewersManager(self, self._mmc)
@@ -233,12 +238,12 @@ class MicroManagerGUI(QMainWindow):
         return preview
 
     def _on_streaming_started(self) -> None:
-        if not self._mmc.mda.is_running():
+        if not self._is_mda_running:
             if preview := self._create_or_show_img_preview():
                 preview._on_streaming_start()
 
     def _on_image_snapped(self) -> None:
-        if not self._mmc.mda.is_running():
+        if not self._is_mda_running:
             if preview := self._create_or_show_img_preview():
                 preview.set_data(self._mmc.getImage())
 
