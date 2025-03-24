@@ -43,8 +43,6 @@ def test_viewers_manager(
     with qtbot.waitSignal(dummy.destroyed, timeout=1000):
         dummy.deleteLater()
     QApplication.processEvents()
-    QApplication.processEvents()
-    gc.collect()
     gc.collect()
     # only checking for strong references when WE have created the datahandler.
     # otherwise... the NDV datawrapper itself may be holding a strong ref?
@@ -54,7 +52,6 @@ def test_viewers_manager(
             if "vispy" in type(viewer._canvas).__name__.lower():
                 # don't even bother... vispy is a mess of hard references
                 del viewer._canvas
-                del viewer._histogram
                 continue
             referrers = gc.get_referrers(viewer)[1:]
             pytest.fail(f"Viewer {viewer} not deleted. Still referenced by {referrers}")

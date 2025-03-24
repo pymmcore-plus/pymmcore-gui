@@ -36,15 +36,16 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "ndv[pygfx]>=0.2.2",
+    "ndv[vispy]>=0.2.2",
     "pydantic-settings>=2.7.1",
     "pymmcore-plus[cli]>=0.13.2",
     "pymmcore-widgets>=0.9.0",
     "PyQt6==6.7.1",
+    "pyqt6ads>=4.4.0.post1",
     "pyright>=1.1.393",
     "pyyaml>=6.0.2",
     "qtconsole>=5.6.1",
-    "rich",                         # also in pymmcore-plus[cli] above
+    "rich", # also in pymmcore-plus[cli] above
     "superqt[cmap,iconify]>=0.7.1",
     "tifffile>=2024.12.12",
     "tqdm>=4.67.1",
@@ -95,7 +96,7 @@ repository = "https://github.com/tlambert03/pymmcore-gui"
 [tool.ruff]
 line-length = 88
 target-version = "py310"
-src = ["src"]
+src = ["src", "tests"]
 
 # https://docs.astral.sh/ruff/rules
 [tool.ruff.lint]
@@ -147,6 +148,7 @@ ignore_missing_imports = true
 include = ["src", "tests"]
 pythonVersion = "3.10"
 enableExperimentalFeatures = true
+reportMissingImports = false
 verboseOutput = true
 venv = ".venv"
 
