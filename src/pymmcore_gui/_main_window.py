@@ -8,10 +8,19 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast, overload
 from weakref import WeakValueDictionary
 
+import ndv
+import tifffile
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets import ConfigWizard
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QAction, QCloseEvent, QGuiApplication, QIcon
+from PyQt6.QtGui import (
+    QAction,
+    QCloseEvent,
+    QDragEnterEvent,
+    QDropEvent,
+    QGuiApplication,
+    QIcon,
+)
 from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -39,7 +48,6 @@ from .widgets._toolbars import OCToolBar
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    import ndv
     from pymmcore_widgets import (
         CameraRoiWidget,
         ConfigWizard,
@@ -135,6 +143,7 @@ class MicroManagerGUI(QMainWindow):
         self.setWindowTitle("Mike")
         self.setWindowIcon(QIcon(str(ICON)))
         self.setObjectName("MicroManagerGUI")
+        self.setAcceptDrops(True)
 
         # Serves to cache created QAction objects so that they can be re-used
         # when the same action is requested multiple times. This is useful to
@@ -463,6 +472,25 @@ class MicroManagerGUI(QMainWindow):
             )
         return self._dock_widgets[key]
 
+    def dragEnterEvent(self, a0: QDragEnterEvent | None) -> None:
+        if a0 and (data := a0.mimeData()) and data.hasUrls():
+            a0.acceptProposedAction()
+
+    def dropEvent(self, a0: QDropEvent | None) -> None:
+        if a0 and (data := a0.mimeData()):
+            for url in data.urls():
+                local_path = Path(url.toLocalFile())
+                if local_path.suffix in {".tif", ".tiff"}:
+                    ary = tifffile.imread(local_path)
+                    viewer = ndv.ArrayViewer(ary)
+
+                    dw = CDockWidget(f"{local_path.name[:40]}")
+                    dw.setWidget(viewer.widget())
+                    dw._viewer = viewer  # pyright: ignore
+                    self.dock_manager.addDockWidgetTabToArea(
+                        dw, self._central_dock_area
+                    )
+
     def _toggle_action_widget(self, checked: bool) -> None:
         """Callback that toggles the visibility of a widget.
 
@@ -499,6 +527,7 @@ class MicroManagerGUI(QMainWindow):
         q_viewer.setWindowFlags(Qt.WindowType.Dialog)
 
         dw = CDockWidget(f"ndv-{sha}")
+        dw._viewer = ndv_viewer  # pyright: ignore
         dw.setWidget(q_viewer)
         self.dock_manager.addDockWidgetTabToArea(dw, self._central_dock_area)
 

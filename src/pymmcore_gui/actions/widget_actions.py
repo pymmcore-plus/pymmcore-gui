@@ -91,11 +91,11 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
     wdg.save_info.save_name.editingFinished.emit()
 
     settings = Settings.instance()
-    if (dir := settings.last_save_directory) and dir.exists():
-        wdg.save_info.save_dir.setText(str(dir))
+    if (dir_ := settings.last_save_directory) and dir_.exists():
+        wdg.save_info.save_dir.setText(str(dir_))
 
-    @wdg.save_info.save_dir.textChanged.connect
-    def _on_change(text: str):
+    @wdg.save_info.save_dir.textChanged.connect  # type: ignore
+    def _on_change(text: str) -> None:
         if (path := Path(text)).exists():
             settings.last_save_directory = path
             settings.flush()
