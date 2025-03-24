@@ -2,31 +2,23 @@ from __future__ import annotations
 
 import sys
 import warnings
-from typing import TYPE_CHECKING, Any, TypeGuard, cast
+from typing import TYPE_CHECKING, Any, TypeGuard
 from weakref import WeakValueDictionary
 
 import ndv
 import numpy as np
+import useq
 from ndv import DataWrapper
 from pymmcore_plus.mda.handlers import TensorStoreHandler
 from pymmcore_plus.mda.handlers._5d_writer_base import _5DWriterBase
-from PyQt6.QtCore import QObject, Qt, QTimer
+from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 from PyQt6.QtWidgets import (
     QWidget,
 )
-from typing import TYPE_CHECKING
-from weakref import WeakValueDictionary
-
-import ndv
-import useq
-from pymmcore_plus.mda.handlers import TensorStoreHandler
-from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
 if TYPE_CHECKING:
     from collections.abc import Hashable, Iterator, Mapping, Sequence
 
-    import useq
-    import numpy as np
     from ndv.models._array_display_model import IndexMap
     from pymmcore_plus import CMMCorePlus
     from pymmcore_plus.mda import SupportsFrameReady
