@@ -17,6 +17,7 @@ from superqt.utils import WorkerBase
 
 from pymmcore_gui import __version__
 from pymmcore_gui._main_window import ICON, MicroManagerGUI
+from pymmcore_gui.settings import Settings
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -99,7 +100,11 @@ def main() -> QCoreApplication:
         if args.config:
             win.mmcore.loadSystemConfiguration(args.config)
         else:
-            win.mmcore.loadSystemConfiguration()
+            last_config = Settings.instance().last_config
+            if last_config and last_config.exists():
+                win.mmcore.loadSystemConfiguration(str(last_config))
+            else:
+                win.mmcore.loadSystemConfiguration()
     except Exception as e:
         print(f"Failed to load system configuration: {e}")
 
