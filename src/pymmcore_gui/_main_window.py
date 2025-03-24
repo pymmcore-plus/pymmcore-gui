@@ -233,12 +233,14 @@ class MicroManagerGUI(QMainWindow):
         return preview
 
     def _on_streaming_started(self) -> None:
-        if preview := self._create_or_show_img_preview():
-            preview._on_streaming_start()
+        if not self._mmc.mda.is_running():
+            if preview := self._create_or_show_img_preview():
+                preview._on_streaming_start()
 
     def _on_image_snapped(self) -> None:
-        if preview := self._create_or_show_img_preview():
-            preview.set_data(self._mmc.getImage())
+        if not self._mmc.mda.is_running():
+            if preview := self._create_or_show_img_preview():
+                preview.set_data(self._mmc.getImage())
 
     def _on_system_config_loaded(self) -> None:
         settings = Settings.instance()
