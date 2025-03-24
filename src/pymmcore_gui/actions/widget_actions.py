@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Generic, TypeVar, cast
 
-from pymmcore_plus import CMMCorePlus
+from pymmcore_plus import CMMCorePlus, PropertyType
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
 from PyQt6Ads import DockWidgetArea, SideBarLocation
@@ -91,6 +91,18 @@ def create_camera_roi(parent: QWidget) -> pmmw.CameraRoiWidget:
     from pymmcore_widgets import CameraRoiWidget
 
     return CameraRoiWidget(parent=parent, mmcore=_get_core(parent))
+
+
+def create_illum_widget(parent: QWidget) -> pmmw.PropertiesWidget:
+    """Create the Camera ROI widget."""
+    from pymmcore_widgets import PropertiesWidget
+
+    return PropertiesWidget(
+        property_name_pattern="(Intensity|Power|test)s?",
+        property_type={PropertyType.Integer, PropertyType.Float},
+        parent=parent,
+        mmcore=_get_core(parent),
+    )
 
 
 def create_config_groups(parent: QWidget) -> pmmw.GroupPresetTableWidget:
@@ -192,6 +204,7 @@ class WidgetAction(ActionKey):
     CONFIG_GROUPS = "Configs and Preset"
     CAMERA_ROI = "Camera ROI"
     CONSOLE = "Console"
+    ILLUM = "Illumination"
     EXCEPTION_LOG = "Exception Log"
     STAGE_CONTROL = "Stage Control"
     CONFIG_WIZARD = "Hardware Config Wizard"
@@ -270,6 +283,14 @@ show_camera_roi = WidgetActionInfo(
     shortcut="Ctrl+Shift+R",
     icon="material-symbols-light:screenshot-region-rounded",
     create_widget=create_camera_roi,
+    dock_area=DockWidgetArea.LeftDockWidgetArea,
+)
+
+show_illum_widget = WidgetActionInfo(
+    key=WidgetAction.ILLUM,
+    shortcut="Ctrl+Shift+R",
+    icon="mdi:lightbulb-on-10",
+    create_widget=create_illum_widget,
     dock_area=DockWidgetArea.LeftDockWidgetArea,
 )
 
