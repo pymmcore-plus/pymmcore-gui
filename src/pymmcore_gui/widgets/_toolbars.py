@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import cast
 
 from pymmcore_plus import CMMCorePlus, DeviceType
-from pymmcore_widgets import ShuttersWidget
+from pymmcore_widgets import DefaultCameraExposureWidget, ShuttersWidget
 from PyQt6.QtWidgets import QToolBar, QWidget, QWidgetAction
 
 
@@ -22,6 +22,7 @@ class OCToolBar(QToolBar):
         mmc.events.channelGroupChanged.connect(self._refresh)
         mmc.events.configSet.connect(self._on_config_set)
         mmc.events.propertyChanged.connect(self._on_property_changed)
+
         self._refresh()
 
     def _on_config_set(self, group: str, config: str) -> None:
@@ -41,6 +42,9 @@ class OCToolBar(QToolBar):
         mmc = self.mmc
         if not (ch_group := mmc.getChannelGroup()):
             return
+
+        exposure = DefaultCameraExposureWidget(parent=self, mmcore=mmc)
+        self.addWidget(exposure)
 
         current = mmc.getCurrentConfig(ch_group)
         for preset_name in mmc.getAvailableConfigs(ch_group):
