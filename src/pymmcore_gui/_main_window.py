@@ -34,12 +34,6 @@ from ._notification_manager import NotificationManager
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
 from .settings import Settings
-
-try:
-    from .widgets._pygfx_image import PygfxImagePreview as ImagePreview
-except ImportError:
-    pass  # type: ignore
-
 from .widgets._toolbars import OCToolBar
 
 if TYPE_CHECKING:
@@ -152,9 +146,13 @@ class MicroManagerGUI(QMainWindow):
 
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
+        self._mmc.events.imageSnapped.connect(self._on_image_snapped)
+        self._mmc.events.sequenceAcquisitionStarted.connect(self._on_streaming_started)
+        self._mmc.events.continuousSequenceAcquisitionStarted.connect(
+            self._on_streaming_started
+        )
+        self._img_preview: CDockWidget | None = None
 
-        self._img_preview = NDVPreview(self, mmcore=self._mmc)
-        self._img_preview.setObjectName("ImagePreview")
         self._viewers_manager = NDVViewersManager(self, self._mmc)
         self._viewers_manager.viewerCreated.connect(self._on_viewer_created)
         self._notification_manager = NotificationManager(self)
@@ -202,7 +200,13 @@ class MicroManagerGUI(QMainWindow):
 
         self._central = CDockWidget("Viewers", self)
         self._central.setFeature(CDockWidget.DockWidgetFeature.NoTab, True)
-        self._central.setWidget(self._img_preview)
+        blank = QWidget()
+        blank.setObjectName("blank")
+        blank.setStyleSheet(
+            "background-color: qlineargradient("
+            "x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #333, stop: 1 #111);"
+        )
+        self._central.setWidget(blank)
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
         QTimer.singleShot(0, self._restore_state)
@@ -211,6 +215,28 @@ class MicroManagerGUI(QMainWindow):
     def nm(self) -> NotificationManager:
         """A callable that can be used to show a message in the status bar."""
         return self._notification_manager
+
+    def _create_or_show_img_preview(self) -> NDVPreview | None:
+        """Create or show the image preview widget, return True if created."""
+        preview = None
+        if self._img_preview is None:
+            preview = NDVPreview(self, mmcore=self._mmc)
+            self._img_preview = dw = CDockWidget("Preview", self)
+            self._img_preview.setWidget(preview)
+            self.dock_manager.addDockWidgetTabToArea(dw, self._central_dock_area)
+        elif not self._img_preview.isVisible():
+            self.dock_manager.addDockWidgetTabToArea(
+                self._img_preview, self._central_dock_area
+            )
+        return preview
+
+    def _on_streaming_started(self) -> None:
+        if preview := self._create_or_show_img_preview():
+            preview._on_streaming_start()
+
+    def _on_image_snapped(self) -> None:
+        if preview := self._create_or_show_img_preview():
+            preview.set_data(self._mmc.getImage())
 
     def _on_system_config_loaded(self) -> None:
         settings = Settings.instance()

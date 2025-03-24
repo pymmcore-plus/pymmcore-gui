@@ -127,10 +127,9 @@ class NDVPreview(_ImagePreviewBase):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(qwdg)
 
-    def attach(self, core: CMMCorePlus) -> None:
-        super().attach(core)
-
     def set_data(self, data: np.ndarray) -> None:
+        if self._streamer is None:
+            self._setup_viewer()
         if self._streamer is not None:
             self._streamer.append(data)
 
@@ -144,11 +143,6 @@ class NDVPreview(_ImagePreviewBase):
                 self._streamer = Streamer(
                     self._viewer, shape, max_planes=20, dtype=np_dtype
                 )
-                self._streamer.append(_get_scope_img(shape, np_dtype))
-                # try:
-                #     self._viewer._handles[0].set_clims((0, 2000))
-                # except Exception:
-                #     pass  # :)
 
     def _on_system_config_loaded(self) -> None:
         self._setup_viewer()
