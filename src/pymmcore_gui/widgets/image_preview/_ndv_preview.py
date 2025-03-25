@@ -71,6 +71,8 @@ class Streamer:
         self._wrapper = _StreamingWrapper(self)
 
         self.viewer = viewer
+        self.viewer._viewer_model.show_roi_button = False
+        self.viewer._viewer_model.show_3d_button = False
         self.process_events_on_update = process_events_on_update
 
         self._start = 0  # index of the oldest frame in the buffer
