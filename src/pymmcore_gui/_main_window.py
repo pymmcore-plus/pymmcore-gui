@@ -140,7 +140,7 @@ class MicroManagerGUI(QMainWindow):
 
     def __init__(self, *, mmcore: CMMCorePlus | None = None) -> None:
         super().__init__()
-        self.setWindowTitle("Christina (A QI Special)")
+        self.setWindowTitle("Python Micro-Manager")
         self.setWindowIcon(QIcon(str(ICON)))
         self.setObjectName("MicroManagerGUI")
         self.setAcceptDrops(True)
