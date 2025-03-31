@@ -2,18 +2,10 @@ version = 1
 revision = 1
 requires-python = ">=3.10"
 resolution-markers = [
-    "python_full_version >= '3.13' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version >= '3.13' and sys_platform == 'win32'",
-    "(python_full_version >= '3.13' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'win32')",
-    "python_full_version == '3.12.*' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version == '3.12.*' and sys_platform == 'win32'",
-    "(python_full_version == '3.12.*' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'win32')",
-    "python_full_version == '3.11.*' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version == '3.11.*' and sys_platform == 'win32'",
-    "(python_full_version == '3.11.*' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'win32')",
-    "python_full_version < '3.11' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version < '3.11' and sys_platform == 'win32'",
-    "(python_full_version < '3.11' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'win32')",
+    "python_full_version >= '3.13'",
+    "python_full_version == '3.12.*'",
+    "python_full_version == '3.11.*'",
+    "python_full_version < '3.11'",
 ]
 
 [[package]]
@@ -508,9 +500,7 @@ name = "ipython"
 version = "8.34.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.11' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version < '3.11' and sys_platform == 'win32'",
-    "(python_full_version < '3.11' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'win32')",
+    "python_full_version < '3.11'",
 ]
 dependencies = [
     { name = "colorama", marker = "python_full_version < '3.11' and sys_platform == 'win32'" },
@@ -535,15 +525,9 @@ name = "ipython"
 version = "9.0.2"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.13' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version >= '3.13' and sys_platform == 'win32'",
-    "(python_full_version >= '3.13' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'win32')",
-    "python_full_version == '3.12.*' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version == '3.12.*' and sys_platform == 'win32'",
-    "(python_full_version == '3.12.*' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'win32')",
-    "python_full_version == '3.11.*' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version == '3.11.*' and sys_platform == 'win32'",
-    "(python_full_version == '3.11.*' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'win32')",
+    "python_full_version >= '3.13'",
+    "python_full_version == '3.12.*'",
+    "python_full_version == '3.11.*'",
 ]
 dependencies = [
     { name = "colorama", marker = "python_full_version >= '3.11' and sys_platform == 'win32'" },
@@ -709,7 +693,7 @@ name = "macholib"
 version = "1.16.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "altgraph", marker = "sys_platform != 'win32'" },
+    { name = "altgraph" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/95/ee/af1a3842bdd5902ce133bd246eb7ffd4375c38642aeb5dc0ae3a0329dfa2/macholib-1.16.3.tar.gz", hash = "sha256:07ae9e15e8e4cd9a788013d81f5908b3609aa76f9b1421bae9c4d7606ec86a30", size = 59309 }
 wheels = [
@@ -777,15 +761,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/52/38/703169100fdde27957f061d4d0ea3e00525775a09acaccf7e655d9609d55/ml_dtypes-0.5.1-cp313-cp313t-macosx_10_13_universal2.whl", hash = "sha256:05f23447a1c20ddf4dc7c2c661aa9ed93fcb2658f1017c204d1e758714dc28a8", size = 693043 },
     { url = "https://files.pythonhosted.org/packages/28/ff/4e234c9c23e0d456f5da5a326c103bf890c746d93351524d987e41f438b3/ml_dtypes-0.5.1-cp313-cp313t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1b7fbe5571fdf28fd3aaab3ef4aafc847de9ebf263be959958c1ca58ec8eadf5", size = 4903946 },
     { url = "https://files.pythonhosted.org/packages/b7/45/c1a1ccfdd02bc4173ca0f4a2d327683a27df85797b885eb1da1ca325b85c/ml_dtypes-0.5.1-cp313-cp313t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d13755f8e8445b3870114e5b6240facaa7cb0c3361e54beba3e07fa912a6e12b", size = 5052731 },
-]
-
-[[package]]
-name = "mm-device-adapters"
-version = "73.2025.3.28"
-source = { registry = "https://pypi.org/simple" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fc/66/27d52fa6a08b3f99c76ba6ebd86de8d34d21cb8d7b2e710970efd089db2b/mm_device_adapters-73.2025.3.28-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:8b2799d0bb88a2731968e1c3172ff9fea69bf6b9f104425516d59a36064a6b48", size = 14899359 },
-    { url = "https://files.pythonhosted.org/packages/c8/b5/8e4b6730fe913f8b878a73458b7b28b56640d549797f64af511902647c71/mm_device_adapters-73.2025.3.28-py3-none-win_amd64.whl", hash = "sha256:ee3381f2fce90262aa9bcad23ce788222326dab3bf079d51814cec9ee18fd543", size = 34649932 },
 ]
 
 [[package]]
@@ -891,9 +866,7 @@ name = "numcodecs"
 version = "0.13.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.11' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version < '3.11' and sys_platform == 'win32'",
-    "(python_full_version < '3.11' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'win32')",
+    "python_full_version < '3.11'",
 ]
 dependencies = [
     { name = "numpy", marker = "python_full_version < '3.11'" },
@@ -923,15 +896,9 @@ name = "numcodecs"
 version = "0.15.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.13' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version >= '3.13' and sys_platform == 'win32'",
-    "(python_full_version >= '3.13' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'win32')",
-    "python_full_version == '3.12.*' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version == '3.12.*' and sys_platform == 'win32'",
-    "(python_full_version == '3.12.*' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'win32')",
-    "python_full_version == '3.11.*' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version == '3.11.*' and sys_platform == 'win32'",
-    "(python_full_version == '3.11.*' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'win32')",
+    "python_full_version >= '3.13'",
+    "python_full_version == '3.12.*'",
+    "python_full_version == '3.11.*'",
 ]
 dependencies = [
     { name = "deprecated", marker = "python_full_version >= '3.11'" },
@@ -1047,7 +1014,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess", marker = "sys_platform != 'win32'" },
+    { name = "ptyprocess" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450 }
 wheels = [
@@ -1473,7 +1440,6 @@ wheels = [
 name = "pymmcore-gui"
 source = { editable = "." }
 dependencies = [
-    { name = "mm-device-adapters", marker = "(platform_machine == 'x86_64' and sys_platform == 'darwin') or sys_platform == 'win32'" },
     { name = "ndv", extra = ["vispy"] },
     { name = "pydantic-settings" },
     { name = "pymmcore-plus", extra = ["cli"] },
@@ -1514,11 +1480,9 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "mm-device-adapters", marker = "platform_machine == 'x86_64' and sys_platform == 'darwin'", specifier = "~=73.0" },
-    { name = "mm-device-adapters", marker = "sys_platform == 'win32'", specifier = "~=73.0" },
     { name = "ndv", extras = ["vispy"], specifier = ">=0.2.2" },
     { name = "pydantic-settings", specifier = ">=2.7.1" },
-    { name = "pymmcore-plus", extras = ["cli"], specifier = ">=0.13.6" },
+    { name = "pymmcore-plus", extras = ["cli"], specifier = ">=0.13.2" },
     { name = "pymmcore-widgets", specifier = ">=0.9.0" },
     { name = "pyqt6", specifier = "==6.7.1" },
     { name = "pyqt6ads", specifier = ">=4.4.0.post1" },
@@ -1554,7 +1518,7 @@ dev = [
 
 [[package]]
 name = "pymmcore-plus"
-version = "0.13.6"
+version = "0.13.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
@@ -1567,9 +1531,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "useq-schema" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6f/6b/3e843372d878475c7a81ad548ee4ff82bfe17be93f3d0705eba9d49fc288/pymmcore_plus-0.13.6.tar.gz", hash = "sha256:3a153d4461025e66710d72f87146cf340940eb16daee627acd861b5c38e7faa4", size = 170742 }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/24/e9b2f962151e856f33a92ab9a3a482e5d6c43dcc3887c0fc3d9e5380e82d/pymmcore_plus-0.13.5.tar.gz", hash = "sha256:6fdec04a8ca91e31cdde25750c16e69b5d7db71331b9e44669780172bac000aa", size = 167717 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5b/b4/aec7eb1791d5edafad114e8caf3bf03aac3834a5134dfc2c6477c27513a4/pymmcore_plus-0.13.6-py3-none-any.whl", hash = "sha256:c65f9858182cf8a0fa3d1517a288261a161cdeea2a1dc01efcebbd25252a60be", size = 174091 },
+    { url = "https://files.pythonhosted.org/packages/d0/b8/83a311661f74ac9dde60b5c59fd14328e3a5aa83ad801eb6a14cb2e1a222/pymmcore_plus-0.13.5-py3-none-any.whl", hash = "sha256:e053a32eae4fca995b94fe000bc915f0d74b1488f0978976a702baf7cc041b35", size = 171513 },
 ]
 
 [package.optional-dependencies]
@@ -1618,7 +1582,7 @@ name = "pyobjc-framework-cocoa"
 version = "11.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pyobjc-core", marker = "sys_platform != 'win32'" },
+    { name = "pyobjc-core" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c5/32/53809096ad5fc3e7a2c5ddea642590a5f2cb5b81d0ad6ea67fdb2263d9f9/pyobjc_framework_cocoa-11.0.tar.gz", hash = "sha256:00346a8cb81ad7b017b32ff7bf596000f9faa905807b1bd234644ebd47f692c5", size = 6173848 }
 wheels = [
@@ -1634,8 +1598,8 @@ name = "pyobjc-framework-quartz"
 version = "11.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pyobjc-core", marker = "sys_platform != 'win32'" },
-    { name = "pyobjc-framework-cocoa", marker = "sys_platform != 'win32'" },
+    { name = "pyobjc-core" },
+    { name = "pyobjc-framework-cocoa" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a5/ad/f00f3f53387c23bbf4e0bb1410e11978cbf87c82fa6baff0ee86f74c5fb6/pyobjc_framework_quartz-11.0.tar.gz", hash = "sha256:3205bf7795fb9ae34747f701486b3db6dfac71924894d1f372977c4d70c3c619", size = 3952463 }
 wheels = [
@@ -2518,9 +2482,7 @@ name = "zarr"
 version = "2.18.3"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version < '3.11' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version < '3.11' and sys_platform == 'win32'",
-    "(python_full_version < '3.11' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'win32')",
+    "python_full_version < '3.11'",
 ]
 dependencies = [
     { name = "asciitree", marker = "python_full_version < '3.11'" },
@@ -2538,15 +2500,9 @@ name = "zarr"
 version = "2.18.4"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.13' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version >= '3.13' and sys_platform == 'win32'",
-    "(python_full_version >= '3.13' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'win32')",
-    "python_full_version == '3.12.*' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version == '3.12.*' and sys_platform == 'win32'",
-    "(python_full_version == '3.12.*' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'win32')",
-    "python_full_version == '3.11.*' and platform_machine == 'x86_64' and sys_platform == 'darwin'",
-    "python_full_version == '3.11.*' and sys_platform == 'win32'",
-    "(python_full_version == '3.11.*' and platform_machine != 'x86_64' and sys_platform == 'darwin') or (python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'win32')",
+    "python_full_version >= '3.13'",
+    "python_full_version == '3.12.*'",
+    "python_full_version == '3.11.*'",
 ]
 dependencies = [
     { name = "asciitree", marker = "python_full_version >= '3.11'" },
