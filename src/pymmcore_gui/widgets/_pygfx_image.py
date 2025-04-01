@@ -233,7 +233,10 @@ class PygfxImagePreview(QWidget):
 
     def timerEvent(self, a0: QTimerEvent | None) -> None:
         if (core := self._mmc) and core.getRemainingImageCount() > 0:
-            img = core.getLastImage()
+            try:
+                img = core.getLastImage()
+            except IndexError:  # pragma: no cover
+                return
             self.set_data(img)
 
     def _on_image_snapped(self) -> None:
