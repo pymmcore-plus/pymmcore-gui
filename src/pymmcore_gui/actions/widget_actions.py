@@ -192,7 +192,7 @@ show_about = WidgetActionInfo(
 show_console = WidgetActionInfo(
     key=WidgetAction.CONSOLE,
     shortcut="Ctrl+Shift+C",
-    icon="iconoir:terminal",
+    icon="mdi:console-line",
     create_widget=create_mm_console,
     dock_area=DockWidgetArea.BottomDockWidgetArea,
 )
@@ -200,7 +200,7 @@ show_console = WidgetActionInfo(
 show_property_browser = WidgetActionInfo(
     key=WidgetAction.PROP_BROWSER,
     shortcut="Ctrl+Shift+P",
-    icon="mdi-light:format-list-bulleted",
+    icon="mdi:view-sequential",
     create_widget=create_property_browser,
     dock_area=SideBarLocation.SideBarLeft,
 )
@@ -208,7 +208,7 @@ show_property_browser = WidgetActionInfo(
 show_install_devices = WidgetActionInfo(
     key=WidgetAction.INSTALL_DEVICES,
     shortcut="Ctrl+Shift+I",
-    icon="mdi-light:download",
+    icon="mdi:download",
     create_widget=create_install_widgets,
     dock_area=None,
 )
@@ -216,14 +216,14 @@ show_install_devices = WidgetActionInfo(
 show_mda_widget = WidgetActionInfo(
     key=WidgetAction.MDA_WIDGET,
     shortcut="Ctrl+Shift+M",
-    icon="qlementine-icons:cube-16",
+    icon="mdi:cube-outline",
     create_widget=create_mda_widget,
 )
 
 show_camera_roi = WidgetActionInfo(
     key=WidgetAction.CAMERA_ROI,
     shortcut="Ctrl+Shift+R",
-    icon="material-symbols-light:screenshot-region-rounded",
+    icon="mdi:crop",
     create_widget=create_camera_roi,
     dock_area=DockWidgetArea.LeftDockWidgetArea,
 )
@@ -231,7 +231,7 @@ show_camera_roi = WidgetActionInfo(
 show_config_groups = WidgetActionInfo(
     key=WidgetAction.CONFIG_GROUPS,
     shortcut="Ctrl+Shift+G",
-    icon="mdi-light:format-list-bulleted",
+    icon="mdi:view-list",
     create_widget=create_config_groups,
     dock_area=DockWidgetArea.LeftDockWidgetArea,
 )
@@ -239,14 +239,14 @@ show_config_groups = WidgetActionInfo(
 show_pixel_config = WidgetActionInfo(
     key=WidgetAction.PIXEL_CONFIG,
     shortcut="Ctrl+Shift+X",
-    icon="mdi-light:grid",
+    icon="mdi:table-edit",
     create_widget=create_pixel_config,
 )
 
 show_exception_log = WidgetActionInfo(
     key=WidgetAction.EXCEPTION_LOG,
     shortcut="Ctrl+Shift+E",
-    icon="mdi-light:alert",
+    icon="mdi:alert",
     create_widget=create_exception_log,
     dock_area=None,
 )
@@ -254,7 +254,7 @@ show_exception_log = WidgetActionInfo(
 show_stage_control = WidgetActionInfo(
     key=WidgetAction.STAGE_CONTROL,
     shortcut="Ctrl+Shift+S",
-    icon="fa:arrows",
+    icon="mdi:arrow-all",
     create_widget=create_stage_widget,
     dock_area=DockWidgetArea.LeftDockWidgetArea,
 )
