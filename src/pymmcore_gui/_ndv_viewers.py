@@ -13,7 +13,9 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
     import numpy as np
-    from ndv.models._array_display_model import IndexMap  # pyright: ignore[reportPrivateImportUsage]
+    from ndv.models._array_display_model import (
+        IndexMap,  # pyright: ignore[reportPrivateImportUsage]
+    )
     from pymmcore_plus import CMMCorePlus
     from pymmcore_plus.mda import SupportsFrameReady
     from pymmcore_plus.metadata import FrameMetaV1, SummaryMetaV1
