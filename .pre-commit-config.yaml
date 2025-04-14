@@ -54,8 +54,8 @@ repos:
           - ipython
           - ndv
           - pygfx
-          - pydantic
-          - pydantic_core
+          - pydantic==2.10.6
+          - pydantic_core==2.27.2
           - pymmcore
           - pymmcore-plus>=0.13.2
           - pymmcore-widgets

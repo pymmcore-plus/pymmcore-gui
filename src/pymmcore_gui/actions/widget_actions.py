@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Generic, TypeVar, cast
 from pymmcore_plus import CMMCorePlus
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
-from PyQt6Ads import DockWidgetArea, SideBarLocation, CDockWidget
+from PyQt6Ads import CDockWidget, DockWidgetArea, SideBarLocation
 
 from pymmcore_gui.actions._action_info import ActionKey
 

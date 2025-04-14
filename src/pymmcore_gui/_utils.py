@@ -1,6 +1,6 @@
-from functools import cache
 import urllib.error
 import urllib.request
+from functools import cache
 
 GH_REPO_URL = "http://github.com/pymmcore-plus/pymmcore-gui"
 

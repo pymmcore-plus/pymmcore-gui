@@ -13,10 +13,10 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from superqt.utils import create_worker
 
 from pymmcore_gui import __version__
 from pymmcore_gui._utils import GH_REPO_URL, gh_link
-from superqt.utils import create_worker
 
 RESOURCES = Path(__file__).parent.parent / "resources"
 
