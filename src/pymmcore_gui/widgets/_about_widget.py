@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
 
 from pymmcore_gui import __version__
 from pymmcore_gui._utils import GH_REPO_URL, gh_link
+from superqt.utils import create_worker
 
 RESOURCES = Path(__file__).parent.parent / "resources"
 
@@ -37,10 +38,16 @@ class AboutWidget(QDialog):
 
         version = QLabel(f"Version: {__version__}")
 
-        link = QLabel(f"<a href={gh_link()}>{GH_REPO_URL}</a>")
+        link = QLabel(f"<a href={GH_REPO_URL}>{GH_REPO_URL}</a>")
         link.setTextFormat(Qt.TextFormat.RichText)
         link.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         link.setOpenExternalLinks(True)
+        link.setFixedSize(300, 20)
+
+        # getting link is a little slow, so do it in a thread
+        @create_worker(gh_link, _start_thread=True).returned.connect
+        def _set_link_text(href: str) -> None:
+            link.setText(f"<a href={href}>{GH_REPO_URL}</a>")
 
         # SYSTEM INFORMATION
         sys_info = system_info()

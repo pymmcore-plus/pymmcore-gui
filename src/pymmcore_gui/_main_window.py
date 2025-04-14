@@ -14,6 +14,7 @@ from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QAction, QCloseEvent, QGuiApplication, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
+    QDialog,
     QMainWindow,
     QMenu,
     QMenuBar,
@@ -167,8 +168,8 @@ class MicroManagerGUI(QMainWindow):
         self._status_bar.setMaximumHeight(26)
         self.setStatusBar(self._status_bar)
 
-        self.bell_button = QPushButton("")
-        self.bell_button.setIcon(QIconifyIcon("codicon:bell"))
+        self.bell_button = QPushButton(QIconifyIcon("codicon:bell"), None)
+        self.bell_button.setFixedWidth(20)
         self.bell_button.setFlat(True)  # Make it blend nicely
         self._status_bar.addPermanentWidget(self.bell_button)
 
@@ -379,21 +380,37 @@ class MicroManagerGUI(QMainWindow):
                 raise KeyError(
                     f"Widget {key} has not been created yet, and 'create' is False"
                 )
+            area = key.dock_area()
             widget = key.create_widget(self)
             widget.setObjectName(key.name)
+            if isinstance(widget, QDialog):
+                widget.exec()
+                return widget
+
             self._action_widgets[key] = widget
 
             action = self.get_action(key)
             dock = CDockWidget(key.value, self)
-            dock.setWidget(widget)
+            dock.setWidget(widget, key.scroll_mode())
             dock.setObjectName(f"docked_{key.name}")
             dock.setToggleViewAction(action)
+            dock.setMinimumSize(widget.minimumSize())
             dock.setIcon(action.icon())
+            dock.resize(widget.sizeHint())
             self._dock_widgets[key] = dock
-            if (area := key.dock_area()) is None:
+            if area is None:
                 self.dock_manager.addDockWidgetFloating(dock)
             elif isinstance(area, SideBarLocation):
-                self.dock_manager.addAutoHideDockWidget(area, dock)
+                if container := self.dock_manager.addAutoHideDockWidget(area, dock):
+                    dock.toggleView(True)
+                    if area in {
+                        SideBarLocation.SideBarLeft,
+                        SideBarLocation.SideBarRight,
+                    }:
+                        size = widget.sizeHint().width()
+                    else:
+                        size = widget.sizeHint().height()
+                    container.setSize(size + 5)
             else:
                 self.dock_manager.addDockWidget(area, dock)
 

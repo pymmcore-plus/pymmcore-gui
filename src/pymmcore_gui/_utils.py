@@ -1,3 +1,4 @@
+from functools import cache
 import urllib.error
 import urllib.request
 
@@ -26,6 +27,7 @@ def get_treeish() -> str:
     return tag
 
 
+@cache
 def gh_link(
     file: str | None = None,
     line_no: int | tuple[int, int] | None = None,
