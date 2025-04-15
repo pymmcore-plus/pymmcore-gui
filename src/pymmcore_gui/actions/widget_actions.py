@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Generic, TypeVar, cast
 from pymmcore_plus import CMMCorePlus
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
+from PyQt6.QtWidgets import QDialog
 from PyQt6Ads import CDockWidget, DockWidgetArea, SideBarLocation
 
 from pymmcore_gui.actions._action_info import ActionKey
@@ -72,7 +73,9 @@ def create_install_widgets(parent: QWidget) -> pmmw.InstallWidget:
     """Create the Install Devices widget."""
     from pymmcore_widgets import InstallWidget
 
-    wdg = InstallWidget(parent=parent)
+    class InstallDialog(QDialog, InstallWidget): ...
+
+    wdg = InstallDialog(parent=parent)
     wdg.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Window)
     wdg.resize(800, 400)
     return wdg
