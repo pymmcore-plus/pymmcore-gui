@@ -133,7 +133,7 @@ class NotificationToast(QWidget):
         self.auto_hide_timer.start()
 
     def _on_btn_clicked(self) -> None:
-        btn = cast(QPushButton, self.sender())
+        btn = cast("QPushButton", self.sender())
         if on_action := self.notification.on_action:
             on_action(btn.text())
             self.remove_notification()
