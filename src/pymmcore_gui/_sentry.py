@@ -220,7 +220,7 @@ Please help us fix bugs by allowing us to collect crash and exception reports.
 source code</a>.</li>
 </ul>
 
-You can disable this at any time in the settings dialog.
+You can disable this at any time in the Exception Log Window.
         """
         )
         txt.setWordWrap(True)
