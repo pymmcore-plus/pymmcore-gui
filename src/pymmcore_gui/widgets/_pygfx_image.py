@@ -12,7 +12,9 @@ from PyQt6.QtWidgets import QVBoxLayout, QWidget
 
 if TYPE_CHECKING:
     import rendercanvas.qt
-    from cmap._colormap import ColorStopsLike
+    from cmap._colormap import (
+        ColorStopsLike,  # pyright: ignore [reportPrivateImportUsage]
+    )
     from pymmcore_plus import CMMCorePlus
 
     class QRenderWidget(rendercanvas.qt.QRenderWidget, QWidget): ...  # pyright: ignore [reportIncompatibleMethodOverride]

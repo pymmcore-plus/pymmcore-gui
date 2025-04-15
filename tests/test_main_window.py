@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 from unittest.mock import patch
 
+import pytest
 import useq
 from pymmcore_widgets import MDAWidget
 from PyQt6.QtWidgets import QApplication, QDialog
@@ -20,18 +21,21 @@ if TYPE_CHECKING:
     from pymmcore_gui.settings import Settings
 
 
-def test_main_window(qtbot: QtBot, qapp: QApplication) -> None:
+@pytest.mark.parametrize("w_action", list(WidgetAction))
+def test_main_window(qtbot: QtBot, qapp: QApplication, w_action: WidgetAction) -> None:
     gui = MicroManagerGUI()
     qtbot.addWidget(gui)
-    for w_action in (WidgetAction.ABOUT, WidgetAction.PROP_BROWSER):
-        action = gui.get_action(w_action)
+    action = gui.get_action(w_action)
+    with patch.object(QDialog, "exec", lambda x: x.show()):
         wdg = gui.get_widget(w_action)
         assert w_action in gui._qactions
+    if isinstance(wdg, QDialog):
+        ...
+    else:
         assert w_action in gui._action_widgets
-        if not isinstance(wdg, QDialog):
-            assert action.isChecked()
-            wdg.close()
-            assert not action.isChecked()
+        assert action.isChecked()
+        gui.get_dock_widget(w_action).toggleView(False)
+        assert not action.isChecked()
 
     for c_action in CoreAction:
         gui.get_action(c_action)

@@ -8,7 +8,8 @@ from typing import TYPE_CHECKING, Generic, TypeVar, cast
 from pymmcore_plus import CMMCorePlus
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
-from PyQt6Ads import DockWidgetArea, SideBarLocation
+from PyQt6.QtWidgets import QDialog
+from PyQt6Ads import CDockWidget, DockWidgetArea, SideBarLocation
 
 from pymmcore_gui.actions._action_info import ActionKey
 
@@ -72,7 +73,9 @@ def create_install_widgets(parent: QWidget) -> pmmw.InstallWidget:
     """Create the Install Devices widget."""
     from pymmcore_widgets import InstallWidget
 
-    wdg = InstallWidget(parent=parent)
+    class InstallDialog(QDialog, InstallWidget): ...
+
+    wdg = InstallDialog(parent=parent)
     wdg.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Window)
     wdg.resize(800, 400)
     return wdg
@@ -162,6 +165,10 @@ class WidgetAction(ActionKey):
         """Return the default dock area for this widget."""
         return WidgetActionInfo.for_key(self).dock_area
 
+    def scroll_mode(self) -> CDockWidget.eInsertMode:
+        """Return the default scroll mode for this widget."""
+        return WidgetActionInfo.for_key(self).scroll_mode
+
 
 # ######################## WidgetActionInfos #########################
 
@@ -180,13 +187,16 @@ class WidgetActionInfo(ActionInfo, Generic[WT]):
     dock_area: DockWidgetArea | SideBarLocation | None = (
         DockWidgetArea.RightDockWidgetArea
     )
+    scroll_mode: CDockWidget.eInsertMode = CDockWidget.eInsertMode.AutoScrollArea
 
 
 show_about = WidgetActionInfo(
     key=WidgetAction.ABOUT,
     create_widget=create_about_widget,
     dock_area=None,
+    checkable=False,
     menu_role=QAction.MenuRole.AboutRole,
+    scroll_mode=CDockWidget.eInsertMode.ForceNoScrollArea,
 )
 
 show_console = WidgetActionInfo(
@@ -211,6 +221,8 @@ show_install_devices = WidgetActionInfo(
     icon="mdi-light:download",
     create_widget=create_install_widgets,
     dock_area=None,
+    checkable=False,
+    scroll_mode=CDockWidget.eInsertMode.ForceNoScrollArea,
 )
 
 show_mda_widget = WidgetActionInfo(
@@ -234,6 +246,7 @@ show_config_groups = WidgetActionInfo(
     icon="mdi-light:format-list-bulleted",
     create_widget=create_config_groups,
     dock_area=DockWidgetArea.LeftDockWidgetArea,
+    scroll_mode=CDockWidget.eInsertMode.ForceNoScrollArea,
 )
 
 show_pixel_config = WidgetActionInfo(
@@ -264,4 +277,5 @@ show_config_wizard = WidgetActionInfo(
     icon="mdi:cog",
     create_widget=create_config_wizard,
     dock_area=None,
+    checkable=False,
 )
