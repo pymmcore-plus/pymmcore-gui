@@ -1,5 +1,6 @@
 import urllib.error
 import urllib.request
+from functools import cache
 
 GH_REPO_URL = "http://github.com/pymmcore-plus/pymmcore-gui"
 
@@ -26,6 +27,7 @@ def get_treeish() -> str:
     return tag
 
 
+@cache
 def gh_link(
     file: str | None = None,
     line_no: int | tuple[int, int] | None = None,

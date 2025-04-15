@@ -12,7 +12,9 @@ from PyQt6.QtWidgets import QVBoxLayout, QWidget
 
 if TYPE_CHECKING:
     import rendercanvas.qt
-    from cmap._colormap import ColorStopsLike
+    from cmap._colormap import (
+        ColorStopsLike,  # pyright: ignore [reportPrivateImportUsage]
+    )
     from pymmcore_plus import CMMCorePlus
 
     class QRenderWidget(rendercanvas.qt.QRenderWidget, QWidget): ...  # pyright: ignore [reportIncompatibleMethodOverride]
@@ -233,7 +235,10 @@ class PygfxImagePreview(QWidget):
 
     def timerEvent(self, a0: QTimerEvent | None) -> None:
         if (core := self._mmc) and core.getRemainingImageCount() > 0:
-            img = core.getLastImage()
+            try:
+                img = core.getLastImage()
+            except IndexError:  # pragma: no cover
+                return
             self.set_data(img)
 
     def _on_image_snapped(self) -> None:

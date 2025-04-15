@@ -54,7 +54,7 @@ class StagesControlWidget(QWidget):
         for idx, stage_dev in enumerate(stages):
             bx = _Group(stage_dev, self)
             stage = StageWidget(device=stage_dev, parent=bx)
-            cast(QHBoxLayout, bx.layout()).addWidget(stage)
+            cast("QHBoxLayout", bx.layout()).addWidget(stage)
             self._layout.addWidget(bx, idx // 2, idx % 2)
         self.resize(self.sizeHint())
 

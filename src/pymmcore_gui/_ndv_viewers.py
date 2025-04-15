@@ -1,23 +1,25 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 from weakref import WeakValueDictionary
 
 import ndv
+import useq
 from pymmcore_plus.mda.handlers import TensorStoreHandler
-from PyQt6.QtCore import QObject, Qt, QTimer
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtCore import QObject, QTimer, pyqtSignal
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
     import numpy as np
-    import useq
-    from ndv.models._array_display_model import IndexMap
+    from ndv.models._array_display_model import (
+        IndexMap,  # pyright: ignore[reportPrivateImportUsage]
+    )
     from pymmcore_plus import CMMCorePlus
     from pymmcore_plus.mda import SupportsFrameReady
     from pymmcore_plus.metadata import FrameMetaV1, SummaryMetaV1
+    from PyQt6.QtWidgets import QWidget
     from useq import MDASequence
 
 
@@ -34,6 +36,9 @@ class NDVViewersManager(QObject):
     mmcore : CMMCorePlus
         The CMMCorePlus instance.
     """
+
+    viewerCreated = pyqtSignal(ndv.ArrayViewer, useq.MDASequence)
+    viewerDestroyed = pyqtSignal(str)
 
     def __init__(self, parent: QWidget, mmcore: CMMCorePlus):
         super().__init__(parent)
@@ -80,8 +85,7 @@ class NDVViewersManager(QObject):
             self._own_handler.reset(sequence)
 
         # since the handler is empty at this point, create a ndv viewer with no data
-        self._active_viewer = viewer = self._create_ndv_viewer(sequence)
-        self._seq_viewers[str(sequence.uid)] = viewer
+        self._active_viewer = self._create_ndv_viewer(sequence)
 
     def _on_frame_ready(
         self, frame: np.ndarray, event: useq.MDAEvent, meta: FrameMetaV1
@@ -133,16 +137,8 @@ class NDVViewersManager(QObject):
     def _create_ndv_viewer(self, sequence: MDASequence) -> ndv.ArrayViewer:
         """Create a new ndv viewer with no data."""
         ndv_viewer = ndv.ArrayViewer()
-        q_viewer = cast("QWidget", ndv_viewer.widget())
-
-        if isinstance(par := self.parent(), QWidget):
-            q_viewer.setParent(par)
-
-        sha = str(sequence.uid)[:8]
-        q_viewer.setObjectName(f"ndv-{sha}")
-        q_viewer.setWindowTitle(f"MDA {sha}")
-        q_viewer.setWindowFlags(Qt.WindowType.Dialog)
-        q_viewer.show()
+        self._seq_viewers[str(sequence.uid)] = ndv_viewer
+        self.viewerCreated.emit(ndv_viewer, sequence)
         return ndv_viewer
 
     def __repr__(self) -> str:  # pragma: no cover

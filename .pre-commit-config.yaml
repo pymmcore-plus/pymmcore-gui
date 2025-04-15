@@ -5,12 +5,12 @@ ci:
 
 repos:
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.23
+    rev: v0.24.1
     hooks:
       - id: validate-pyproject
 
   - repo: https://github.com/crate-ci/typos
-    rev: typos-dict-v0.12.4
+    rev: v1.31.1
     hooks:
       - id: typos
         args: [--force-exclude] # omitting --write-changes
@@ -24,14 +24,14 @@ repos:
           ]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.4
+    rev: v0.11.5
     hooks:
       - id: ruff
         args: [--fix, --unsafe-fixes]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.14.1
+    rev: v1.15.0
     hooks:
       - id: mypy
         files: "^src/"
@@ -54,8 +54,8 @@ repos:
           - ipython
           - ndv
           - pygfx
-          - pydantic
-          - pydantic_core
+          - pydantic==2.10.6
+          - pydantic_core==2.27.2
           - pymmcore
           - pymmcore-plus>=0.13.2
           - pymmcore-widgets
@@ -76,7 +76,7 @@ repos:
   # however, this won't work for pre-commit.ci (because of environment creation limits)
   # so we use stages: [manual], and run it manually in ci.yml
   - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.393
+    rev: v1.1.399
     hooks:
       - id: pyright
         files: "^src/"
