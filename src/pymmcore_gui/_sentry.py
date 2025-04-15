@@ -13,13 +13,24 @@ from site import getsitepackages, getusersitepackages
 from subprocess import run
 from typing import TYPE_CHECKING
 
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QLabel, QVBoxLayout
+
+from ._settings import Settings
+
 if TYPE_CHECKING:
-    from sentry_sdk._types import Event, Hint
+    from PyQt6.QtGui import QCloseEvent, QKeyEvent
+    from sentry_sdk._types import (
+        Event,  # pyright: ignore[reportPrivateImportUsage]
+        Hint,  # pyright: ignore[reportPrivateImportUsage]
+    )
 else:
     try:
         from rich import print
     except ImportError:  # pragma: no cover
         from pprint import pprint as print
+
+logger = logging.getLogger("pymmcore-gui")
 
 SENTRY_DSN = "https://3ea8feba276ec96bdf6c110a26fe9699@o100671.ingest.us.sentry.io/4507535157952512"
 SHOW_HOSTNAME = os.getenv("MM_TELEMETRY_SHOW_HOSTNAME", "0") in ("1", "True")
@@ -121,10 +132,23 @@ def install_error_reporter() -> None:  # pragma: no cover
     if "PYTEST_VERSION" in os.environ:
         return
 
+    # ask the user if it's ok
+    settings = Settings.instance()
+    if settings.send_error_reports is None:
+        send_errors = _show_send_errors_dialog()
+        if send_errors is None:
+            logger.debug("Error reporting dialog cancelled by user.")
+            return
+        settings.send_error_reports = send_errors
+        settings.flush()
+    if not settings.send_error_reports:
+        logger.debug("Error reporting disabled by user.")
+        return
+
     try:
         import sentry_sdk
     except ImportError:
-        logging.info("sentry-sdk not installed, skipping error reporting.")
+        logger.debug("sentry-sdk not installed, skipping error reporting.")
         return
 
     global SENTRY_INSTALLED
@@ -170,3 +194,65 @@ def install_error_reporter() -> None:  # pragma: no cover
     with suppress(Exception):
         sentry_sdk.set_user({"id": uuid.getnode()})
     SENTRY_INSTALLED = True
+
+
+class SendErrorsDialog(QDialog):
+    """Dialog to ask the user if they want to send error reports."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setWindowTitle("Allow error reporting?")
+        self.setMinimumWidth(500)
+        layout = QVBoxLayout()
+        txt = QLabel(
+            """
+<h2>Help us improve?</h2>
+
+<p>
+Please help us fix bugs by allowing us to collect crash and exception reports.
+
+<ul>
+<li><strong>No</strong> personally identifiable information is collected.</li>
+<li>We collect tracebacks that show where errors occur.</li>
+<li>We collect program, and python versions.</li>
+<li>Error-reporting logic is available in the
+<a href="https://github.com/pymmcore-plus/pymmcore-gui/blob/main/src/pymmcore_gui/_utils.py">
+source code</a>.</li>
+</ul>
+
+You can disable this at any time in the settings dialog.
+        """
+        )
+        txt.setWordWrap(True)
+        txt.setOpenExternalLinks(True)
+        layout.addWidget(txt)
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.No | QDialogButtonBox.StandardButton.Ok
+        )
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+        self.setLayout(layout)
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+        self._result = -1
+        super().closeEvent(a0)
+
+    def keyPressEvent(self, a0: QKeyEvent | None) -> None:
+        if a0 and a0.key() == Qt.Key.Key_Escape:
+            self._result = -1
+        super().keyPressEvent(a0)
+
+    def result(self) -> int:
+        if hasattr(self, "_result"):
+            return self._result
+        return super().result()
+
+
+def _show_send_errors_dialog() -> bool | None:
+    """Show a dialog to ask the user if they want to send error reports."""
+    dlg = SendErrorsDialog()
+    dlg.exec()
+    if dlg.result() < 0:
+        return None
+    return bool(dlg.result() == QDialog.DialogCode.Accepted)

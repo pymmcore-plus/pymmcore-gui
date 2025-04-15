@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-from pymmcore_gui.settings import Settings
+from pymmcore_gui._settings import Settings
 
 # This is a temporary fix due to a `DeprecationWarning` from the `qtconsole` package:
 # """DeprecationWarning: Jupyter is migrating its paths to use standard platformdirs

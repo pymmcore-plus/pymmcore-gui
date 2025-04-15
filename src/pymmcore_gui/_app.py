@@ -73,12 +73,25 @@ def parse_args(args: Sequence[str] = ()) -> argparse.Namespace:
         help="Config file to load",
         nargs="?",
     )
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        default=False,
+        help="Reset settings to default values and exit.",
+    )
+
     return parser.parse_args(args)
 
 
 def main() -> QCoreApplication:
     """Run the Micro-Manager GUI."""
     args = parse_args()
+    if args.reset:
+        from pymmcore_gui._settings import reset_to_defaults
+
+        reset_to_defaults()
+        print("Settings reset to defaults.")
+        sys.exit(0)
 
     # Note: in practice this should almost never be None,
     # but in the case of testing, it's conceivable that it could be.
