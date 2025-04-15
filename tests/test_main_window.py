@@ -25,13 +25,14 @@ def test_main_window(qtbot: QtBot, qapp: QApplication) -> None:
     qtbot.addWidget(gui)
     for w_action in (WidgetAction.ABOUT, WidgetAction.PROP_BROWSER):
         action = gui.get_action(w_action)
-        wdg = gui.get_widget(w_action)
-        assert w_action in gui._qactions
-        assert w_action in gui._action_widgets
-        if not isinstance(wdg, QDialog):
-            assert action.isChecked()
-            wdg.close()
-            assert not action.isChecked()
+        with patch.object(QDialog, "exec", qapp.processEvents):
+            wdg = gui.get_widget(w_action)
+            assert w_action in gui._qactions
+            if not isinstance(wdg, QDialog):
+                assert w_action in gui._action_widgets
+                assert action.isChecked()
+                wdg.close()
+                assert not action.isChecked()
 
     for c_action in CoreAction:
         gui.get_action(c_action)

@@ -1,3 +1,4 @@
+from contextlib import suppress
 from pathlib import Path
 
 from pymmcore_plus._util import system_info  # TODO: make public in pymmcore_plus
@@ -47,7 +48,8 @@ class AboutWidget(QDialog):
         # getting link is a little slow, so do it in a thread
         @create_worker(gh_link, _start_thread=True).returned.connect
         def _set_link_text(href: str) -> None:
-            link.setText(f"<a href={href}>{GH_REPO_URL}</a>")
+            with suppress(RuntimeError):
+                link.setText(f"<a href={href}>{GH_REPO_URL}</a>")
 
         # SYSTEM INFORMATION
         sys_info = system_info()
