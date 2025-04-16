@@ -132,6 +132,16 @@ def install_error_reporter() -> None:  # pragma: no cover
     if "PYTEST_VERSION" in os.environ:
         return
 
+    try:
+        import sentry_sdk
+    except ImportError:
+        logger.debug("sentry-sdk not installed, skipping error reporting.")
+        return
+
+    global SENTRY_INSTALLED
+    if SENTRY_INSTALLED:
+        return
+
     # ask the user if it's ok
     settings = Settings.instance()
     if settings.send_error_reports is None:
@@ -145,16 +155,7 @@ def install_error_reporter() -> None:  # pragma: no cover
         logger.debug("Error reporting disabled by user.")
         return
 
-    try:
-        import sentry_sdk
-    except ImportError:
-        logger.debug("sentry-sdk not installed, skipping error reporting.")
-        return
-
-    global SENTRY_INSTALLED
-    if SENTRY_INSTALLED:
-        return
-
+    logger.debug("Error reporting enabled by user.")
     sentry_sdk.init(
         SENTRY_DSN,
         # When enabled, local variables are sent along with stackframes.
