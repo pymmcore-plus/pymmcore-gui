@@ -74,7 +74,7 @@ def parse_args(args: Sequence[str] = ()) -> argparse.Namespace:
     return parser.parse_args(args)
 
 
-def main() -> QCoreApplication:
+def main() -> None:
     """Run the Micro-Manager GUI."""
     args = parse_args()
 
@@ -111,14 +111,6 @@ def main() -> QCoreApplication:
         pyi_splash.close()
 
     app.exec()
-
-    # NOTE:
-    # the fact that we're returning the app instance after exec() is a little odd.
-    # it's there for testing so that `test_app::test_main_app` can retain a reference
-    # to the application for the scope of the test.
-    # I also tried retaining a global app reference within this module, but that led
-    # to consistent segfaults for reasons I don't understand.
-    return app
 
 
 # ------------------- Custom excepthook -------------------
