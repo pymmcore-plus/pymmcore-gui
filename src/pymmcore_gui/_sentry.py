@@ -215,7 +215,7 @@ Please help us fix bugs by allowing us to collect crash and exception reports.
 <li><strong>No</strong> personally identifiable information is collected.</li>
 <li>We collect tracebacks that show where errors occur.</li>
 <li>We collect program, and python versions.</li>
-<li>Error-reporting logic is available in the
+<li>Error-reporting logic is viewable in the
 <a href="https://github.com/pymmcore-plus/pymmcore-gui/blob/main/src/pymmcore_gui/_utils.py">
 source code</a>.</li>
 </ul>
