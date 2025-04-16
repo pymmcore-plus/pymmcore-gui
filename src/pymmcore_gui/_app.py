@@ -10,7 +10,7 @@ import warnings
 from contextlib import suppress
 from typing import TYPE_CHECKING, cast
 
-from PyQt6.QtCore import QCoreApplication, QTimer, pyqtSignal
+from PyQt6.QtCore import QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication
 from superqt.utils import WorkerBase
