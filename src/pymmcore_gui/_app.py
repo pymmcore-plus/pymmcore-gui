@@ -105,7 +105,6 @@ def main() -> QCoreApplication:
         )
 
     _install_excepthook()
-    _sentry.install_error_reporter()
 
     win = MicroManagerGUI()
     QTimer.singleShot(0, lambda: win._restore_state(True))
@@ -126,6 +125,7 @@ def main() -> QCoreApplication:
         pyi_splash.update_text("UI Loaded ...")
         pyi_splash.close()
 
+    _sentry.install_error_reporter()
     app.exec()
 
     # NOTE:
