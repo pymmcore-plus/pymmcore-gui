@@ -52,7 +52,7 @@ def mmcore() -> Iterator[CMMCorePlus]:
 @pytest.fixture(autouse=True)
 def settings() -> Iterator[Settings]:
     settings = Settings()
-    with patch("pymmcore_gui.settings._GLOBAL_SETTINGS", settings):
+    with patch("pymmcore_gui._settings._GLOBAL_SETTINGS", settings):
         yield settings
 
 
