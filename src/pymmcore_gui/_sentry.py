@@ -196,7 +196,7 @@ def install_error_reporter() -> None:  # pragma: no cover
     SENTRY_INSTALLED = True
 
 
-class SendErrorsDialog(QDialog):
+class OptInDialog(QDialog):
     """Dialog to ask the user if they want to send error reports."""
 
     def __init__(self) -> None:
@@ -206,7 +206,7 @@ class SendErrorsDialog(QDialog):
         layout = QVBoxLayout()
         txt = QLabel(
             """
-<h2>Help us improve?</h2>
+<h2>&#128591; Help us improve pymmcore-gui?</h2>
 
 <p>
 Please help us fix bugs by allowing us to collect crash and exception reports.
@@ -220,14 +220,16 @@ Please help us fix bugs by allowing us to collect crash and exception reports.
 source code</a>.</li>
 </ul>
 
-You can disable this at any time in the Exception Log Window.
-        """
+You can disable this at any time in the Exception Log Window.</p><br>
+<em><small>
+<a href="https://github.com/pymmcore-plus/pymmcore-gui/blob/main/PRIVACY.md">
+Privacy Policy</a></small></em>"""
         )
         txt.setWordWrap(True)
         txt.setOpenExternalLinks(True)
         layout.addWidget(txt)
         button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.No | QDialogButtonBox.StandardButton.Ok
+            QDialogButtonBox.StandardButton.No | QDialogButtonBox.StandardButton.Yes
         )
         button_box.accepted.connect(self.accept)
         button_box.rejected.connect(self.reject)
@@ -251,7 +253,7 @@ You can disable this at any time in the Exception Log Window.
 
 def _show_send_errors_dialog() -> bool | None:
     """Show a dialog to ask the user if they want to send error reports."""
-    dlg = SendErrorsDialog()
+    dlg = OptInDialog()
     dlg.exec()
     if dlg.result() < 0:
         return None
