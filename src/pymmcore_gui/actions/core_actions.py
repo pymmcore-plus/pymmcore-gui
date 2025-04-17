@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from superqt import QIconifyIcon
+
 from ._action_info import ActionInfo, ActionKey
 
 if TYPE_CHECKING:
@@ -43,7 +45,10 @@ def _init_toggle_live(action: QCoreAction) -> None:
     mmc = action.mmc
 
     def _on_change() -> None:
-        action.setChecked(mmc.isSequenceRunning())
+        _is_running = mmc.isSequenceRunning()
+        action.setChecked(_is_running)
+        _icon = "mdi:video-off-outline" if _is_running else "mdi:video-outline"
+        action.setIcon(QIconifyIcon(_icon))
 
     mmc.events.sequenceAcquisitionStarted.connect(_on_change)
     mmc.events.continuousSequenceAcquisitionStarted.connect(_on_change)
@@ -56,7 +61,7 @@ snap_action = ActionInfo(
     key=CoreAction.SNAP,
     shortcut="Ctrl+K",
     auto_repeat=True,
-    icon="mdi-light:camera",
+    icon="mdi:camera-outline",
     on_triggered=snap_image,
 )
 
