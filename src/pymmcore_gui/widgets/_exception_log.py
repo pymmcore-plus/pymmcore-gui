@@ -10,6 +10,7 @@ from PyQt6.QtGui import QTextCursor
 from PyQt6.QtWidgets import (
     QAbstractItemView,
     QApplication,
+    QCheckBox,
     QComboBox,
     QHBoxLayout,
     QLabel,
@@ -24,6 +25,7 @@ from PyQt6.QtWidgets import (
 from superqt.utils import CodeSyntaxHighlight
 
 from pymmcore_gui import _app
+from pymmcore_gui._settings import Settings
 
 if TYPE_CHECKING:
     from types import TracebackType
@@ -100,6 +102,17 @@ class ExceptionLog(QWidget):
         self._clear_btn = QPushButton("Clear")
         self._clear_btn.clicked.connect(self._clear)
 
+        self._send_errors = QCheckBox("Send error reports to pymmcore-plus developers.")
+        settings = Settings.instance()
+        if settings.send_error_reports is None:
+            self._send_errors.setTristate(True)
+            self._send_errors.setCheckState(Qt.CheckState.PartiallyChecked)
+        elif settings.send_error_reports is True:
+            self._send_errors.setCheckState(Qt.CheckState.Checked)
+        else:
+            self._send_errors.setCheckState(Qt.CheckState.Unchecked)
+        self._send_errors.checkStateChanged.connect(self._on_send_errors_changed)
+
         # LAYOUT
 
         top_row = QHBoxLayout()
@@ -123,6 +136,7 @@ class ExceptionLog(QWidget):
         layout = QVBoxLayout(self)
         layout.addLayout(top_row)
         layout.addWidget(splitter)
+        layout.addWidget(self._send_errors)
         layout.addLayout(bottom_row)
         self.resize(800, 600)
 
@@ -205,6 +219,20 @@ class ExceptionLog(QWidget):
         text_area.setText(details)
         text_area.moveCursor(QTextCursor.MoveOperation.Start)
         self._copy_btn.setEnabled(True)
+
+    def _on_send_errors_changed(self, state: Qt.CheckState) -> None:
+        """Handle changes to the error reporting checkbox."""
+        settings = Settings.instance()
+        if state == Qt.CheckState.PartiallyChecked:
+            settings.send_error_reports = None
+        elif state == Qt.CheckState.Checked:
+            settings.send_error_reports = True
+        else:
+            settings.send_error_reports = False
+        settings.flush()
+        self._send_errors.setText(
+            "Send error reports to pymmcore-plus developers. (restart required)"
+        )
 
     def show_exception(self, exc: BaseException) -> None:
         """Show the exception in the log."""

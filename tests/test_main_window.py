@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from PyQt6Ads import CDockAreaWidget
     from pytestqt.qtbot import QtBot
 
-    from pymmcore_gui.settings import Settings
+    from pymmcore_gui._settings import Settings
 
 
 @pytest.mark.parametrize("w_action", list(WidgetAction))

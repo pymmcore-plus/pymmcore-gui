@@ -18,6 +18,8 @@ from superqt.utils import WorkerBase
 from pymmcore_gui import __version__
 from pymmcore_gui._main_window import ICON, MicroManagerGUI
 
+from . import _sentry
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
     from types import TracebackType
@@ -71,12 +73,25 @@ def parse_args(args: Sequence[str] = ()) -> argparse.Namespace:
         help="Config file to load",
         nargs="?",
     )
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        default=False,
+        help="Reset settings to default values and exit.",
+    )
+
     return parser.parse_args(args)
 
 
 def main() -> None:
     """Run the Micro-Manager GUI."""
     args = parse_args()
+    if args.reset:
+        from pymmcore_gui._settings import reset_to_defaults
+
+        reset_to_defaults()
+        print("Settings reset to defaults.")
+        sys.exit(0)
 
     # Note: in practice this should almost never be None,
     # but in the case of testing, it's conceivable that it could be.
@@ -110,6 +125,7 @@ def main() -> None:
         pyi_splash.update_text("UI Loaded ...")
         pyi_splash.close()
 
+    _sentry.install_error_reporter()
     app.exec()
 
 

@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 from pydantic_settings import BaseSettings
 
-from pymmcore_gui.settings import MMGuiUserPrefsSource, SettingsV1
+from pymmcore_gui._settings import MMGuiUserPrefsSource, SettingsV1
 
 
 def test_settings() -> None:

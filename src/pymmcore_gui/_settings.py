@@ -125,6 +125,8 @@ class SettingsV1(BaseMMSettings):
 
     version: Literal["1.0"] = "1.0"
     window: WindowSettingsV1 = Field(default_factory=WindowSettingsV1)
+    # None means the user has neither opted in nor out
+    send_error_reports: bool | None = None
     last_config: Path | None = None
 
     @property
@@ -198,3 +200,12 @@ class SettingsV1(BaseMMSettings):
 
 Settings = SettingsV1
 _GLOBAL_SETTINGS = SettingsV1()
+
+
+def reset_to_defaults() -> None:
+    """Erase user settings and reset to defaults."""
+    global _GLOBAL_SETTINGS
+    if TESTING or os.getenv("MMGUI_NO_SETTINGS"):  # pragma: no cover
+        return
+    SETTINGS_FILE_NAME.unlink(missing_ok=True)
+    _GLOBAL_SETTINGS = SettingsV1()

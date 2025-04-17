@@ -21,6 +21,7 @@ repos:
       - id: markdownlint
         args: [
             --disable=MD033, # no-inline-html
+            --disable=MD036, # no-emphasis-as-heading
           ]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
