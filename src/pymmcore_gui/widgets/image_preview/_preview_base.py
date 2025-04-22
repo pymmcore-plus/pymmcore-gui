@@ -1,3 +1,4 @@
+import warnings
 from abc import abstractmethod
 from contextlib import suppress
 
@@ -81,8 +82,13 @@ class _ImagePreviewBase(QWidget):
 
     def timerEvent(self, a0: QTimerEvent | None) -> None:
         if (core := self._mmc) and core.getRemainingImageCount() > 0:
-            img = core.getLastImage()
-            self.set_data(img)
+            try:
+                img = core.fixImage(core.getLastImage())
+                self.set_data(img)
+            except Exception as e:
+                warnings.warn(
+                    f"Failed to get image from core: {e}", RuntimeWarning, stacklevel=2
+                )
 
     def _on_image_snapped(self) -> None:
         if (core := self._mmc) is None:

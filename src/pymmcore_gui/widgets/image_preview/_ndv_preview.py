@@ -65,6 +65,7 @@ class Streamer:
         process_events_on_update: bool = True,
     ) -> None:
         self._plane_shape = plane_shape
+
         self._max_planes = max_planes
         self._num_channels = num_channels
         self._data = np.zeros((max_planes, num_channels, *plane_shape), dtype=dtype)
@@ -80,7 +81,10 @@ class Streamer:
         self._current_frame = -1  # logical time index for grouped channels
 
         viewer.data = self._wrapper
-        viewer.display_model.channel_axis = 1
+
+        viewer.display_model.channel_axis = -3
+        if num_channels == 3:
+            viewer.display_model.channel_mode = "rgb"
         viewer._update_visible_sliders()  # BUG
 
     def append(self, data: np.ndarray, channel: int = 0) -> None:
@@ -88,9 +92,13 @@ class Streamer:
             self._start_new_frame()
 
         if data.shape != self._plane_shape:
-            raise ValueError(f"Item must have shape {self._plane_shape}")
-        if not (0 <= channel < self._num_channels):
-            raise ValueError(f"Channel index {channel} out of range")
+            if self._num_channels == 3 and data.ndim == 3:
+                data = np.transpose(data, (2, 0, 1))
+                channel = slice(None)
+            else:
+                raise ValueError(f"Item must have shape {self._plane_shape}")
+        # if not (0 <= channel < self._num_channels):
+        # raise ValueError(f"Channel index {channel} out of range")
 
         self._data[self._current_frame, channel] = data
 
@@ -141,9 +149,15 @@ class NDVPreview(_ImagePreviewBase):
                 img_width = core.getImageWidth()
                 img_height = core.getImageHeight()
                 shape = (img_width, img_height)
+                num_channels = 3 if core.getNumberOfComponents() > 1 else 1
+
                 np_dtype = f"uint{bits}"
                 self._streamer = Streamer(
-                    self._viewer, shape, max_planes=20, dtype=np_dtype
+                    self._viewer,
+                    shape,
+                    num_channels=num_channels,
+                    max_planes=20,
+                    dtype=np_dtype,
                 )
 
     def _on_system_config_loaded(self) -> None:
