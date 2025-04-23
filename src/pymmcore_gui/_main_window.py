@@ -35,7 +35,6 @@ from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
 from .settings import Settings
 from .widgets._toolbars import OCToolBar
-from .widgets.image_preview._ndv_preview import NDVPreview
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -148,19 +147,9 @@ class MicroManagerGUI(QMainWindow):
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
 
-        self._is_mda_running = False
-        mda_ev = self._mmc.mda.events
-        mda_ev.sequenceStarted.connect(lambda: setattr(self, "_is_mda_running", True))
-        mda_ev.sequenceFinished.connect(lambda: setattr(self, "_is_mda_running", False))
-
-        ev = self._mmc.events
-        ev.imageSnapped.connect(self._on_image_snapped)
-        ev.sequenceAcquisitionStarted.connect(self._on_streaming_started)
-        ev.continuousSequenceAcquisitionStarted.connect(self._on_streaming_started)
-        self._img_preview: CDockWidget | None = None
-
         self._viewers_manager = NDVViewersManager(self, self._mmc)
-        self._viewers_manager.viewerCreated.connect(self._on_viewer_created)
+        self._viewers_manager.mdaViewerCreated.connect(self._on_viewer_created)
+        self._viewers_manager.previewViewerCreated.connect(self._on_previewer_created)
         self._notification_manager = NotificationManager(self)
         if app := QApplication.instance():
             if hasattr(app, "exceptionRaised"):
@@ -221,29 +210,6 @@ class MicroManagerGUI(QMainWindow):
     def nm(self) -> NotificationManager:
         """A callable that can be used to show a message in the status bar."""
         return self._notification_manager
-
-    def _create_or_show_img_preview(self) -> NDVPreview | None:
-        """Create or show the image preview widget, return True if created."""
-        preview = None
-        if self._img_preview is None:
-            preview = NDVPreview(self, mmcore=self._mmc)
-            self._img_preview = dw = CDockWidget("Preview", self)
-            self._img_preview.setWidget(preview)
-            self.dock_manager.addDockWidgetTabToArea(dw, self._central_dock_area)
-        else:
-            self._img_preview.toggleView(True)
-
-        return preview
-
-    def _on_streaming_started(self) -> None:
-        if not self._is_mda_running:
-            if preview := self._create_or_show_img_preview():
-                preview._on_streaming_start()
-
-    def _on_image_snapped(self) -> None:
-        if not self._is_mda_running:
-            if preview := self._create_or_show_img_preview():
-                preview.set_data(self._mmc.getImage())
 
     def _on_system_config_loaded(self) -> None:
         settings = Settings.instance()
@@ -515,7 +481,11 @@ class MicroManagerGUI(QMainWindow):
         dw = CDockWidget(f"ndv-{sha}")
         dw._viewer = ndv_viewer  # pyright: ignore
         dw.setWidget(q_viewer)
+        dw.setFeature(dw.DockWidgetFeature.DockWidgetFloatable, False)
         self.dock_manager.addDockWidgetTabToArea(dw, self._central_dock_area)
+
+    def _on_previewer_created(self, dock_widget: CDockWidget) -> None:
+        self.dock_manager.addDockWidgetTabToArea(dock_widget, self._central_dock_area)
 
     def _on_exception(self, exc: BaseException) -> None:
         """Show a notification when an exception is raised."""

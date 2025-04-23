@@ -8,7 +8,7 @@ from cmap import Colormap
 from PyQt6.QtCore import QObject, QSize
 from PyQt6.QtWidgets import QVBoxLayout, QWidget
 
-from ._preview_base import _ImagePreviewBase
+from ._preview_base import ImagePreviewBase
 
 if TYPE_CHECKING:
     import rendercanvas.qt
@@ -23,7 +23,7 @@ else:
 _DEFAULT_WAIT = 10
 
 
-class PygfxImagePreview(_ImagePreviewBase):
+class PygfxImagePreview(ImagePreviewBase):
     """A Widget that displays the last image snapped by active core.
 
     This widget will automatically update when the active core snaps an image, when the

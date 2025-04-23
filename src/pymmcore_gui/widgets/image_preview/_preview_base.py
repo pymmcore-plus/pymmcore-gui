@@ -9,10 +9,8 @@ from PyQt6.QtWidgets import QWidget
 
 _DEFAULT_WAIT = 10
 
-__all__ = ["_ImagePreviewBase"]
 
-
-class _ImagePreviewBase(QWidget):
+class ImagePreviewBase(QWidget):
     def __init__(
         self,
         parent: QWidget | None,

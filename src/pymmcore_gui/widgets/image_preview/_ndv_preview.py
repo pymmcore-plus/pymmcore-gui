@@ -10,7 +10,7 @@ import numpy.typing as npt
 from PyQt6.QtGui import QImage
 from PyQt6.QtWidgets import QApplication, QVBoxLayout, QWidget
 
-from pymmcore_gui.widgets.image_preview._preview_base import _ImagePreviewBase
+from pymmcore_gui.widgets.image_preview._preview_base import ImagePreviewBase
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -119,11 +119,11 @@ class Streamer:
             ) % self._max_planes
 
 
-class NDVPreview(_ImagePreviewBase):
+class NDVPreview(ImagePreviewBase):
     def __init__(
         self,
-        parent: QWidget | None,
         mmcore: CMMCorePlus,
+        parent: QWidget | None = None,
         *,
         use_with_mda: bool = False,
     ):

@@ -8,6 +8,10 @@ import ndv
 import useq
 from pymmcore_plus.mda.handlers import TensorStoreHandler
 from PyQt6.QtCore import QObject, QTimer, pyqtSignal
+from PyQt6.QtWidgets import QWidget
+from PyQt6Ads import CDockWidget
+
+from pymmcore_gui.widgets.image_preview._ndv_preview import NDVPreview
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -19,8 +23,9 @@ if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
     from pymmcore_plus.mda import SupportsFrameReady
     from pymmcore_plus.metadata import FrameMetaV1, SummaryMetaV1
-    from PyQt6.QtWidgets import QWidget
     from useq import MDASequence
+
+    from pymmcore_gui.widgets.image_preview._preview_base import ImagePreviewBase
 
 
 # NOTE: we make this a QObject mostly so that the lifetime of this object is tied to
@@ -37,7 +42,8 @@ class NDVViewersManager(QObject):
         The CMMCorePlus instance.
     """
 
-    viewerCreated = pyqtSignal(ndv.ArrayViewer, useq.MDASequence)
+    mdaViewerCreated = pyqtSignal(ndv.ArrayViewer, useq.MDASequence)
+    previewViewerCreated = pyqtSignal(CDockWidget)
     viewerDestroyed = pyqtSignal(str)
 
     def __init__(self, parent: QWidget, mmcore: CMMCorePlus):
@@ -57,9 +63,19 @@ class NDVViewersManager(QObject):
 
         # CONNECTIONS ---------------------------------------------------------
 
-        self._mmc.mda.events.sequenceStarted.connect(self._on_sequence_started)
-        self._mmc.mda.events.frameReady.connect(self._on_frame_ready)
-        self._mmc.mda.events.sequenceFinished.connect(self._on_sequence_finished)
+        self._is_mda_running = False
+        self._img_preview: CDockWidget | None = None
+
+        ev = self._mmc.events
+        ev.imageSnapped.connect(self._on_image_snapped)
+        ev.sequenceAcquisitionStarted.connect(self._on_streaming_started)
+        ev.continuousSequenceAcquisitionStarted.connect(self._on_streaming_started)
+
+        mda_ev = self._mmc.mda.events
+        mda_ev.sequenceStarted.connect(self._on_sequence_started)
+        mda_ev.frameReady.connect(self._on_frame_ready)
+        mda_ev.sequenceFinished.connect(self._on_sequence_finished)
+
         parent.destroyed.connect(self._cleanup)
 
     def _cleanup(self, obj: QObject | None = None) -> None:
@@ -75,6 +91,8 @@ class NDVViewersManager(QObject):
         We grab the first handler in the list of output handlers, or create a new
         TensorStoreHandler if none exist. Then we create a new ndv viewer and show it.
         """
+        self._is_mda_running = True
+
         self._own_handler = self._handler = None
         if handlers := self._mmc.mda.get_output_handlers():
             # someone else has created a handler for this sequence
@@ -133,13 +151,40 @@ class NDVViewersManager(QObject):
         if self._own_handler is not None:
             self._own_handler.sequenceFinished(sequence)
         # cleanup pointers somehow?
+        self._is_mda_running = False
 
     def _create_ndv_viewer(self, sequence: MDASequence) -> ndv.ArrayViewer:
         """Create a new ndv viewer with no data."""
         ndv_viewer = ndv.ArrayViewer()
         self._seq_viewers[str(sequence.uid)] = ndv_viewer
-        self.viewerCreated.emit(ndv_viewer, sequence)
+        self.mdaViewerCreated.emit(ndv_viewer, sequence)
         return ndv_viewer
+
+    def _create_or_show_img_preview(self) -> ImagePreviewBase | None:
+        """Create or show the image preview widget, return True if created."""
+        preview = None
+        if self._img_preview is None:
+            preview = NDVPreview(mmcore=self._mmc)
+            if not isinstance((parent := self.parent()), QWidget):
+                parent = None
+            self._img_preview = dw = CDockWidget("Preview", parent)
+            dw.setWidget(preview)
+            dw.setFeature(dw.DockWidgetFeature.DockWidgetFloatable, False)
+            self.previewViewerCreated.emit(dw)
+        else:
+            self._img_preview.toggleView(True)
+
+        return preview
+
+    def _on_streaming_started(self) -> None:
+        if not self._is_mda_running:
+            if preview := self._create_or_show_img_preview():
+                preview._on_streaming_start()
+
+    def _on_image_snapped(self) -> None:
+        if not self._is_mda_running:
+            if preview := self._create_or_show_img_preview():
+                preview.set_data(self._mmc.getImage())
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<{self.__class__.__name__} {hex(id(self))} ({len(self)} viewer)>"
