@@ -152,6 +152,9 @@ class MicroManagerGUI(QMainWindow):
 
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
+        self._mmc.events.systemConfigurationLoaded.connect(
+            self._on_system_config_loaded
+        )
 
         self._img_preview = ImagePreview(self, mmcore=self._mmc)
         self._img_preview.setObjectName("ImagePreview")

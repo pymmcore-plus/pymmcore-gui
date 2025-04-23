@@ -12,11 +12,12 @@ from typing import TYPE_CHECKING, cast
 
 from PyQt6.QtCore import QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QMessageBox
 from superqt.utils import WorkerBase
 
 from pymmcore_gui import __version__
 from pymmcore_gui._main_window import ICON, MicroManagerGUI
+from pymmcore_gui._settings import Settings
 
 from . import _sentry
 
@@ -111,8 +112,23 @@ def main() -> None:
 
     # FIXME: be better...
     try:
+        settings = Settings.instance()
         if args.config:
             win.mmcore.loadSystemConfiguration(args.config)
+        elif last_config := settings.last_config:
+            if settings.auto_load_last_config:
+                win.mmcore.loadSystemConfiguration(last_config)
+            else:
+                # show dialog to ask if the user wants to load the last config
+                response = QMessageBox.question(
+                    win,
+                    "Load last config?",
+                    f"Do you want to load the last-used config file:\n\n{last_config}?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.Yes,
+                )
+                if response == QMessageBox.StandardButton.Yes:
+                    win.mmcore.loadSystemConfiguration(last_config)
         else:
             win.mmcore.loadSystemConfiguration()
     except Exception as e:

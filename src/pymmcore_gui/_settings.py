@@ -127,6 +127,7 @@ class SettingsV1(BaseMMSettings):
     window: WindowSettingsV1 = Field(default_factory=WindowSettingsV1)
     # None means the user has neither opted in nor out
     send_error_reports: bool | None = None
+    auto_load_last_config: bool = False
     last_config: Path | None = None
 
     @property
