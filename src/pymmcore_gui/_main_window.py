@@ -76,6 +76,7 @@ class Menu(str, Enum):
 
     PYMM_GUI = "pymmcore-gui"
     WINDOW = "Window"
+    HELP = "Help"
 
     def __str__(self) -> str:
         return str(self.value)
@@ -132,6 +133,7 @@ class MicroManagerGUI(QMainWindow):
             WidgetAction.EXCEPTION_LOG,
             WidgetAction.CONFIG_WIZARD,
         ],
+        Menu.HELP: [CoreAction.LOAD_DEMO],
     }
 
     def __init__(self, *, mmcore: CMMCorePlus | None = None) -> None:

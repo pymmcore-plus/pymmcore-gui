@@ -125,10 +125,16 @@ class SettingsV1(BaseMMSettings):
 
     version: Literal["1.0"] = "1.0"
     window: WindowSettingsV1 = Field(default_factory=WindowSettingsV1)
-    # None means the user has neither opted in nor out
+
     send_error_reports: bool | None = None
-    auto_load_last_config: bool = False
+    """Whether to send error reports to the developers, None means undecided."""
+
     last_config: Path | None = None
+    """Path to the last used config file."""
+    auto_load_last_config: bool | None = None
+    """Load the last used config on startup. None means undecided."""
+    fallback_to_demo_config: bool = False
+    """Load demo config if no config is found."""
 
     @property
     def version_tuple(self) -> tuple[int, int, str]:
