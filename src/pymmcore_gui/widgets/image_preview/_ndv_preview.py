@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from functools import cache
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeGuard
 
 import ndv
 import numpy as np
 import numpy.typing as npt
-from PyQt6.QtGui import QImage
 from PyQt6.QtWidgets import QApplication, QVBoxLayout, QWidget
 
 from pymmcore_gui.widgets.image_preview._preview_base import ImagePreviewBase
@@ -179,43 +176,3 @@ class NDVPreview(ImagePreviewBase):
         # Maybe be more strict about which properties trigger a reconfigure?
         elif dev == self._mmc.getCameraDevice():
             self._setup_viewer()
-
-
-@cache
-def _scope_img_numpy() -> np.ndarray:
-    resources = Path(__file__).parent.parent.parent / "resources"
-    qimage = QImage(str(resources / "logo.png"))
-    qimage = qimage.convertToFormat(QImage.Format.Format_RGBA8888)
-    width, height = qimage.width(), qimage.height()
-    ptr = qimage.bits()
-    ptr.setsize(qimage.sizeInBytes())  # type: ignore [union-attr]
-    ary = np.array(ptr).reshape(height, width, 4)
-    return np.mean(ary, axis=-1)
-
-
-def _get_scope_img(shape: tuple[int, int], dtype: np.typing.DTypeLike) -> np.ndarray:
-    """Get an adorable little image of the logo to place on the canvas."""
-    ary = _scope_img_numpy()
-    img = _resize_nearest_neighbor(ary, shape).astype(dtype)
-    return img
-
-
-def _resize_nearest_neighbor(arr: np.ndarray, new_shape: tuple[int, int]) -> np.ndarray:
-    """Rescale a 2D numpy array using nearest neighbor interpolation."""
-    old_M, old_N = arr.shape
-    new_M, new_N = new_shape
-
-    # Compute the ratio between the old and new dimensions.
-    row_ratio: float = old_M / new_M
-    col_ratio: float = old_N / new_N
-
-    # Compute the indices for the new array using nearest neighbor interpolation.
-    row_indices: np.ndarray = (np.arange(new_M) * row_ratio).astype(int)
-    col_indices: np.ndarray = (np.arange(new_N) * col_ratio).astype(int)
-
-    # Ensure indices are within bounds
-    row_indices = np.clip(row_indices, 0, old_M - 1)
-    col_indices = np.clip(col_indices, 0, old_N - 1)
-
-    # Use np.ix_ to generate the 2D index arrays for advanced indexing
-    return arr[np.ix_(row_indices, col_indices)]
