@@ -4,12 +4,12 @@ from functools import cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeGuard
 
+import ndv
 import numpy as np
 import numpy.typing as npt
 from PyQt6.QtGui import QImage
 from PyQt6.QtWidgets import QApplication, QVBoxLayout, QWidget
 
-from pymmcore_gui.widgets import _ndv as ndv
 from pymmcore_gui.widgets.image_preview._preview_base import _ImagePreviewBase
 
 if TYPE_CHECKING:
@@ -84,10 +84,10 @@ class Streamer:
 
         viewer.display_model.channel_axis = -3
         if num_channels == 3:
-            viewer.display_model.channel_mode = "rgb"
+            viewer.display_model.channel_mode = ndv.models.ChannelMode.RGBA
         viewer._update_visible_sliders()  # BUG
 
-    def append(self, data: np.ndarray, channel: int = 0) -> None:
+    def append(self, data: np.ndarray, channel: int | slice = 0) -> None:
         if channel == 0 or self._current_frame == -1:
             self._start_new_frame()
 
@@ -97,8 +97,8 @@ class Streamer:
                 channel = slice(None)
             else:
                 raise ValueError(f"Item must have shape {self._plane_shape}")
-        # if not (0 <= channel < self._num_channels):
-        # raise ValueError(f"Channel index {channel} out of range")
+        if isinstance(channel, int) and not (0 <= channel < self._num_channels):
+            raise ValueError(f"Channel index {channel} out of range")
 
         self._data[self._current_frame, channel] = data
 
