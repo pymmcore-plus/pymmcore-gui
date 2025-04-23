@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
-from weakref import WeakValueDictionary
+from typing import TYPE_CHECKING, cast
+from weakref import WeakSet, WeakValueDictionary
 
 import ndv
 import useq
@@ -52,6 +52,7 @@ class NDVViewersManager(QObject):
 
         # weakref map of {sequence_uid: ndv.ArrayViewer}
         self._seq_viewers = WeakValueDictionary[str, ndv.ArrayViewer]()
+        self._preview_dock_widgets = WeakSet[CDockWidget]()
         # currently active viewer
         self._active_viewer: ndv.ArrayViewer | None = None
 
@@ -64,12 +65,13 @@ class NDVViewersManager(QObject):
         # CONNECTIONS ---------------------------------------------------------
 
         self._is_mda_running = False
-        self._img_preview: CDockWidget | None = None
+        self._current_image_preview: CDockWidget | None = None
 
         ev = self._mmc.events
         ev.imageSnapped.connect(self._on_image_snapped)
         ev.sequenceAcquisitionStarted.connect(self._on_streaming_started)
         ev.continuousSequenceAcquisitionStarted.connect(self._on_streaming_started)
+        ev.propertyChanged.connect(self._on_property_changed)
 
         mda_ev = self._mmc.mda.events
         mda_ev.sequenceStarted.connect(self._on_sequence_started)
@@ -163,16 +165,17 @@ class NDVViewersManager(QObject):
     def _create_or_show_img_preview(self) -> ImagePreviewBase | None:
         """Create or show the image preview widget, return True if created."""
         preview = None
-        if self._img_preview is None:
+        if self._current_image_preview is None:
             preview = NDVPreview(mmcore=self._mmc)
             if not isinstance((parent := self.parent()), QWidget):
                 parent = None
-            self._img_preview = dw = CDockWidget("Preview", parent)
+            self._current_image_preview = dw = CDockWidget("Preview", parent)
+            self._preview_dock_widgets.add(dw)
             dw.setWidget(preview)
             dw.setFeature(dw.DockWidgetFeature.DockWidgetFloatable, False)
             self.previewViewerCreated.emit(dw)
         else:
-            self._img_preview.toggleView(True)
+            self._current_image_preview.toggleView(True)
 
         return preview
 
@@ -194,3 +197,15 @@ class NDVViewersManager(QObject):
 
     def viewers(self) -> Iterator[ndv.ArrayViewer]:
         yield from (self._seq_viewers.values())
+
+    def _on_property_changed(self, dev: str, prop: str, value: str) -> None:
+        if self._mmc is None:
+            return
+
+        # if we change camera, reconfigure the viewer
+        if dev == self._mmc.getCameraDevice() or (dev == "Core" and prop == "Camera"):
+            if self._current_image_preview:
+                preview = cast("NDVPreview", self._current_image_preview.widget())
+                preview.detach()
+
+            self._current_image_preview = None

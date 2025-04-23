@@ -145,7 +145,7 @@ class NDVPreview(ImagePreviewBase):
             if bits := core.getImageBitDepth():
                 img_width = core.getImageWidth()
                 img_height = core.getImageHeight()
-                shape = (img_width, img_height)
+                shape = (img_height, img_width)
                 num_channels = 3 if core.getNumberOfComponents() > 1 else 1
 
                 np_dtype = f"uint{bits}"
@@ -164,15 +164,15 @@ class NDVPreview(ImagePreviewBase):
         """Reconfigure the viewer when a Camera ROI is set."""
         self._setup_viewer()
 
-    def _on_property_changed(self, dev: str, prop: str, value: str) -> None:
-        """Reconfigure the viewer when a Camera property is changed."""
-        if self._mmc is None:
-            return
-        # if we change camera, reconfigure the viewer
-        if dev == "Core" and prop == "Camera":
-            self._setup_viewer()
-        # if any property related to the camera is changed, reconfigure the viewer
-        # e.g. bit depth, binning, etc.
-        # Maybe be more strict about which properties trigger a reconfigure?
-        elif dev == self._mmc.getCameraDevice():
-            self._setup_viewer()
+    # def _on_property_changed(self, dev: str, prop: str, value: str) -> None:
+    #     """Reconfigure the viewer when a Camera property is changed."""
+    #     if self._mmc is None:
+    #         return
+    #     # if we change camera, reconfigure the viewer
+    #     if dev == "Core" and prop == "Camera":
+    #         self._setup_viewer()
+    #     # if any property related to the camera is changed, reconfigure the viewer
+    #     # e.g. bit depth, binning, etc.
+    #     # Maybe be more strict about which properties trigger a reconfigure?
+    #     elif dev == self._mmc.getCameraDevice():
+    #         self._setup_viewer()
