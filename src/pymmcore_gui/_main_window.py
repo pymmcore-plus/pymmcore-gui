@@ -31,9 +31,9 @@ from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
 from ._ndv_viewers import NDVViewersManager
 from ._notification_manager import NotificationManager
+from ._settings import Settings
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
-from .settings import Settings
 
 try:
     from .widgets._pygfx_image import PygfxImagePreview as ImagePreview
