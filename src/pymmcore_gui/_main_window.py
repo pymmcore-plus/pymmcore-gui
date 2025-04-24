@@ -70,6 +70,25 @@ logger = logging.getLogger("pymmcore_gui")
 RESOURCES = Path(__file__).parent / "resources"
 ICON = RESOURCES / ("icon.ico" if sys.platform.startswith("win") else "logo.png")
 
+SS_TOOLBUTTON = """
+    QToolButton {
+        min-height: 35px;
+        max-height: 35px;
+    }
+    QToolButton:checked {
+        background-color: rgba(0, 174, 0, 255);
+        border: 2px solid rgba(0, 174, 0, 255);
+    }
+    QToolButton:checked:hover {
+        background-color: rgba(0, 174, 0, 80);
+        border: 2px solid rgba(0, 174, 0, 80);
+    }
+    QToolButton:!checked:hover {
+        background-color: rgba(0, 174, 0, 80);
+        border: 2px solid rgba(0, 174, 0, 100);
+    }
+"""
+
 
 class Menu(str, Enum):
     """Menu names."""
@@ -111,11 +130,12 @@ class MicroManagerGUI(QMainWindow):
         Toolbar.OPTICAL_CONFIGS: OCToolBar,
         # Toolbar.SHUTTERS: ShuttersToolbar,
         Toolbar.WIDGETS: [
-            WidgetAction.CONSOLE,
             WidgetAction.PROP_BROWSER,
+            WidgetAction.CONFIG_GROUPS,
             WidgetAction.MDA_WIDGET,
             WidgetAction.STAGE_CONTROL,
             WidgetAction.CAMERA_ROI,
+            WidgetAction.CONSOLE,
         ],
     }
     # Menus are a mapping of strings to either a list of ActionKeys or a callable
@@ -234,6 +254,7 @@ class MicroManagerGUI(QMainWindow):
             for action in tb_entry:
                 tb.addAction(self.get_action(action))
         tb.setObjectName(name)
+        tb.setStyleSheet(SS_TOOLBUTTON)
 
     def _add_menubar(self, name: str, menu_entry: MenuDictValue) -> None:
         mb = cast("QMenuBar", self.menuBar())
