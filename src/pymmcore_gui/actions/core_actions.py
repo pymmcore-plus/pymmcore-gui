@@ -15,6 +15,7 @@ class CoreAction(ActionKey):
 
     SNAP = "Snap Image"
     TOGGLE_LIVE = "Toggle Live"
+    LOAD_DEMO = "Load Demo Configuration"
 
 
 # ######################## Functions acting on the Core #########################
@@ -50,6 +51,11 @@ def _init_toggle_live(action: QCoreAction) -> None:
     mmc.events.sequenceAcquisitionStopped.connect(_on_change)
 
 
+def load_demo_config(action: QCoreAction, checked: bool) -> None:
+    """Load the demo configuration."""
+    action.mmc.loadSystemConfiguration()
+
+
 # ########################## Action Info Instances #############################
 
 snap_action = ActionInfo(
@@ -69,4 +75,9 @@ toggle_live_action = ActionInfo(
     checkable=True,
     on_triggered=toggle_live,
     on_created=_init_toggle_live,
+)
+
+load_demo_action = ActionInfo(
+    key=CoreAction.LOAD_DEMO,
+    on_triggered=load_demo_config,
 )

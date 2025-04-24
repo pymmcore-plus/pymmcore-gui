@@ -12,14 +12,23 @@ from typing import TYPE_CHECKING, cast
 
 from PyQt6.QtCore import QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QMessageBox,
+    QWidget,
+)
 from superqt.utils import WorkerBase
 
 from pymmcore_gui import __version__
 from pymmcore_gui._main_window import ICON, MicroManagerGUI
+from pymmcore_gui._settings import Settings
+
+from . import _sentry
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+    from pathlib import Path
     from types import TracebackType
 
     ExcTuple = tuple[type[BaseException], BaseException, TracebackType | None]
@@ -71,12 +80,25 @@ def parse_args(args: Sequence[str] = ()) -> argparse.Namespace:
         help="Config file to load",
         nargs="?",
     )
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        default=False,
+        help="Reset settings to default values and exit.",
+    )
+
     return parser.parse_args(args)
 
 
 def main() -> None:
     """Run the Micro-Manager GUI."""
     args = parse_args()
+    if args.reset:
+        from pymmcore_gui._settings import reset_to_defaults
+
+        reset_to_defaults()
+        print("Settings reset to defaults.")
+        sys.exit(0)
 
     # Note: in practice this should almost never be None,
     # but in the case of testing, it's conceivable that it could be.
@@ -94,14 +116,11 @@ def main() -> None:
     win = MicroManagerGUI()
     QTimer.singleShot(0, lambda: win._restore_state(True))
 
-    # FIXME: be better...
-    try:
-        if args.config:
-            win.mmcore.loadSystemConfiguration(args.config)
-        else:
-            win.mmcore.loadSystemConfiguration()
-    except Exception as e:
-        print(f"Failed to load system configuration: {e}")
+    if config := _decide_configuration(args.config, win):
+        try:
+            win.mmcore.loadSystemConfiguration(config)
+        except Exception as e:
+            print(f"Failed to load system configuration: {e}")
 
     splsh = "_PYI_SPLASH_IPC" in os.environ and importlib.util.find_spec("pyi_splash")
     if splsh:  # pragma: no cover
@@ -110,7 +129,52 @@ def main() -> None:
         pyi_splash.update_text("UI Loaded ...")
         pyi_splash.close()
 
+    _sentry.install_error_reporter()
     app.exec()
+
+
+def _decide_configuration(
+    config: str | None = None, parent: QWidget | None = None
+) -> str | None:
+    settings = Settings.instance()
+    if config:
+        return config
+
+    if last_config := settings.last_config:
+        if auto_load := settings.auto_load_last_config:
+            return str(last_config)
+
+        # show dialog to ask if the user wants to load the last config
+        if auto_load is None:
+            dialog = LoadConfigDialog(last_config)
+            if (btn := dialog.exec()) != QMessageBox.StandardButton.Cancel:
+                auto_load = btn == QMessageBox.StandardButton.Yes
+                if dialog.dont_ask_again.isChecked():
+                    settings.auto_load_last_config = auto_load
+                    settings.flush()
+                if auto_load:
+                    return str(last_config)
+
+    if settings.fallback_to_demo_config:
+        return "MMConfig_demo.cfg"
+    return None
+
+
+class LoadConfigDialog(QMessageBox):
+    def __init__(self, last_config: Path | str):
+        super().__init__(
+            QMessageBox.Icon.Question,
+            "Load last config?",
+            f"Do you want to load the last-used config file:\n\n{last_config}?",
+            QMessageBox.StandardButton.Yes
+            | QMessageBox.StandardButton.No
+            | QMessageBox.StandardButton.Cancel,
+        )
+        self.setDefaultButton(QMessageBox.StandardButton.Yes)
+        self.setEscapeButton(QMessageBox.StandardButton.Cancel)
+
+        self.dont_ask_again = QCheckBox("Don't ask again")
+        self.setCheckBox(self.dont_ask_again)
 
 
 # ------------------- Custom excepthook -------------------

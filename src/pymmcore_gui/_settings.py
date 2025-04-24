@@ -125,7 +125,16 @@ class SettingsV1(BaseMMSettings):
 
     version: Literal["1.0"] = "1.0"
     window: WindowSettingsV1 = Field(default_factory=WindowSettingsV1)
+
+    send_error_reports: bool | None = None
+    """Whether to send error reports to the developers, None means undecided."""
+
     last_config: Path | None = None
+    """Path to the last used config file."""
+    auto_load_last_config: bool | None = None
+    """Load the last used config on startup. None means undecided."""
+    fallback_to_demo_config: bool = False
+    """Load demo config if no config is found."""
 
     @property
     def version_tuple(self) -> tuple[int, int, str]:
@@ -198,3 +207,12 @@ class SettingsV1(BaseMMSettings):
 
 Settings = SettingsV1
 _GLOBAL_SETTINGS = SettingsV1()
+
+
+def reset_to_defaults() -> None:
+    """Erase user settings and reset to defaults."""
+    global _GLOBAL_SETTINGS
+    if TESTING or os.getenv("MMGUI_NO_SETTINGS"):  # pragma: no cover
+        return
+    SETTINGS_FILE_NAME.unlink(missing_ok=True)
+    _GLOBAL_SETTINGS = SettingsV1()

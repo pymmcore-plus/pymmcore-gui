@@ -31,6 +31,7 @@ from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
 from ._ndv_viewers import NDVViewersManager
 from ._notification_manager import NotificationManager
+from ._settings import Settings
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
 from .settings import Settings
@@ -70,6 +71,7 @@ class Menu(str, Enum):
 
     PYMM_GUI = "pymmcore-gui"
     WINDOW = "Window"
+    HELP = "Help"
 
     def __str__(self) -> str:
         return str(self.value)
@@ -126,6 +128,7 @@ class MicroManagerGUI(QMainWindow):
             WidgetAction.EXCEPTION_LOG,
             WidgetAction.CONFIG_WIZARD,
         ],
+        Menu.HELP: [CoreAction.LOAD_DEMO],
     }
 
     def __init__(self, *, mmcore: CMMCorePlus | None = None) -> None:
@@ -146,6 +149,9 @@ class MicroManagerGUI(QMainWindow):
 
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
+        self._mmc.events.systemConfigurationLoaded.connect(
+            self._on_system_config_loaded
+        )
 
         self._viewers_manager = NDVViewersManager(self, self._mmc)
         self._viewers_manager.mdaViewerCreated.connect(self._on_viewer_created)
