@@ -76,6 +76,7 @@ class Menu(str, Enum):
 
     PYMM_GUI = "pymmcore-gui"
     WINDOW = "Window"
+    HELP = "Help"
 
     def __str__(self) -> str:
         return str(self.value)
@@ -132,6 +133,7 @@ class MicroManagerGUI(QMainWindow):
             WidgetAction.EXCEPTION_LOG,
             WidgetAction.CONFIG_WIZARD,
         ],
+        Menu.HELP: [CoreAction.LOAD_DEMO],
     }
 
     def __init__(self, *, mmcore: CMMCorePlus | None = None) -> None:
@@ -152,6 +154,9 @@ class MicroManagerGUI(QMainWindow):
 
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
+        self._mmc.events.systemConfigurationLoaded.connect(
+            self._on_system_config_loaded
+        )
 
         self._img_preview = ImagePreview(self, mmcore=self._mmc)
         self._img_preview.setObjectName("ImagePreview")
