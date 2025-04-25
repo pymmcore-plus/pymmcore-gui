@@ -99,15 +99,17 @@ class ActionInfo(BaseModel):
     def for_key(cls, key: str) -> Self:
         """Get the ActionInfo for a given key."""
         if key not in ActionInfo._registry:
-            key_type = type(key).__name__
-            parent_module = __name__.rsplit(".", 1)[0]
-            if key_type == "WidgetAction":
-                module = f"{parent_module}.widget_actions"
-            else:
-                module = f"{parent_module}.core_actions"
+            # Find possible matches among available widget actions
+            import difflib
+
+            suggestion = ""
+            if matches := difflib.get_close_matches(
+                key, list(ActionInfo._registry), n=1, cutoff=0.5
+            ):
+                suggestion = f"\nDid you mean: {matches[0]}?"
+
             raise KeyError(
-                f"No 'ActionInfo' has been declared for key '{key_type}.{key}'. "
-                f"Please create one in {module}"
+                f"No 'ActionInfo' has been declared for key '{key}'.{suggestion}"
             )
 
         info = ActionInfo._registry[key]

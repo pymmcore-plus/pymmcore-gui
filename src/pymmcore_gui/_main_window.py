@@ -399,22 +399,7 @@ class MicroManagerGUI(QMainWindow):
         initial_widgets = settings.window.initial_widgets
         # we need to create the widgets first, before calling restoreState.
         for key in initial_widgets:
-            try:
-                self.get_widget(key)
-            except KeyError:
-                # Find possible matches among available widget actions
-                import difflib
-
-                if matches := difflib.get_close_matches(
-                    key, list(ActionInfo._registry), n=1, cutoff=0.5
-                ):
-                    suggestion = f"\nDid you mean: {matches[0]}?"
-                else:
-                    suggestion = ""
-                self.nm.show_warning_message(
-                    "Cannot find info for widget that was saved in the settings with "
-                    f"key: {key!r}.{suggestion}",
-                )
+            self.get_widget(key)
 
         # restore position and size of the main window
         if geo := settings.window.geometry:
