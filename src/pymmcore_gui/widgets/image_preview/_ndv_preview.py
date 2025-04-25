@@ -18,10 +18,40 @@ if TYPE_CHECKING:
     class QRenderWidget(rendercanvas.qt.QRenderWidget, QWidget): ...  # pyright: ignore [reportIncompatibleMethodOverride]
 
 
-class _StreamingWrapper(ndv.DataWrapper):
-    def __init__(self, streamer: Streamer):
-        super().__init__(streamer._data)
-        self._streamer = streamer
+class CircularBuffer(ndv.DataWrapper):
+    def __init__(
+        self,
+        plane_shape: tuple[int, ...],
+        num_channels: int = 1,
+        max_planes: int = 100,
+        dtype: npt.DTypeLike = np.uint16,
+    ):
+        self.max_planes = max_planes
+        self.num_channels = num_channels
+        self.plane_shape = plane_shape
+
+        self._start = 0  # index of the oldest frame in the buffer
+        self._count = 0  # number of valid frames
+        self._current_frame = -1  # logical time index for grouped channels
+
+        self._data = np.zeros((max_planes, num_channels, *plane_shape), dtype=dtype)
+        super().__init__(self._data)
+
+    def _shape(self) -> tuple[int, ...]:
+        """Return the shape of the *valid* data."""
+        n_planes = self.count or 1
+        return (n_planes, self.num_channels, *self.plane_shape)
+
+    @property
+    def dims(self) -> tuple[int, ...]:
+        """Return the dimensions of the data."""
+        return tuple(range(len(self._shape())))
+
+    @property
+    def coords(self) -> Mapping:
+        """Return the coordinates for the data."""
+        shape = self._shape()
+        return {i: range(s) for i, s in enumerate(shape)}
 
     @classmethod
     def supports(cls, obj: Any) -> TypeGuard[Any]:
@@ -32,22 +62,59 @@ class _StreamingWrapper(ndv.DataWrapper):
 
     def isel(self, index: Mapping[int, int | slice]) -> np.ndarray:
         """Return a slice of the data as a numpy array, never empty in axis 0."""
-        strm = self._streamer
-        max_planes = strm._max_planes
-        count = strm._count
-        start = strm._start
-
-        if count == 0:
-            # Return a dummy first frame to maintain correct ndim
-            ary = strm._data[:1]
-        elif count < max_planes:
-            ary = strm._data[:count]
-        else:
-            idx = np.arange(start, start + max_planes) % max_planes
-            ary = strm._data[idx]
-
+        idx = self._cur_idx()
+        ary = self._data[idx]
         idx_tuple = tuple(index.get(k, slice(None)) for k in range(ary.ndim))
         return ary[idx_tuple]
+
+    def _cur_idx(self) -> slice | np.ndarray:
+        """Return the current index of the logical timepoint."""
+        count = self._count
+        if count == 0:
+            return slice(None, 1)
+        elif count < self.max_planes:
+            return slice(None, count)
+        idx = np.arange(self._start, self._start + self.max_planes) % self.max_planes
+        return idx
+
+    @property
+    def current_frame(self) -> int:
+        """Return the current logical timepoint (frame)."""
+        return self._current_frame
+
+    @property
+    def count(self) -> int:
+        """Return the number of valid frames in the buffer."""
+        return self._count
+
+    def _advance(self) -> None:
+        """Advance to a new logical timepoint (frame)."""
+        mp = self.max_planes
+        if self._count < mp:
+            self._current_frame = self._count
+            self._count += 1
+            self.dims_changed.emit()
+        else:
+            # Advance _start first, then compute new end-of-buffer index
+            self._start = (self._start + 1) % mp
+            self._current_frame = (self._start + mp - 1) % mp
+
+    def append(self, data: np.ndarray, channel: int | slice = 0) -> None:
+        if channel == 0 or self.current_frame == -1:
+            self._advance()
+
+        nc = self.num_channels
+        if data.shape != self.plane_shape:
+            if nc == 3 and data.ndim == 3:
+                data = np.transpose(data, (2, 0, 1))
+                channel = slice(None)
+            else:
+                raise ValueError(f"Item must have shape {self.plane_shape}")
+
+        if isinstance(channel, int) and not (0 <= channel < nc):
+            raise ValueError(f"Channel index {channel} out of range")
+
+        self._data[self.current_frame, channel] = data
 
 
 class Streamer:
@@ -61,22 +128,12 @@ class Streamer:
         *,
         process_events_on_update: bool = True,
     ) -> None:
-        self._plane_shape = plane_shape
-
-        self._max_planes = max_planes
-        self._num_channels = num_channels
-        self._data = np.zeros((max_planes, num_channels, *plane_shape), dtype=dtype)
-        self._wrapper = _StreamingWrapper(self)
-
         self.viewer = viewer
         self.viewer._viewer_model.show_roi_button = False
         self.viewer._viewer_model.show_3d_button = False
         self.process_events_on_update = process_events_on_update
 
-        self._start = 0  # index of the oldest frame in the buffer
-        self._count = 0  # number of valid frames
-        self._current_frame = -1  # logical time index for grouped channels
-
+        self._wrapper = CircularBuffer(plane_shape, num_channels, max_planes, dtype)
         viewer.data = self._wrapper
 
         viewer.display_model.channel_axis = -3
@@ -85,35 +142,10 @@ class Streamer:
         viewer._update_visible_sliders()  # BUG
 
     def append(self, data: np.ndarray, channel: int | slice = 0) -> None:
-        if channel == 0 or self._current_frame == -1:
-            self._start_new_frame()
-
-        if data.shape != self._plane_shape:
-            if self._num_channels == 3 and data.ndim == 3:
-                data = np.transpose(data, (2, 0, 1))
-                channel = slice(None)
-            else:
-                raise ValueError(f"Item must have shape {self._plane_shape}")
-        if isinstance(channel, int) and not (0 <= channel < self._num_channels):
-            raise ValueError(f"Channel index {channel} out of range")
-
-        self._data[self._current_frame, channel] = data
-
-        self.viewer.display_model.current_index.update({0: self._count - 1})
+        self._wrapper.append(data, channel)
+        self.viewer.display_model.current_index.update({0: self._wrapper.count - 1})
         if self.process_events_on_update:
             QApplication.processEvents()
-
-    def _start_new_frame(self) -> None:
-        """Advance to a new logical timepoint (frame)."""
-        if self._count < self._max_planes:
-            self._current_frame = self._count
-            self._count += 1
-        else:
-            # Advance _start first, then compute new end-of-buffer index
-            self._start = (self._start + 1) % self._max_planes
-            self._current_frame = (
-                self._start + self._max_planes - 1
-            ) % self._max_planes
 
 
 class NDVPreview(ImagePreviewBase):
@@ -163,16 +195,3 @@ class NDVPreview(ImagePreviewBase):
     def _on_roi_set(self) -> None:
         """Reconfigure the viewer when a Camera ROI is set."""
         self._setup_viewer()
-
-    # def _on_property_changed(self, dev: str, prop: str, value: str) -> None:
-    #     """Reconfigure the viewer when a Camera property is changed."""
-    #     if self._mmc is None:
-    #         return
-    #     # if we change camera, reconfigure the viewer
-    #     if dev == "Core" and prop == "Camera":
-    #         self._setup_viewer()
-    #     # if any property related to the camera is changed, reconfigure the viewer
-    #     # e.g. bit depth, binning, etc.
-    #     # Maybe be more strict about which properties trigger a reconfigure?
-    #     elif dev == self._mmc.getCameraDevice():
-    #         self._setup_viewer()

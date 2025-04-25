@@ -34,7 +34,7 @@ from ._notification_manager import NotificationManager
 from ._settings import Settings
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionKey
-from .settings import Settings
+from ._settings import Settings
 from .widgets._toolbars import OCToolBar
 
 if TYPE_CHECKING:
