@@ -86,7 +86,7 @@ allow-direct-references = true
 
 # same as console_scripts entry point
 [project.scripts]
-mmgui = "pymmcore_gui._app:main"
+mmgui = "pymmcore_gui.__main__:main"
 
 [project.urls]
 homepage = "https://github.com/tlambert03/pymmcore-gui"

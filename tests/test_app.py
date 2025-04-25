@@ -12,7 +12,7 @@ def test_main_app(monkeypatch: MonkeyPatch) -> None:
         _app.MMQApplication, "exec", lambda _: QApplication.processEvents()
     ):
         monkeypatch.setattr(sys, "argv", ["mmgui"])
-        _app.main()
+        _app.create_mmgui()
 
         assert QApplication.instance()
         assert isinstance(QApplication.instance(), _app.MMQApplication)
