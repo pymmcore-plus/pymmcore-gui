@@ -39,6 +39,7 @@ def main() -> None:
         sys.exit(0)
 
     create_mmgui(mm_config=args.config, exec_app=True)
+    sys.exit(0)
 
 
 if __name__ == "__main__":

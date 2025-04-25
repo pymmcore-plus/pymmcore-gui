@@ -7,16 +7,11 @@ import sys
 import traceback
 import warnings
 from contextlib import suppress
-from typing import TYPE_CHECKING, Literal, cast, overload
+from typing import TYPE_CHECKING, Literal, cast
 
 from PyQt6.QtCore import QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import (
-    QApplication,
-    QCheckBox,
-    QMessageBox,
-    QWidget,
-)
+from PyQt6.QtWidgets import QApplication, QCheckBox, QMessageBox, QWidget
 from superqt.utils import WorkerBase
 
 from pymmcore_gui import __version__
@@ -32,7 +27,7 @@ if TYPE_CHECKING:
     ExcTuple = tuple[type[BaseException], BaseException, TracebackType | None]
 
 APP_NAME = "Micro-Manager GUI"
-APP_VERSION = __version__
+APP_VERSION: str = __version__
 ORG_NAME = "pymmcore-plus"
 ORG_DOMAIN = "pymmcore-plus"
 APP_ID = f"{ORG_DOMAIN}.{ORG_NAME}.{APP_NAME}.{APP_VERSION}"
@@ -65,29 +60,13 @@ class MMQApplication(QApplication):
         self.aboutToQuit.connect(WorkerBase.await_workers)
 
 
-@overload
-def create_mmgui(
-    *,
-    mm_config: str | None | Literal[False] = ...,
-    install_sys_excepthook: bool = ...,
-    install_sentry: bool = ...,
-    exec_app: Literal[False],
-) -> MicroManagerGUI: ...
-@overload
-def create_mmgui(
-    *,
-    mm_config: str | None | Literal[False] = ...,
-    install_sys_excepthook: bool = ...,
-    install_sentry: bool = ...,
-    exec_app: Literal[True] = ...,
-) -> None: ...
 def create_mmgui(
     *,
     mm_config: str | None | Literal[False] = None,
     install_sys_excepthook: bool = True,
     install_sentry: bool = True,
     exec_app: bool = True,
-) -> None | MicroManagerGUI:
+) -> MicroManagerGUI:
     """Initialize the pymmcore-gui application and Main Window.
 
     This is the primary way to start pymmcore-gui.  (It is also called by
@@ -110,7 +89,7 @@ def create_mmgui(
         If True (the default), the user will be given an option to send error reports
         to the developers, unless they have previously opted in/out.  If False, no
         prompt will be shown, and no error reports will be sent.
-    exec_qapp : bool
+    exec_app : bool
         If True (the default), the QApplication event loop will be started.  If
         False, the event loop will not be started, and the caller is responsible for
         starting it with `QApplication.instance().exec()`.
@@ -125,9 +104,6 @@ def create_mmgui(
             " This may cause unexpected behavior.",
             stacklevel=2,
         )
-
-    if install_sys_excepthook:
-        _install_excepthook()
 
     win = MicroManagerGUI()
     QTimer.singleShot(0, lambda: win._restore_state(show=True))
@@ -145,20 +121,25 @@ def create_mmgui(
             except Exception as e:
                 print(f"Failed to load system configuration: {e}")
 
+    if install_sys_excepthook:
+        _install_excepthook()
+    if install_sentry:
+        _sentry.install_error_reporter()
+
     # close the PyInstaller splash screen if it exists
-    splsh = "_PYI_SPLASH_IPC" in os.environ and importlib.util.find_spec("pyi_splash")
-    if splsh:  # pragma: no cover
+    _close_splash_screen()
+
+    if exec_app:
+        app.exec()
+    return win
+
+
+def _close_splash_screen() -> None:  # pragma: no cover
+    if "_PYI_SPLASH_IPC" in os.environ and importlib.util.find_spec("pyi_splash"):
         import pyi_splash  # pyright: ignore [reportMissingModuleSource]
 
         pyi_splash.update_text("UI Loaded ...")
         pyi_splash.close()
-
-    if install_sentry:
-        _sentry.install_error_reporter()
-    if exec_app:
-        app.exec()
-    else:
-        return win
 
 
 def _decide_configuration(

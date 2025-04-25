@@ -11,6 +11,7 @@ def test_main_app(monkeypatch: MonkeyPatch) -> None:
     with patch.object(
         _app.MMQApplication, "exec", lambda _: QApplication.processEvents()
     ):
+        assert not QApplication.instance()
         monkeypatch.setattr(sys, "argv", ["mmgui"])
         _app.create_mmgui()
 
