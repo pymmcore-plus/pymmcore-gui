@@ -157,8 +157,6 @@ class WidgetAction(ActionKey):
     def create_widget(self, parent: QWidget) -> QWidget:
         """Create the widget associated with this action."""
         info: WidgetActionInfo[QWidget] = WidgetActionInfo.for_key(self)
-        if not info.create_widget:
-            raise NotImplementedError(f"No constructor has been provided for {self!r}")
         return info.create_widget(parent)
 
     def dock_area(self) -> DockWidgetArea | SideBarLocation | None:
@@ -182,12 +180,19 @@ class WidgetActionInfo(ActionInfo, Generic[WT]):
     # by default, widget actions are checkable, and the check state indicates visibility
     checkable: bool = True
     # function that can be called with (parent: QWidget) -> QWidget
-    create_widget: Callable[[QWidget], WT] | None = None
+    create_widget: Callable[[QWidget], WT] = None  # type: ignore[assignment]
     # Use None to indicate that the widget should not be docked
     dock_area: DockWidgetArea | SideBarLocation | None = (
         DockWidgetArea.RightDockWidgetArea
     )
     scroll_mode: CDockWidget.eInsertMode = CDockWidget.eInsertMode.AutoScrollArea
+
+    def __post_init__(self) -> None:
+        """Ensure that the create_widget function is set."""
+        if self.create_widget is None:  # pragma: no cover
+            raise ValueError(
+                f"WidgetActionInfo for {self.key!r} must have a create_widget function."
+            )
 
 
 show_about = WidgetActionInfo(

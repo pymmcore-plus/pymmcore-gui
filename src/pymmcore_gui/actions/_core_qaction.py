@@ -9,13 +9,13 @@ if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
     from PyQt6.QtCore import QObject
 
-    from ._action_info import ActionInfo, ActionKey, ActionTriggeredFunc
+    from ._action_info import ActionInfo, ActionTriggeredFunc
 
 
 class QCoreAction(QAction):
     """QAction that can act on a CMMCorePlus instance."""
 
-    key: ActionKey
+    key: str
 
     def __init__(
         self,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, ClassVar
 
 from pymmcore_plus import CMMCorePlus
 from PyQt6.QtCore import QObject
@@ -19,13 +19,13 @@ if TYPE_CHECKING:
     from PyQt6.QtGui import QAction, QIcon, QKeySequence
     from typing_extensions import Self
 
+    from pymmcore_gui.actions.widget_actions import WidgetActionInfo
+
     CoreActionFunc: TypeAlias = Callable[[QCoreAction], Any]
     ActionTriggeredFunc: TypeAlias = Callable[[QCoreAction, bool], Any]
 
-AK = TypeVar("AK", bound="ActionKey")
 
-
-class ActionKey(Enum):
+class ActionKey(str, Enum):
     """A Key representing an action in the GUI.
 
     This is subclassed in core_actions, widget_actions, etc. to provide a unique key
@@ -41,10 +41,10 @@ class ActionKey(Enum):
 
 
 @dataclass
-class ActionInfo(Generic[AK]):
+class ActionInfo:
     """Information for creating a QCoreAction."""
 
-    key: AK
+    key: str
 
     text: str | None = None
     auto_repeat: bool = False
@@ -70,7 +70,7 @@ class ActionInfo(Generic[AK]):
     on_created: CoreActionFunc | None = None
 
     # global registry of all Action
-    _registry: ClassVar[dict[ActionKey, ActionInfo]] = {}
+    _registry: ClassVar[dict[str, ActionInfo]] = {}
     _action_cls: ClassVar[type[QCoreAction]] = QCoreAction
 
     def __post_init__(self) -> None:
@@ -88,12 +88,9 @@ class ActionInfo(Generic[AK]):
         return self._action_cls(mmc, self, parent)
 
     @classmethod
-    def for_key(cls, key: ActionKey) -> Self:
+    def for_key(cls, key: str) -> Self:
         """Get the ActionInfo for a given key."""
-        try:
-            # TODO: is this cast valid?
-            return cast("Self", ActionInfo._registry[key])
-        except KeyError as e:  # pragma: no cover
+        if key not in ActionInfo._registry:
             key_type = type(key).__name__
             parent_module = __name__.rsplit(".", 1)[0]
             if key_type == "WidgetAction":
@@ -101,6 +98,23 @@ class ActionInfo(Generic[AK]):
             else:
                 module = f"{parent_module}.core_actions"
             raise KeyError(
-                f"No 'ActionInfo' has been declared for key '{key_type}.{key.name}'."
+                f"No 'ActionInfo' has been declared for key '{key_type}.{key}'."
                 f"Please create one in {module}"
-            ) from e
+            )
+
+        info = ActionInfo._registry[key]
+        if not isinstance(info, cls):
+            raise TypeError(
+                f"ActionInfo for key {key} is not an instance of {cls!r}. "
+                f"Please call `for_key` on the appropriate super-class."
+            )
+        return info
+
+    @classmethod
+    def widget_actions(cls) -> dict[str, WidgetActionInfo]:
+        """Return all widget actions."""
+        from pymmcore_gui.actions.widget_actions import WidgetActionInfo
+
+        return {
+            k: v for k, v in cls._registry.items() if isinstance(v, WidgetActionInfo)
+        }
