@@ -4,7 +4,7 @@ from unittest.mock import patch
 from PyQt6.QtWidgets import QApplication
 from pytest import MonkeyPatch
 
-from pymmcore_gui import _app
+from pymmcore_gui import __main__, _app
 
 
 def test_main_app(monkeypatch: MonkeyPatch) -> None:
@@ -13,7 +13,7 @@ def test_main_app(monkeypatch: MonkeyPatch) -> None:
     ):
         assert not QApplication.instance()
         monkeypatch.setattr(sys, "argv", ["mmgui"])
-        _app.create_mmgui()
+        __main__.main()
 
         assert QApplication.instance()
         assert isinstance(QApplication.instance(), _app.MMQApplication)
