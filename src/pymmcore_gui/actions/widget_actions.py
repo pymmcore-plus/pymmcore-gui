@@ -193,6 +193,7 @@ class WidgetActionInfo(ActionInfo, Generic[WT]):
             raise ValueError(
                 f"WidgetActionInfo for {self.key!r} must have a create_widget function."
             )
+        super().__post_init__()
 
 
 show_about = WidgetActionInfo(

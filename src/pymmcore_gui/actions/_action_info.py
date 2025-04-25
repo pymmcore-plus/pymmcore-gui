@@ -34,7 +34,7 @@ class ActionKey(str, Enum):
 
     def __str__(self) -> str:
         """Return value as the string representation."""
-        return str(self.value)
+        return str(self.name)
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}.{self.name}"
@@ -98,7 +98,7 @@ class ActionInfo:
             else:
                 module = f"{parent_module}.core_actions"
             raise KeyError(
-                f"No 'ActionInfo' has been declared for key '{key_type}.{key}'."
+                f"No 'ActionInfo' has been declared for key '{key_type}.{key}'. "
                 f"Please create one in {module}"
             )
 
