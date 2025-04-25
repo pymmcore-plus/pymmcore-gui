@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     ExcTuple = tuple[type[BaseException], BaseException, TracebackType | None]
 
 APP_NAME = "Micro-Manager GUI"
-APP_VERSION: str = __version__
+APP_VERSION = __version__
 ORG_NAME = "pymmcore-plus"
 ORG_DOMAIN = "pymmcore-plus"
 APP_ID = f"{ORG_DOMAIN}.{ORG_NAME}.{APP_NAME}.{APP_VERSION}"
