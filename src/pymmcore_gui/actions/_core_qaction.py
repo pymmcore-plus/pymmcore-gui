@@ -54,6 +54,7 @@ class QCoreAction(QAction):
             if isinstance(info.icon, str):
                 icon: QIcon = QIconifyIcon(info.icon)
             else:
+                breakpoint()
                 icon = QIcon(info.icon)
             self.setIcon(icon)
         if info.icon_text is not None:

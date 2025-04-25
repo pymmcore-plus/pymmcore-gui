@@ -1,28 +1,26 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Callable
 from enum import Enum
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Annotated, Any, ClassVar
 
+from pydantic import BaseModel, PlainValidator
 from pymmcore_plus import CMMCorePlus
-from PyQt6.QtCore import QObject
-from PyQt6.QtGui import QAction
+from PyQt6.QtCore import QObject, Qt  # noqa: TC002
+from PyQt6.QtGui import QAction, QIcon, QKeySequence
 
 from pymmcore_gui.actions._core_qaction import QCoreAction
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-    from typing import Any, TypeAlias
+    from typing import TypeAlias
 
     from pymmcore_plus import CMMCorePlus
-    from PyQt6.QtCore import QObject, Qt
-    from PyQt6.QtGui import QAction, QIcon, QKeySequence
     from typing_extensions import Self
 
     from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
-    CoreActionFunc: TypeAlias = Callable[[QCoreAction], Any]
-    ActionTriggeredFunc: TypeAlias = Callable[[QCoreAction, bool], Any]
+CoreActionFunc: TypeAlias = Callable[[QCoreAction], Any]
+ActionTriggeredFunc: TypeAlias = Callable[[QCoreAction, bool], Any]
 
 
 class ActionKey(str, Enum):
@@ -40,8 +38,23 @@ class ActionKey(str, Enum):
         return f"{self.__class__.__name__}.{self.name}"
 
 
-@dataclass
-class ActionInfo:
+def ensure_isinstance(cls: type) -> PlainValidator:
+    """Check if the value is an instance of the class."""
+
+    def _check_type(value: Any) -> None:
+        if not isinstance(value, cls):
+            raise TypeError(
+                f"Expected {cls.__name__}, got {type(value).__name__} instead."
+            )
+
+    return PlainValidator(_check_type)
+
+
+QIconType: TypeAlias = Annotated[QIcon, ensure_isinstance(QIcon)]
+QKeySequenceType: TypeAlias = Annotated[QKeySequence, ensure_isinstance(QKeySequence)]
+
+
+class ActionInfo(BaseModel):
     """Information for creating a QCoreAction."""
 
     key: str
@@ -51,12 +64,12 @@ class ActionInfo:
     checkable: bool = False
     checked: bool = False
     enabled: bool = True
-    icon: QIcon | str | None = None
+    icon: str | None | QIconType = None
     icon_text: str | None = None
     icon_visible_in_menu: bool | None = None
     menu_role: QAction.MenuRole | None = None
     priority: QAction.Priority | None = None
-    shortcut: str | QKeySequence | None = None
+    shortcut: str | None | QKeySequenceType = None
     shortcut_context: Qt.ShortcutContext | None = None
     shortcut_visible_in_context_menu: bool | None = None
     status_top: str | None = None
@@ -73,7 +86,7 @@ class ActionInfo:
     _registry: ClassVar[dict[str, ActionInfo]] = {}
     _action_cls: ClassVar[type[QCoreAction]] = QCoreAction
 
-    def __post_init__(self) -> None:
+    def model_post_init(self, __context: Any) -> None:
         ActionInfo._registry[self.key] = self
 
     def mark_on_created(self, f: CoreActionFunc) -> CoreActionFunc:

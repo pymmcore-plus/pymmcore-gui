@@ -2,25 +2,22 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Generic, TypeVar, cast
+from collections.abc import Callable  # noqa: TC003
+from typing import TYPE_CHECKING, Annotated, cast
 
 from pymmcore_plus import CMMCorePlus
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QDialog, QWidget
 from PyQt6Ads import CDockWidget, DockWidgetArea, SideBarLocation
 
 from pymmcore_gui.actions._action_info import ActionKey
 
-from ._action_info import ActionInfo
+from ._action_info import ActionInfo, ensure_isinstance
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     import pymmcore_widgets as pmmw
     from PyQt6.QtCore import QObject
-    from PyQt6.QtWidgets import QWidget
 
     from pymmcore_gui._main_window import MicroManagerGUI
     from pymmcore_gui.widgets._exception_log import ExceptionLog
@@ -156,7 +153,7 @@ class WidgetAction(ActionKey):
 
     def create_widget(self, parent: QWidget) -> QWidget:
         """Create the widget associated with this action."""
-        info: WidgetActionInfo[QWidget] = WidgetActionInfo.for_key(self)
+        info: WidgetActionInfo = WidgetActionInfo.for_key(self)
         return info.create_widget(parent)
 
     def dock_area(self) -> DockWidgetArea | SideBarLocation | None:
@@ -170,30 +167,22 @@ class WidgetAction(ActionKey):
 
 # ######################## WidgetActionInfos #########################
 
-WT = TypeVar("WT", bound="QWidget")
+
+QWidgetType = Annotated[QWidget, ensure_isinstance(QWidget)]
 
 
-@dataclass
-class WidgetActionInfo(ActionInfo, Generic[WT]):
+class WidgetActionInfo(ActionInfo):
     """Subclass to set default values for WidgetAction."""
 
     # by default, widget actions are checkable, and the check state indicates visibility
     checkable: bool = True
     # function that can be called with (parent: QWidget) -> QWidget
-    create_widget: Callable[[QWidget], WT] = None  # type: ignore[assignment]
+    create_widget: Callable[[QWidgetType], QWidget]
     # Use None to indicate that the widget should not be docked
     dock_area: DockWidgetArea | SideBarLocation | None = (
         DockWidgetArea.RightDockWidgetArea
     )
     scroll_mode: CDockWidget.eInsertMode = CDockWidget.eInsertMode.AutoScrollArea
-
-    def __post_init__(self) -> None:
-        """Ensure that the create_widget function is set."""
-        if self.create_widget is None:  # pragma: no cover
-            raise ValueError(
-                f"WidgetActionInfo for {self.key!r} must have a create_widget function."
-            )
-        super().__post_init__()
 
 
 show_about = WidgetActionInfo(
