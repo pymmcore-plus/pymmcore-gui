@@ -89,11 +89,6 @@ class ActionInfo(BaseModel):
     def model_post_init(self, __context: Any) -> None:
         ActionInfo._registry[self.key] = self
 
-    def mark_on_created(self, f: CoreActionFunc) -> CoreActionFunc:
-        """Decorator to mark a function to call when the QAction is created."""
-        self.on_created = f
-        return f
-
     def to_qaction(
         self, mmc: CMMCorePlus, parent: QObject | None = None
     ) -> QCoreAction:
