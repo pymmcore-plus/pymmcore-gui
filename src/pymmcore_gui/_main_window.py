@@ -202,7 +202,7 @@ class MicroManagerGUI(QMainWindow):
         self._central.setWidget(self._img_preview)
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
-        QTimer.singleShot(0, lambda: self._restore_state(True))
+        QTimer.singleShot(0, self._restore_state)
 
     # --------------------- Properties ----------------------
 
@@ -283,7 +283,6 @@ class MicroManagerGUI(QMainWindow):
         KeyError
             If the widget doesn't exist and `create` is False.
         """
-        print("get_widget", key)
         if key not in self._action_widgets:
             if not create:  # pragma: no cover
                 raise KeyError(
@@ -383,7 +382,6 @@ class MicroManagerGUI(QMainWindow):
         else:
             menu = cast("QMenu", mb.addMenu(name))
             for action in menu_entry:
-                print("Adding action", action)
                 menu.addAction(self.get_action(action))
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
@@ -401,7 +399,22 @@ class MicroManagerGUI(QMainWindow):
         initial_widgets = settings.window.initial_widgets
         # we need to create the widgets first, before calling restoreState.
         for key in initial_widgets:
-            self.get_widget(key)
+            try:
+                self.get_widget(key)
+            except KeyError:
+                # Find possible matches among available widget actions
+                import difflib
+
+                if matches := difflib.get_close_matches(
+                    key, list(ActionInfo._registry), n=1, cutoff=0.5
+                ):
+                    suggestion = f"\nDid you mean: {matches[0]}?"
+                else:
+                    suggestion = ""
+                self.nm.show_warning_message(
+                    "Cannot find info for widget that was saved in the settings with "
+                    f"key: {key!r}.{suggestion}",
+                )
 
         # restore position and size of the main window
         if geo := settings.window.geometry:
@@ -465,10 +478,8 @@ class MicroManagerGUI(QMainWindow):
         # if the widget is a dock widget, we want to toggle the dock widget
         # rather than the inner widget
         if action.key in self._dock_widgets:
-            print("Dock widget", action.key)
             widget: QWidget = self.get_dock_widget(action.key)
         else:
-            print("get widget", action.key)
             # this will create the widget if it doesn't exist yet,
             # e.g. for a click event on a Toolbutton that doesn't yet have a widget
             widget = self.get_widget(action.key)
