@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import argparse
 import importlib
 import importlib.util
 import os
@@ -8,16 +7,11 @@ import sys
 import traceback
 import warnings
 from contextlib import suppress
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 from PyQt6.QtCore import QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import (
-    QApplication,
-    QCheckBox,
-    QMessageBox,
-    QWidget,
-)
+from PyQt6.QtWidgets import QApplication, QCheckBox, QMessageBox, QWidget
 from superqt.utils import WorkerBase
 
 from pymmcore_gui import __version__
@@ -27,7 +21,6 @@ from pymmcore_gui._settings import Settings
 from . import _sentry
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
     from pathlib import Path
     from types import TracebackType
 
@@ -67,39 +60,40 @@ class MMQApplication(QApplication):
         self.aboutToQuit.connect(WorkerBase.await_workers)
 
 
-def parse_args(args: Sequence[str] = ()) -> argparse.Namespace:
-    if not args:
-        args = sys.argv[1:]
+def create_mmgui(
+    *,
+    mm_config: str | None | Literal[False] = None,
+    install_sys_excepthook: bool = True,
+    install_sentry: bool = True,
+    exec_app: bool = True,
+) -> MicroManagerGUI:
+    """Initialize the pymmcore-gui application and Main Window.
 
-    parser = argparse.ArgumentParser(description="Enter string")
-    parser.add_argument(
-        "-c",
-        "--config",
-        type=str,
-        default=None,
-        help="Config file to load",
-        nargs="?",
-    )
-    parser.add_argument(
-        "--reset",
-        action="store_true",
-        default=False,
-        help="Reset settings to default values and exit.",
-    )
+    This is the primary way to start pymmcore-gui.  (It is also called by
+    `__main__.main()` when running from the command line.)
 
-    return parser.parse_args(args)
-
-
-def main() -> None:
-    """Run the Micro-Manager GUI."""
-    args = parse_args()
-    if args.reset:
-        from pymmcore_gui._settings import reset_to_defaults
-
-        reset_to_defaults()
-        print("Settings reset to defaults.")
-        sys.exit(0)
-
+    Parameters
+    ----------
+    mm_config : str | None | False
+        The path to the Micro-Manager configuration file to load.
+        - If `False`, no configuration will be loaded.
+        - If a non-empty string, that configuration will be loaded.
+        - If None (or the empty string), auto-deciding logic will be used based on the
+          stored user settings (based on the settings values for
+          `Settings.last_config` and `Settings.auto_load_last_config`).
+    install_sys_excepthook : bool
+        If True (the default), installs a custom excepthook that does not raise
+        sys.exit(). This is necessary to prevent the application from closing when an
+        unhandled exception is raised in the main thread.
+    install_sentry : bool
+        If True (the default), the user will be given an option to send error reports
+        to the developers, unless they have previously opted in/out.  If False, no
+        prompt will be shown, and no error reports will be sent.
+    exec_app : bool
+        If True (the default), the QApplication event loop will be started.  If
+        False, the event loop will not be started, and the caller is responsible for
+        starting it with `QApplication.instance().exec()`.
+    """
     # Note: in practice this should almost never be None,
     # but in the case of testing, it's conceivable that it could be.
     if (app := QApplication.instance()) is None:
@@ -111,26 +105,41 @@ def main() -> None:
             stacklevel=2,
         )
 
-    _install_excepthook()
-
     win = MicroManagerGUI()
-    QTimer.singleShot(0, lambda: win._restore_state(True))
+    QTimer.singleShot(0, lambda: win._restore_state(show=True))
 
-    if config := _decide_configuration(args.config, win):
-        try:
-            win.mmcore.loadSystemConfiguration(config)
-        except Exception as e:
-            print(f"Failed to load system configuration: {e}")
+    # if False was passed, don't load any config at all
+    if mm_config is not False:
+        # if a string was passed, load that config
+        if mm_config:
+            # if mm_config is a string, load that config
+            win.mmcore.loadSystemConfiguration(mm_config)
+        # otherwise, fall back to auto-loading / cli-based
+        elif config := _decide_configuration(mm_config, win):
+            try:
+                win.mmcore.loadSystemConfiguration(config)
+            except Exception as e:
+                print(f"Failed to load system configuration: {e}")
 
-    splsh = "_PYI_SPLASH_IPC" in os.environ and importlib.util.find_spec("pyi_splash")
-    if splsh:  # pragma: no cover
+    if install_sys_excepthook:
+        _install_excepthook()
+    if install_sentry:
+        _sentry.install_error_reporter()
+
+    # close the PyInstaller splash screen if it exists
+    _close_splash_screen()
+
+    if exec_app:
+        app.exec()
+    return win
+
+
+def _close_splash_screen() -> None:  # pragma: no cover
+    if "_PYI_SPLASH_IPC" in os.environ and importlib.util.find_spec("pyi_splash"):
         import pyi_splash  # pyright: ignore [reportMissingModuleSource]
 
         pyi_splash.update_text("UI Loaded ...")
         pyi_splash.close()
-
-    _sentry.install_error_reporter()
-    app.exec()
 
 
 def _decide_configuration(
