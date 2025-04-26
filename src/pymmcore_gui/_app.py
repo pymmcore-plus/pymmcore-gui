@@ -102,6 +102,7 @@ def create_mmgui(
         warnings.warn(
             "A QApplication instance already exists, but it is not MMQApplication. "
             " This may cause unexpected behavior.",
+            RuntimeWarning,
             stacklevel=2,
         )
 
@@ -119,7 +120,11 @@ def create_mmgui(
             try:
                 win.mmcore.loadSystemConfiguration(config)
             except Exception as e:
-                print(f"Failed to load system configuration: {e}")
+                warnings.warn(
+                    f"Failed to load system configuration: {e}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
 
     if install_sys_excepthook:
         _install_excepthook()

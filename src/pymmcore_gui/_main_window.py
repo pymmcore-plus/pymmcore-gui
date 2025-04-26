@@ -26,8 +26,8 @@ from PyQt6.QtWidgets import (
 from PyQt6Ads import CDockManager, CDockWidget, SideBarLocation
 from superqt import QIconifyIcon
 
+from pymmcore_gui.actions._action_info import WidgetActionInfo
 from pymmcore_gui.actions._core_qaction import QCoreAction
-from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
 from ._ndv_viewers import NDVViewersManager
 from ._notification_manager import NotificationManager
@@ -399,7 +399,10 @@ class MicroManagerGUI(QMainWindow):
         initial_widgets = settings.window.initial_widgets
         # we need to create the widgets first, before calling restoreState.
         for key in initial_widgets:
-            self.get_widget(key)
+            try:
+                self.get_widget(key)
+            except KeyError as e:
+                self.nm.show_error_message(str(e))
 
         # restore position and size of the main window
         if geo := settings.window.geometry:

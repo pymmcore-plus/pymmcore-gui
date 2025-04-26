@@ -8,6 +8,7 @@ from pydantic import BaseModel, PlainValidator
 from pymmcore_plus import CMMCorePlus
 from PyQt6.QtCore import QObject, Qt  # noqa: TC002
 from PyQt6.QtGui import QAction, QIcon, QKeySequence
+from PyQt6Ads import CDockWidget, DockWidgetArea, SideBarLocation
 
 from pymmcore_gui.actions._core_qaction import QCoreAction
 
@@ -15,12 +16,10 @@ if TYPE_CHECKING:
     from typing import TypeAlias
 
     from pymmcore_plus import CMMCorePlus
+    from PyQt6.QtWidgets import QWidget
     from typing_extensions import Self
 
-    from pymmcore_gui.actions.widget_actions import WidgetActionInfo
-
-CoreActionFunc: TypeAlias = Callable[[QCoreAction], Any]
-ActionTriggeredFunc: TypeAlias = Callable[[QCoreAction, bool], Any]
+    from pymmcore_gui.actions.widget_actions import QWidgetType
 
 
 class ActionKey(str, Enum):
@@ -32,13 +31,10 @@ class ActionKey(str, Enum):
 
     def __str__(self) -> str:
         """Return value as the string representation."""
-        return str(self.name)
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}.{self.name}"
+        return str(self.value)
 
 
-def ensure_isinstance(cls: type) -> PlainValidator:
+def _ensure_isinstance(cls: type) -> PlainValidator:
     """Check if the value is an instance of the class."""
 
     def _check_type(value: Any) -> None:
@@ -50,16 +46,19 @@ def ensure_isinstance(cls: type) -> PlainValidator:
     return PlainValidator(_check_type)
 
 
-QIconType: TypeAlias = Annotated[QIcon, ensure_isinstance(QIcon)]
-QKeySequenceType: TypeAlias = Annotated[QKeySequence, ensure_isinstance(QKeySequence)]
+CoreActionFunc: TypeAlias = Callable[[QCoreAction], Any]
+ActionTriggeredFunc: TypeAlias = Callable[[QCoreAction, bool], Any]
+QIconType: TypeAlias = Annotated[QIcon, _ensure_isinstance(QIcon)]
+QKeySequenceType: TypeAlias = Annotated[QKeySequence, _ensure_isinstance(QKeySequence)]
 
 
 class ActionInfo(BaseModel):
     """Information for creating a QCoreAction."""
 
     key: str
-
-    text: str | None = None
+    """A unique key to identify the action."""
+    text: str
+    """How the action should be displayed in the GUI."""
     auto_repeat: bool = False
     checkable: bool = False
     checked: bool = False
@@ -98,6 +97,7 @@ class ActionInfo(BaseModel):
     @classmethod
     def for_key(cls, key: str) -> Self:
         """Get the ActionInfo for a given key."""
+        key = str(key)
         if key not in ActionInfo._registry:
             # Find possible matches among available widget actions
             import difflib
@@ -123,8 +123,20 @@ class ActionInfo(BaseModel):
     @classmethod
     def widget_actions(cls) -> dict[str, WidgetActionInfo]:
         """Return all widget actions."""
-        from pymmcore_gui.actions.widget_actions import WidgetActionInfo
-
         return {
             k: v for k, v in cls._registry.items() if isinstance(v, WidgetActionInfo)
         }
+
+
+class WidgetActionInfo(ActionInfo):
+    """Subclass to set default values for WidgetAction."""
+
+    # by default, widget actions are checkable, and the check state indicates visibility
+    checkable: bool = True
+    # function that can be called with (parent: QWidget) -> QWidget
+    create_widget: Callable[[QWidgetType], QWidget]
+    # Use None to indicate that the widget should not be docked
+    dock_area: DockWidgetArea | SideBarLocation | None = (
+        DockWidgetArea.RightDockWidgetArea
+    )
+    scroll_mode: CDockWidget.eInsertMode = CDockWidget.eInsertMode.AutoScrollArea
