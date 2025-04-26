@@ -94,8 +94,17 @@ class Toolbar(str, Enum):
         return str(self.value)
 
 
-ToolDictValue = list[str] | Callable[[CMMCorePlus, QMainWindow], QToolBar]
-MenuDictValue = list[str] | Callable[[CMMCorePlus, QMainWindow], QMenu]
+ToolDictValue = list[str] | Callable[[CMMCorePlus, "MicroManagerGUI"], QToolBar]
+MenuDictValue = list[str] | Callable[[CMMCorePlus, "MicroManagerGUI"], QMenu]
+
+
+def _create_window_menu(mmc: CMMCorePlus, parent: MicroManagerGUI) -> QMenu:
+    """Create the Window menu."""
+    menu = QMenu(Menu.WINDOW.value, parent)
+    actions = sorted(ActionInfo.widget_actions())
+    for action in actions:
+        menu.addAction(parent.get_action(action))
+    return menu
 
 
 class MicroManagerGUI(QMainWindow):
@@ -122,7 +131,7 @@ class MicroManagerGUI(QMainWindow):
     # that takes a CMMCorePlus instance and QMainWindow and returns a QMenu.
     MENUS: Mapping[str, MenuDictValue] = {
         Menu.PYMM_GUI: [WidgetAction.ABOUT],
-        Menu.WINDOW: [],
+        Menu.WINDOW: _create_window_menu,
         Menu.HELP: [CoreAction.LOAD_DEMO],
     }
 
@@ -172,8 +181,6 @@ class MicroManagerGUI(QMainWindow):
         # To add menus or menu items, add them to the MENUS dict above
 
         for name, entry in self.MENUS.items():
-            if name == Menu.WINDOW:
-                entry = sorted(ActionInfo.widget_actions())
             self._add_menubar(name, entry)
 
         # TOOLBARS =================================

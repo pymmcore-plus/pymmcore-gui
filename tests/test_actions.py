@@ -1,8 +1,8 @@
 import pytest
+from PyQt6.QtWidgets import QMenu, QWidget
 
-from pymmcore_gui.actions import ActionInfo, CoreAction
-from pymmcore_gui.actions._action_info import WidgetActionInfo
-from pymmcore_gui.actions.widget_actions import WidgetAction
+from pymmcore_gui import MicroManagerGUI
+from pymmcore_gui.actions import ActionInfo, CoreAction, WidgetAction, WidgetActionInfo
 
 
 def test_action_registry():
@@ -14,6 +14,27 @@ def test_action_registry():
 
     with pytest.raises(TypeError, match="is not an instance of"):
         info = WidgetActionInfo.for_key(CoreAction.SNAP)
-
     info = WidgetActionInfo.for_key(WidgetAction.ABOUT)
-    assert info in ActionInfo.widget_actions().values()
+
+
+@pytest.mark.usefixtures("qapp")
+def test_actions_in_menus():
+    # people can add new ones
+    text = "My Widget!!!!"
+    act = WidgetActionInfo(
+        key="mywidget",
+        text=text,
+        icon="mdi-light:format-list-bulleted",
+        create_widget=lambda p: QWidget(p),
+    )
+    assert "mywidget" in WidgetActionInfo._registry
+    assert act in ActionInfo.widget_actions().values()
+
+    win = MicroManagerGUI()
+    mb = win.menuBar()
+    assert mb
+    window_menu = next(
+        (m for a in mb.actions() if (m := a.menu()) and m.title() == "Window"), None
+    )
+    assert isinstance(window_menu, QMenu)
+    assert any(a.text() == text for a in window_menu.actions())
