@@ -106,7 +106,7 @@ class ActionInfo(BaseModel):
             if matches := difflib.get_close_matches(
                 key, list(ActionInfo._registry), n=1, cutoff=0.5
             ):
-                suggestion = f"\nDid you mean: {matches[0]}?"
+                suggestion = f"\nDid you mean {matches[0]!r}?"
 
             raise KeyError(
                 f"No 'ActionInfo' has been declared for key '{key}'.{suggestion}"

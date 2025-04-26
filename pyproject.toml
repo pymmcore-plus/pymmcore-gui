@@ -114,6 +114,7 @@ select = [
     "B",    # flake8-bugbear
     "A001", # flake8-builtins
     "RUF",  # ruff-specific rules
+    "T100", # no breakpoints
     "TC",   # flake8-type-checking
     "TID",  # flake8-tidy-imports
 ]

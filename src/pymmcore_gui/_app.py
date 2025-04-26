@@ -119,7 +119,7 @@ def create_mmgui(
         elif config := _decide_configuration(mm_config, win):
             try:
                 win.mmcore.loadSystemConfiguration(config)
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 warnings.warn(
                     f"Failed to load system configuration: {e}",
                     RuntimeWarning,
@@ -279,7 +279,7 @@ def ndv_excepthook(
                 additional_info.is_tracing -= 1
     # otherwise, if MMGUI_DEBUG_EXCEPTIONS is set, drop into pdb
     elif os.getenv("MMGUI_DEBUG_EXCEPTIONS"):
-        import pdb
+        import pdb  # noqa: T100
 
         pdb.post_mortem(tb)
 
