@@ -42,7 +42,7 @@ def ensure_isinstance(cls: type) -> PlainValidator:
     """Check if the value is an instance of the class."""
 
     def _check_type(value: Any) -> None:
-        if not isinstance(value, cls):
+        if not isinstance(value, cls):  # pragma: no cover
             raise TypeError(
                 f"Expected {cls.__name__}, got {type(value).__name__} instead."
             )
