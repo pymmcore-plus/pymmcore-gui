@@ -67,6 +67,7 @@ repos:
           - tifffile
           - tqdm
           - traitlets
+          - typer
           - types-Pygments
           - types-PyYAML
           - zarr<3.0
