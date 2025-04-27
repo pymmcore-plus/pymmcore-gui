@@ -72,12 +72,11 @@ def test_save_restore_state(
 ) -> None:
     gui = MicroManagerGUI()
     qtbot.addWidget(gui)
-    qapp.processEvents()  # force the initial _restore_state to run.
-
-    # the thing we're going to restore
-    assert WidgetAction.STAGE_CONTROL not in gui._open_widgets()
+    assert not gui._open_widgets()
+    settings.window.open_widgets.clear()
 
     # save the state
+    assert not settings.window.open_widgets
     assert not settings.window.geometry
     gui._save_state()
     assert settings.window.geometry
@@ -86,7 +85,8 @@ def test_save_restore_state(
     gui.get_widget(WidgetAction.STAGE_CONTROL)
     assert WidgetAction.STAGE_CONTROL in gui._open_widgets()
     # restore the state
-    gui._restore_state()
+    assert not settings.window.open_widgets
+    gui.restore_state()
     assert WidgetAction.STAGE_CONTROL not in gui._open_widgets()
 
 

@@ -13,6 +13,7 @@ from pydantic import (
     TypeAdapter,
     ValidationError,
     WrapSerializer,
+    model_validator,
 )
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
@@ -144,7 +145,7 @@ def _default_widgets() -> set[str]:
 
 
 # set of widgets that are sorted when serialized
-InitialWidgets = Annotated[set[str], WrapSerializer(lambda v, h: sorted(h(v)))]
+WidgetNames = Annotated[set[str], WrapSerializer(lambda v, h: sorted(h(v)))]
 
 
 class WindowSettingsV1(BaseMMSettings):
@@ -156,8 +157,20 @@ class WindowSettingsV1(BaseMMSettings):
     """State of main window's toolbars and dockwidgets. Restored with .restoreState()"""
     dock_manager_state: Base64Bytes | None = None
     """State of dock_manager dockwidgets"""
-    initial_widgets: InitialWidgets = Field(default_factory=_default_widgets)
-    """Set of widgets to load on startup."""
+    open_widgets: WidgetNames = Field(default_factory=_default_widgets)
+    """Set of widgets to load on startup, or when restoring settings."""
+
+    @model_validator(mode="before")
+    @classmethod
+    def _migrate_names(cls, values: dict[str, Any]) -> dict[str, Any]:
+        """Migrate old settings to new ones.
+
+        This is a temporary solution until we have a proper migration system.
+        """
+        # migrate from old settings
+        if "initial_widgets" in values:
+            values["open_widgets"] = values.pop("initial_widgets")
+        return values
 
 
 class SettingsV1(BaseMMSettings):
