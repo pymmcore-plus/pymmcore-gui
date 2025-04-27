@@ -24,6 +24,8 @@ if TYPE_CHECKING:
     from pathlib import Path
     from types import TracebackType
 
+    from pymmcore_plus import CMMCorePlus
+
     ExcTuple = tuple[type[BaseException], BaseException, TracebackType | None]
 
 APP_NAME = "Micro-Manager GUI"
@@ -63,6 +65,7 @@ class MMQApplication(QApplication):
 def create_mmgui(
     *,
     mm_config: str | None | Literal[False] = None,
+    mmcore: CMMCorePlus | None = None,
     install_sys_excepthook: bool = True,
     install_sentry: bool = True,
     exec_app: bool = True,
@@ -81,6 +84,12 @@ def create_mmgui(
         - If None (or the empty string), auto-deciding logic will be used based on the
           stored user settings (based on the settings values for
           `Settings.last_config` and `Settings.auto_load_last_config`).
+    mmcore : CMMCorePlus | None
+        The CMMCorePlus instance to use.  If `None` (default), the global
+        `CMMCorePlus.instance()` will be used if it exists, or a new (global) instance
+        will be created (which you may access later with `CMMCorePlus.instance()`).
+        Note: you may wish to also pass `mm_config = False` to prevent loading a
+        system configuration, if you have already loaded one in your instance.
     install_sys_excepthook : bool
         If True (the default), installs a custom excepthook that does not raise
         sys.exit(). This is necessary to prevent the application from closing when an
@@ -106,8 +115,8 @@ def create_mmgui(
             stacklevel=2,
         )
 
-    win = MicroManagerGUI()
-    QTimer.singleShot(0, lambda: win._restore_state(show=True))
+    win = MicroManagerGUI(mmcore=mmcore)
+    QTimer.singleShot(0, lambda: win.restore_state(show=True))
 
     # if False was passed, don't load any config at all
     if mm_config is not False:
