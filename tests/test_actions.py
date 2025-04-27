@@ -5,7 +5,7 @@ from pymmcore_gui import MicroManagerGUI
 from pymmcore_gui.actions import ActionInfo, CoreAction, WidgetAction, WidgetActionInfo
 
 
-def test_action_registry():
+def test_action_registry() -> None:
     info = ActionInfo.for_key(CoreAction.SNAP)
     assert info.text == "Snap Image"
 
@@ -18,7 +18,7 @@ def test_action_registry():
 
 
 @pytest.mark.usefixtures("qapp")
-def test_actions_in_menus():
+def test_actions_in_menus() -> None:
     # people can add new ones
     text = "My Widget!!!!"
     act = WidgetActionInfo(

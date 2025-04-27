@@ -16,6 +16,8 @@ from pymmcore_gui.actions import CoreAction, WidgetAction
 from pymmcore_gui.widgets._toolbars import ShuttersToolbar
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from PyQt6Ads import CDockAreaWidget
     from pytestqt.qtbot import QtBot
 
@@ -46,7 +48,7 @@ def test_main_window(qtbot: QtBot, qapp: QApplication, w_action: WidgetAction) -
     assert isinstance(gui.get_dock_widget(WidgetAction.MDA_WIDGET), CDockWidget)
 
 
-def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path) -> None:
+def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path: Path) -> None:
     # make sure that when we load a new cfg the shutters toolbar is updated
     gui = MicroManagerGUI()
     qtbot.addWidget(gui)
@@ -54,13 +56,14 @@ def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path) -> None:
     sh_toolbar = ShuttersToolbar(gui._mmc, gui)
 
     # in our test cfg we have 3 shutters
-    assert sh_toolbar.layout().count() == 3  # pyright: ignore
+    assert (layout := sh_toolbar.layout()) is not None
+    assert layout.count() == 3
     assert len(sh_toolbar.actions()) == 3
 
     # loading default cfg
     gui._mmc.loadSystemConfiguration()
     # in our test cfg we have 2 shutters
-    assert sh_toolbar.layout().count() == 2  # pyright: ignore
+    assert layout.count() == 2
     assert len(sh_toolbar.actions()) == 2
 
 
