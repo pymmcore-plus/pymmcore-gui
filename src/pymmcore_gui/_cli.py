@@ -45,14 +45,25 @@ def _main(
         is_eager=True,
     ),
 ) -> None:
-    """mmcore: pymmcore-plus command line (v{version}).
+    """mmgui: pymmcore-gui command line (v{version}).
 
-    For additional help on a specific command: type `mmcore [command] --help`
+    For additional help on a specific command: type `mmgui [command] --help`
+
+    The default command is `mmgui run`, use `mmgui run --help` for more options.
     """
     # fix for windows CI encoding and emoji printing
     if getattr(sys.stdout, "encoding", None) != "utf-8":
         with suppress(AttributeError):  # pragma: no cover
             sys.stdout.reconfigure(encoding="utf-8")  # type: ignore [union-attr]
+
+
+if "mkdocs" in sys.argv[0]:  # pragma: no cover
+    _main.__doc__ = (_main.__doc__ or "").replace(" (v{version})", "")
+else:
+    _main.__doc__ = typer.style(
+        (_main.__doc__ or "").format(version=pymmcore_gui.__version__),
+        fg=typer.colors.BRIGHT_YELLOW,
+    )
 
 
 @app.command()
