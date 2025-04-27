@@ -125,6 +125,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*.py" = ["D", "S"]
+"__main__.py" = ["B008"]
 
 # https://docs.astral.sh/ruff/formatter/
 [tool.ruff.format]

@@ -1,45 +1,168 @@
-import argparse
+import os
+import subprocess
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable
+from contextlib import suppress
+from pathlib import Path
 
-from pymmcore_gui._app import create_mmgui
+import typer
+
+import pymmcore_gui
+
+app = typer.Typer(
+    name="mmgui",
+    add_completion=False,
+    context_settings={
+        "help_option_names": ["-h", "--help"],
+    },
+)
 
 
-def _parse_args(args: Sequence[str] = ()) -> argparse.Namespace:
-    if not args:
-        args = sys.argv[1:]
+def _show_version_and_exit(value: bool) -> None:
+    if value:
+        import pymmcore_plus
 
-    parser = argparse.ArgumentParser(description="Enter string")
-    parser.add_argument(
+        typer.echo(f"pymmcore-gui v{pymmcore_gui.__version__}")
+        typer.echo(f"pymmcore-plus v{pymmcore_plus.__version__}")
+        try:
+            import pymmcore_nano as pymmcore
+
+            typer.echo(f"pymmcore-nano v{pymmcore.__version__}")
+        except ImportError:
+            import pymmcore
+
+            typer.echo(f"pymmcore v{pymmcore.__version__}")
+        raise typer.Exit()
+
+
+@app.callback(invoke_without_command=True)
+def _main(
+    version: bool = typer.Option(
+        None,
+        "--version",
+        callback=_show_version_and_exit,
+        help="Show version and exit.",
+        is_eager=True,
+    ),
+) -> None:
+    """mmcore: pymmcore-plus command line (v{version}).
+
+    For additional help on a specific command: type `mmcore [command] --help`
+    """
+    # fix for windows CI encoding and emoji printing
+    if getattr(sys.stdout, "encoding", None) != "utf-8":
+        with suppress(AttributeError):
+            sys.stdout.reconfigure(encoding="utf-8")  # type: ignore [union-attr]
+
+
+@app.command()
+def run(
+    config: Path | None = typer.Option(
+        None,
         "-c",
         "--config",
-        type=str,
-        default=None,
-        help="Config file to load",
-        nargs="?",
-    )
-    parser.add_argument(
-        "--reset",
-        action="store_true",
-        default=False,
-        help="Reset settings to default values and exit.",
-    )
+        file_okay=True,
+        dir_okay=False,
+        writable=True,
+        resolve_path=True,
+        help="Path to MM hardware config file.",
+    ),
+    demo_config: bool = typer.Option(
+        False,
+        "--demo-config",
+        help="Launch with demo configuration.",
+    ),
+    no_telemetry: bool = typer.Option(
+        False,
+        "--no-telemetry",
+        help="Disable telemetry.",
+    ),
+):
+    """Run the Micro-Manager GUI (this is the default command)."""
+    from pymmcore_gui import create_mmgui
 
-    return parser.parse_args(args)
+    if demo_config:
+        mm_config = "MMConfig_demo.cfg"
+    else:
+        mm_config = config
+
+    create_mmgui(mm_config=mm_config, exec_app=True, install_sentry=not no_telemetry)
+    sys.exit(0)
+
+
+def _open_in_default_editor(path: str | Path) -> None:
+    path = str(path)  # Ensure it's a string
+    if sys.platform.startswith("darwin"):
+        subprocess.run(["open", path], check=True)
+    elif os.name == "nt":
+        os.startfile(path)  # type: ignore[attr-defined]
+    elif os.name == "posix":
+        subprocess.run(["xdg-open", path], check=True)
+    else:
+        raise RuntimeError(f"Unsupported platform: {sys.platform}")
+
+
+@app.command()
+def settings(
+    reset: bool = typer.Option(
+        False,
+        "--reset",
+        help="Reset settings to default values.",
+    ),
+    edit: bool = typer.Option(
+        False,
+        "--edit",
+        help="Open settings file in default editor.",
+    ),
+) -> None:
+    """Configure application settings."""
+    if reset:
+        from pymmcore_gui._settings import reset_to_defaults
+
+        reset_to_defaults()
+        typer.secho("Settings reset to defaults.", fg=typer.colors.BRIGHT_GREEN)
+        raise typer.Exit()
+    if edit:
+        from pymmcore_gui._settings import SETTINGS_FILE_NAME
+
+        if not SETTINGS_FILE_NAME.exists():
+            typer.secho(
+                f"Settings file does not exist: {SETTINGS_FILE_NAME}",
+                fg=typer.colors.RED,
+            )
+            raise typer.Exit(0)
+
+        _open_in_default_editor(SETTINGS_FILE_NAME.resolve())
+
+    _show_help_for_command(settings)
+
+
+def _show_help_for_command(func: Callable) -> None:
+    info = next((cmd for cmd in app.registered_commands if cmd.callback == func), None)
+    cmd = typer.main.get_command_from_info(
+        info,  # type: ignore
+        pretty_exceptions_short=True,
+        rich_markup_mode="rich",
+    )
+    ctx = typer.Context(cmd)
+    typer.echo(ctx.get_help())
+    raise typer.Exit()
 
 
 def main() -> None:
     """Main entry point for the Micro-Manager GUI."""
-    args = _parse_args()
-    if args.reset:
-        from pymmcore_gui._settings import reset_to_defaults
-
-        reset_to_defaults()
-        print("Settings reset to defaults.")
-        sys.exit(0)
-
-    create_mmgui(mm_config=args.config, exec_app=True)
-    sys.exit(0)
+    if len(sys.argv) == 1:
+        app(args=["run"])
+    elif sys.argv[1] in ("-h", "--help"):
+        # show help normally
+        app()
+    else:
+        # prepend "default" if user didn't specify a command
+        first_arg = sys.argv[1]
+        if first_arg.startswith("-"):
+            app(args=["run", *sys.argv[1:]])
+        else:
+            app()
 
 
 if __name__ == "__main__":

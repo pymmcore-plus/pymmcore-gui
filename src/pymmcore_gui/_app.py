@@ -62,7 +62,7 @@ class MMQApplication(QApplication):
 
 def create_mmgui(
     *,
-    mm_config: str | None | Literal[False] = None,
+    mm_config: Path | str | None | Literal[False] = None,
     install_sys_excepthook: bool = True,
     install_sentry: bool = True,
     exec_app: bool = True,
