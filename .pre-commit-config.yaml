@@ -57,6 +57,7 @@ repos:
         require_serial: true
         entry: uv run pyright
 
+
   - repo: https://github.com/crate-ci/typos
     rev: v1.31.1
     hooks:
