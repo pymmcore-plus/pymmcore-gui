@@ -10,7 +10,7 @@ from weakref import WeakValueDictionary
 
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets import ConfigWizard
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction, QCloseEvent, QGuiApplication, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
@@ -209,7 +209,7 @@ class MicroManagerGUI(QMainWindow):
         self._central.setWidget(self._img_preview)
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
-        QTimer.singleShot(0, self._restore_state)
+        # QTimer.singleShot(0, self._restore_state)
 
     # --------------------- Properties ----------------------
 
@@ -408,8 +408,10 @@ class MicroManagerGUI(QMainWindow):
         for key in initial_widgets:
             try:
                 self.get_widget(key)
-            except KeyError as e:
-                self.nm.show_error_message(str(e))
+            except KeyError:
+                self.nm.show_warning_message(
+                    f"Unable to reload widget key stored in settings: {key!r}",
+                )
 
         # restore position and size of the main window
         if geo := settings.window.geometry:
@@ -434,6 +436,7 @@ class MicroManagerGUI(QMainWindow):
 
         if show:
             self.show()
+            self.nm.reposition_notifications()
 
     def _save_state(self) -> None:
         """Save the state of the window to settings."""

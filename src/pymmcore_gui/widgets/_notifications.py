@@ -78,7 +78,7 @@ class NotificationToast(QWidget):
             ic = QIconifyIcon("codicon:info", color="#0af")
         self.icon.setPixmap(ic.pixmap(20, 20))
 
-        self.message_label = QLabel(notification.message)
+        self.message_label = QLabel(notification.message.replace(r"\n", "<br>"))
         self.message_label.setWordWrap(True)
         self.message_label.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse
