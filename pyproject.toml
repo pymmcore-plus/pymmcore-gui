@@ -41,7 +41,7 @@ dependencies = [
     "pymmcore-plus[cli]>=0.13.2",
     "pymmcore-widgets>=0.9.0",
     "PyQt6==6.9.0",
-    "pyqt6ads>=4.4.0.post1",
+    "PyQt6Ads>=4.4.0.post2",
     "pyright>=1.1.393",
     "pyyaml>=6.0.2",
     "qtconsole>=5.6.1",
@@ -56,7 +56,7 @@ dependencies = [
 # TO USE pymmcore-nano, you need to add pymmcore-nano to dependencies
 # and uncomment the override-dependencies line below
 # currently, pymmcore-nano has some issues related to threading that need to be solved
-# 
+#
 # "pymmcore-nano",
 # [tool.uv]
 # override-dependencies = ["pymmcore ;  sys_platform == 'never'"]
@@ -103,6 +103,8 @@ repository = "https://github.com/tlambert03/pymmcore-gui"
 line-length = 88
 target-version = "py310"
 src = ["src", "tests"]
+fix = true
+unsafe-fixes = true
 
 # https://docs.astral.sh/ruff/rules
 [tool.ruff.lint]
@@ -139,7 +141,6 @@ skip-magic-trailing-comma = false # default is false
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
-files = "src/**/*.py"
 strict = true
 disallow_any_generics = false
 disallow_subclassing_any = false
@@ -148,8 +149,9 @@ pretty = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["qtconsole.*", "pydevd.*", "pygfx.*", "rendercanvas.*"]
+module = ["qtconsole.*", "pydevd.*", "pygfx.*", "rendercanvas.*", "pytestqt.*"]
 ignore_missing_imports = true
+
 
 [tool.pyright]
 include = ["src", "tests"]

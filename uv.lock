@@ -1613,7 +1613,7 @@ requires-dist = [
     { name = "pymmcore-plus", extras = ["cli"], specifier = ">=0.13.2" },
     { name = "pymmcore-widgets", specifier = ">=0.9.0" },
     { name = "pyqt6", specifier = "==6.9.0" },
-    { name = "pyqt6ads", specifier = ">=4.4.0.post1" },
+    { name = "pyqt6ads", specifier = ">=4.4.0.post2" },
     { name = "pyright", specifier = ">=1.1.393" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "qtconsole", specifier = ">=5.6.1" },
@@ -1822,18 +1822,18 @@ wheels = [
 
 [[package]]
 name = "pyqt6ads"
-version = "4.4.0.post1"
+version = "4.4.0.post2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyqt6" },
     { name = "pyqt6-sip" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/76/cd/e133e91048173ee3af788875ecc6f50109b1a07a5b3213f8c958fedee1a2/pyqt6ads-4.4.0.post1.tar.gz", hash = "sha256:dccf954b3eb802d9046c0a1ec732c6c555844d1316c47fd419276f3a421cf0b1", size = 50826811 }
+sdist = { url = "https://files.pythonhosted.org/packages/9d/1f/759491f372e3b51321b63a30637d3444983d8e35b9ac579bb7ee90322bab/pyqt6ads-4.4.0.post2.tar.gz", hash = "sha256:3d5063536b5448c83015b3e431ac2c7ef5c33508e47216a51088b9cbeb9f5a81", size = 50897069 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a8/b9/6ffd86087c92f0d258b392215bcc00b4295dfae945f3e8acd48f28a1cfc3/pyqt6ads-4.4.0.post1-cp39-abi3-macosx_10_14_x86_64.whl", hash = "sha256:d6c5d3859a157bd3b89927b34ce42d584bb06501e3e33da9fe4ed51a0d5cce3f", size = 364929 },
-    { url = "https://files.pythonhosted.org/packages/cd/cc/351ca7b343d66d2ccc20f36f0de89a8032e1d09da9ec72ed55d8a5e122c6/pyqt6ads-4.4.0.post1-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:177b56cab7346e01058a2590b2afa0b7ebd8495289619125206d74c624c96686", size = 347225 },
-    { url = "https://files.pythonhosted.org/packages/39/16/9641d76132f4b05df71c684e25ce70c74f837ab22e289e7ad55ddd9a9efa/pyqt6ads-4.4.0.post1-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:0ebc037521e957158c1d4b635a03a633b21b9a3b9af81c5b226c3557f06f1265", size = 444161 },
-    { url = "https://files.pythonhosted.org/packages/9a/51/c24f43109a07e16375c9a66c8ed20ed97bead39b97d152bb5266bbb4791b/pyqt6ads-4.4.0.post1-cp39-abi3-win_amd64.whl", hash = "sha256:9f7f7694ca048ed5e0b45ca7c2f1a15b17ea51f2add9ceaeb3cd65a46ad5a0f7", size = 395505 },
+    { url = "https://files.pythonhosted.org/packages/b8/12/ff90f9ea898048e87d8a7e223a7844169d742a7b614ed0171a33ca610fdd/pyqt6ads-4.4.0.post2-cp39-abi3-macosx_10_14_x86_64.whl", hash = "sha256:921292b46f1f84338b1dc8ff06b0ed8162c044cad34e2b0b1b1e558598f17bfd", size = 364931 },
+    { url = "https://files.pythonhosted.org/packages/af/92/92a07b66bb4de810bc4e622340b95fa4fb210cbcd946cf46fd298c526af3/pyqt6ads-4.4.0.post2-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:79d55e1ad5bbfc4a9e66aa31909d6142197c782b9ec4d1191ceb80e6e42db346", size = 347210 },
+    { url = "https://files.pythonhosted.org/packages/f5/33/8fcd8e7e0b6b64ff2f2e4159ed05eb848719fcd6acb3d0e0324fc1fd8c6c/pyqt6ads-4.4.0.post2-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:93e63b81f14d84055ef5ab1f085c5b3df028969fa9fbcb76d47e2cb803654ea4", size = 444147 },
+    { url = "https://files.pythonhosted.org/packages/a5/f9/853b94522858a97d703cd765679ff519d8d254f5c84ffbc3dde76301f067/pyqt6ads-4.4.0.post2-cp39-abi3-win_amd64.whl", hash = "sha256:eb3584196bf30fc00c8debca61e97920b77bc24508ca3b792d824c17f8fe3bea", size = 395488 },
 ]
 
 [[package]]
@@ -2227,11 +2227,11 @@ wheels = [
 
 [[package]]
 name = "setuptools"
-version = "79.0.1"
+version = "80.0.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/bb/71/b6365e6325b3290e14957b2c3a804a529968c77a049b2ed40c095f749707/setuptools-79.0.1.tar.gz", hash = "sha256:128ce7b8f33c3079fd1b067ecbb4051a66e8526e7b65f6cec075dfc650ddfa88", size = 1367909 }
+sdist = { url = "https://files.pythonhosted.org/packages/44/80/97e25f0f1e4067677806084b7382a6ff9979f3d15119375c475c288db9d7/setuptools-80.0.0.tar.gz", hash = "sha256:c40a5b3729d58dd749c0f08f1a07d134fb8a0a3d7f87dc33e7c5e1f762138650", size = 1354221 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0d/6d/b4752b044bf94cb802d88a888dc7d288baaf77d7910b7dedda74b5ceea0c/setuptools-79.0.1-py3-none-any.whl", hash = "sha256:e147c0549f27767ba362f9da434eab9c5dc0045d5304feb602a0af001089fc51", size = 1256281 },
+    { url = "https://files.pythonhosted.org/packages/23/63/5517029d6696ddf2bd378d46f63f479be001c31b462303170a1da57650cb/setuptools-80.0.0-py3-none-any.whl", hash = "sha256:a38f898dcd6e5380f4da4381a87ec90bd0a7eec23d204a5552e80ee3cab6bd27", size = 1240907 },
 ]
 
 [[package]]
