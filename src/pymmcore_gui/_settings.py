@@ -6,7 +6,13 @@ from pathlib import Path
 from typing import Annotated, Any, Literal, cast
 
 from platformdirs import user_data_dir
-from pydantic import Base64Bytes, Field, WrapSerializer, model_validator
+from pydantic import (
+    Base64Bytes,
+    Field,
+    ValidationError,
+    WrapSerializer,
+    model_validator,
+)
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
@@ -218,7 +224,22 @@ class SettingsV1(BaseMMSettings):
 
 
 Settings = SettingsV1
-_GLOBAL_SETTINGS = SettingsV1()
+try:
+    _GLOBAL_SETTINGS = SettingsV1()
+except ValidationError as e:
+    warnings.warn(
+        f"Failed to load settings from {SETTINGS_FILE_NAME}: {e}",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+    before, os.environ["MMGUI_NO_SETTINGS"] = os.getenv("MMGUI_NO_SETTINGS"), "1"
+    try:
+        _GLOBAL_SETTINGS = SettingsV1()
+    finally:
+        if before:
+            os.environ["MMGUI_NO_SETTINGS"] = before
+        else:
+            del os.environ["MMGUI_NO_SETTINGS"]
 
 
 def reset_to_defaults() -> None:

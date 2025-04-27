@@ -78,7 +78,7 @@ class MMQApplication(QApplication):
 
 def create_mmgui(
     *,
-    mm_config: str | None | Literal[False] = None,
+    mm_config: Path | str | None | Literal[False] = None,
     mmcore: CMMCorePlus | None = None,
     install_sys_excepthook: bool = True,
     install_sentry: bool = True,
@@ -171,11 +171,11 @@ def _close_splash_screen() -> None:  # pragma: no cover
 
 
 def _decide_configuration(
-    config: str | None = None, parent: QWidget | None = None
+    config: Path | str | None = None, parent: QWidget | None = None
 ) -> str | None:
     settings = Settings.instance()
     if config:
-        return config
+        return str(config)
 
     if last_config := settings.last_config:
         if auto_load := settings.auto_load_last_config:
