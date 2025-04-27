@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import sys
 from collections.abc import Callable
+from contextlib import suppress
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, cast, overload
@@ -10,7 +11,7 @@ from weakref import WeakValueDictionary
 
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets import ConfigWizard
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction, QCloseEvent, QGuiApplication, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
@@ -209,7 +210,7 @@ class MicroManagerGUI(QMainWindow):
         self._central.setWidget(self._img_preview)
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
-        QTimer.singleShot(0, self._restore_state)
+        # QTimer.singleShot(0, self._restore_state)
 
     # --------------------- Properties ----------------------
 
@@ -395,7 +396,7 @@ class MicroManagerGUI(QMainWindow):
         self._save_state()
         return super().closeEvent(a0)
 
-    def _restore_state(self, show: bool = False) -> None:
+    def restore_state(self, *, show: bool = False) -> None:
         """Restore the state of the window from settings (or load default state).
 
         show is added as a convenience here because it may be a common use case to
@@ -403,9 +404,16 @@ class MicroManagerGUI(QMainWindow):
         This avoids the window flashing on the screen before it is properly positioned.
         """
         settings = Settings.instance()
-        initial_widgets = settings.window.initial_widgets
+        open_widgets = settings.window.open_widgets
+        for widget in self._open_widgets():
+            if widget not in open_widgets:
+                # if the widget is not in the settings, close it
+                with suppress(KeyError):
+                    dw = self.get_dock_widget(widget)
+                    dw.toggleView(False)
+
         # we need to create the widgets first, before calling restoreState.
-        for key in initial_widgets:
+        for key in open_widgets:
             try:
                 self.get_widget(key)
             except KeyError:
@@ -427,7 +435,7 @@ class MicroManagerGUI(QMainWindow):
 
         # restore state of toolbars and dockwidgets, but only after event loop start
         # https://forum.qt.io/post/794120
-        if initial_widgets and (state := settings.window.dock_manager_state):
+        if open_widgets and (state := settings.window.dock_manager_state):
             self.dock_manager.restoreState(state)
             for key in self._open_widgets():
                 self.get_action(key).setChecked(True)
@@ -444,7 +452,7 @@ class MicroManagerGUI(QMainWindow):
         settings = Settings.instance()
         settings.window.geometry = self.saveGeometry().data()
         # remember which widgets are open, and preserve their state.
-        settings.window.initial_widgets = open_ = self._open_widgets()
+        settings.window.open_widgets = open_ = self._open_widgets()
         if open_:
             # note that dock_manager.saveState mostly replaces QMainWindow.saveState
             # the one thing it doesn't capture is the Toolbar state.
