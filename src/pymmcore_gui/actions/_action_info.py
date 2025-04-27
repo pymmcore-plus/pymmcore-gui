@@ -1,31 +1,28 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Callable
 from enum import Enum
-from typing import TYPE_CHECKING, ClassVar, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Annotated, Any, ClassVar
 
+from pydantic import BaseModel, PlainValidator
 from pymmcore_plus import CMMCorePlus
-from PyQt6.QtCore import QObject
-from PyQt6.QtGui import QAction
+from PyQt6.QtCore import QObject, Qt  # noqa: TC002
+from PyQt6.QtGui import QAction, QIcon, QKeySequence
+from PyQt6Ads import CDockWidget, DockWidgetArea, SideBarLocation
 
 from pymmcore_gui.actions._core_qaction import QCoreAction
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-    from typing import Any, TypeAlias
+    from typing import TypeAlias
 
     from pymmcore_plus import CMMCorePlus
-    from PyQt6.QtCore import QObject, Qt
-    from PyQt6.QtGui import QAction, QIcon, QKeySequence
+    from PyQt6.QtWidgets import QWidget
     from typing_extensions import Self
 
-    CoreActionFunc: TypeAlias = Callable[[QCoreAction], Any]
-    ActionTriggeredFunc: TypeAlias = Callable[[QCoreAction, bool], Any]
-
-AK = TypeVar("AK", bound="ActionKey")
+    from pymmcore_gui.actions.widget_actions import QWidgetType
 
 
-class ActionKey(Enum):
+class ActionKey(str, Enum):
     """A Key representing an action in the GUI.
 
     This is subclassed in core_actions, widget_actions, etc. to provide a unique key
@@ -36,27 +33,42 @@ class ActionKey(Enum):
         """Return value as the string representation."""
         return str(self.value)
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}.{self.name}"
+
+def _ensure_isinstance(cls: type) -> PlainValidator:
+    """Check if the value is an instance of the class."""
+
+    def _check_type(value: Any) -> None:
+        if not isinstance(value, cls):  # pragma: no cover
+            raise TypeError(
+                f"Expected {cls.__name__}, got {type(value).__name__} instead."
+            )
+
+    return PlainValidator(_check_type)
 
 
-@dataclass
-class ActionInfo(Generic[AK]):
+CoreActionFunc: TypeAlias = Callable[[QCoreAction], Any]
+ActionTriggeredFunc: TypeAlias = Callable[[QCoreAction, bool], Any]
+QIconType: TypeAlias = Annotated[QIcon, _ensure_isinstance(QIcon)]
+QKeySequenceType: TypeAlias = Annotated[QKeySequence, _ensure_isinstance(QKeySequence)]
+
+
+class ActionInfo(BaseModel):
     """Information for creating a QCoreAction."""
 
-    key: AK
-
-    text: str | None = None
+    key: str
+    """A unique key to identify the action."""
+    text: str
+    """How the action should be displayed in the GUI."""
     auto_repeat: bool = False
     checkable: bool = False
     checked: bool = False
     enabled: bool = True
-    icon: QIcon | str | None = None
+    icon: str | None | QIconType = None
     icon_text: str | None = None
     icon_visible_in_menu: bool | None = None
     menu_role: QAction.MenuRole | None = None
     priority: QAction.Priority | None = None
-    shortcut: str | QKeySequence | None = None
+    shortcut: str | None | QKeySequenceType = None
     shortcut_context: Qt.ShortcutContext | None = None
     shortcut_visible_in_context_menu: bool | None = None
     status_top: str | None = None
@@ -70,16 +82,11 @@ class ActionInfo(Generic[AK]):
     on_created: CoreActionFunc | None = None
 
     # global registry of all Action
-    _registry: ClassVar[dict[ActionKey, ActionInfo]] = {}
+    _registry: ClassVar[dict[str, ActionInfo]] = {}
     _action_cls: ClassVar[type[QCoreAction]] = QCoreAction
 
-    def __post_init__(self) -> None:
+    def model_post_init(self, __context: Any) -> None:
         ActionInfo._registry[self.key] = self
-
-    def mark_on_created(self, f: CoreActionFunc) -> CoreActionFunc:
-        """Decorator to mark a function to call when the QAction is created."""
-        self.on_created = f
-        return f
 
     def to_qaction(
         self, mmc: CMMCorePlus, parent: QObject | None = None
@@ -88,19 +95,48 @@ class ActionInfo(Generic[AK]):
         return self._action_cls(mmc, self, parent)
 
     @classmethod
-    def for_key(cls, key: ActionKey) -> Self:
+    def for_key(cls, key: str) -> Self:
         """Get the ActionInfo for a given key."""
-        try:
-            # TODO: is this cast valid?
-            return cast("Self", ActionInfo._registry[key])
-        except KeyError as e:  # pragma: no cover
-            key_type = type(key).__name__
-            parent_module = __name__.rsplit(".", 1)[0]
-            if key_type == "WidgetAction":
-                module = f"{parent_module}.widget_actions"
-            else:
-                module = f"{parent_module}.core_actions"
+        key = str(key)
+        if key not in ActionInfo._registry:
+            # Find possible matches among available widget actions
+            import difflib
+
+            suggestion = ""
+            if matches := difflib.get_close_matches(
+                key, list(ActionInfo._registry), n=1, cutoff=0.5
+            ):
+                suggestion = f"\n\nDid you mean {matches[0]!r}?"
+
             raise KeyError(
-                f"No 'ActionInfo' has been declared for key '{key_type}.{key.name}'."
-                f"Please create one in {module}"
-            ) from e
+                f"No 'ActionInfo' has been declared for key '{key}'.{suggestion}"
+            )
+
+        info = ActionInfo._registry[key]
+        if not isinstance(info, cls):
+            raise TypeError(
+                f"ActionInfo for key {key} is not an instance of {cls!r}. "
+                f"Please call `for_key` on the appropriate super-class."
+            )
+        return info
+
+    @classmethod
+    def widget_actions(cls) -> dict[str, WidgetActionInfo]:
+        """Return all widget actions."""
+        return {
+            k: v for k, v in cls._registry.items() if isinstance(v, WidgetActionInfo)
+        }
+
+
+class WidgetActionInfo(ActionInfo):
+    """Subclass to set default values for WidgetAction."""
+
+    # by default, widget actions are checkable, and the check state indicates visibility
+    checkable: bool = True
+    # function that can be called with (parent: QWidget) -> QWidget
+    create_widget: Callable[[QWidgetType], QWidget]
+    # Use None to indicate that the widget should not be docked
+    dock_area: DockWidgetArea | SideBarLocation | None = (
+        DockWidgetArea.RightDockWidgetArea
+    )
+    scroll_mode: CDockWidget.eInsertMode = CDockWidget.eInsertMode.AutoScrollArea

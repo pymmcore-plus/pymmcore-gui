@@ -93,13 +93,13 @@ class MMGuiUserPrefsSource(PydanticBaseSettingsSource):
         return None, "", False  # pragma: no cover
 
 
-def _default_widgets() -> set[WidgetAction]:
+def _default_widgets() -> set[str]:
     """The default set widgets that open on launch."""
     return {WidgetAction.CONFIG_GROUPS, WidgetAction.MDA_WIDGET}
 
 
 # set of widgets that are sorted when serialized
-InitialWidgets = Annotated[set[WidgetAction], WrapSerializer(lambda v, h: sorted(h(v)))]
+InitialWidgets = Annotated[set[str], WrapSerializer(lambda v, h: sorted(h(v)))]
 
 
 class WindowSettingsV1(BaseMMSettings):

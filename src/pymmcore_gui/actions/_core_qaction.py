@@ -4,18 +4,19 @@ from typing import TYPE_CHECKING
 
 from PyQt6.QtGui import QAction, QIcon
 from superqt import QIconifyIcon
+from zmq import Enum
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
     from PyQt6.QtCore import QObject
 
-    from ._action_info import ActionInfo, ActionKey, ActionTriggeredFunc
+    from ._action_info import ActionInfo, ActionTriggeredFunc
 
 
 class QCoreAction(QAction):
     """QAction that can act on a CMMCorePlus instance."""
 
-    key: ActionKey
+    key: str
 
     def __init__(
         self,
@@ -37,7 +38,10 @@ class QCoreAction(QAction):
         """Apply settings from a `CoreActionInfo` object to the QAction."""
         self.key = info.key
 
-        self.setText(info.text or str(info.key))
+        if not (text := info.text):
+            text = info.key.value if isinstance(info.key, Enum) else info.key
+
+        self.setText(text)
         if info.auto_repeat is not None:
             self.setAutoRepeat(info.auto_repeat)
         if info.checkable is not None:

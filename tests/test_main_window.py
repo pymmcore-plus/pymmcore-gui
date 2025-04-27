@@ -9,9 +9,10 @@ from pymmcore_widgets import MDAWidget
 from PyQt6.QtWidgets import QApplication, QDialog
 from PyQt6Ads import CDockWidget
 
-from pymmcore_gui import CoreAction, MicroManagerGUI, WidgetAction
+from pymmcore_gui import MicroManagerGUI
 from pymmcore_gui._app import MMQApplication
 from pymmcore_gui._notification_manager import NotificationManager
+from pymmcore_gui.actions import CoreAction, WidgetAction
 from pymmcore_gui.widgets._toolbars import ShuttersToolbar
 
 if TYPE_CHECKING:
