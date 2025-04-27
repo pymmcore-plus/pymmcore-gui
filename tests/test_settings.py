@@ -43,7 +43,7 @@ def test_user_settings(tmp_path: Path) -> None:
             RuntimeWarning, match="Could not validate key 'window_state'"
         ):
             assert MMGuiUserPrefsSource(BaseSettings)() == {
-                "window": {"geometry": b"\x00\x00\x02"}
+                "window": {"geometry": "AAAC"}
             }
 
         # test invalid json doesn't ruin everything
