@@ -26,14 +26,14 @@ from PyQt6.QtWidgets import (
 from PyQt6Ads import CDockManager, CDockWidget, SideBarLocation
 from superqt import QIconifyIcon
 
+from pymmcore_gui.actions._action_info import WidgetActionInfo
 from pymmcore_gui.actions._core_qaction import QCoreAction
-from pymmcore_gui.actions.widget_actions import WidgetActionInfo
 
 from ._ndv_viewers import NDVViewersManager
 from ._notification_manager import NotificationManager
 from ._settings import Settings
 from .actions import CoreAction, WidgetAction
-from .actions._action_info import ActionKey
+from .actions._action_info import ActionInfo
 
 try:
     from .widgets._pygfx_image import PygfxImagePreview as ImagePreview
@@ -94,8 +94,17 @@ class Toolbar(str, Enum):
         return str(self.value)
 
 
-ToolDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QToolBar]
-MenuDictValue = list[ActionKey] | Callable[[CMMCorePlus, QMainWindow], QMenu]
+ToolDictValue = list[str] | Callable[[CMMCorePlus, "MicroManagerGUI"], QToolBar]
+MenuDictValue = list[str] | Callable[[CMMCorePlus, "MicroManagerGUI"], QMenu]
+
+
+def _create_window_menu(mmc: CMMCorePlus, parent: MicroManagerGUI) -> QMenu:
+    """Create the Window menu."""
+    menu = QMenu(Menu.WINDOW.value, parent)
+    actions = sorted(ActionInfo.widget_actions())
+    for action in actions:
+        menu.addAction(parent.get_action(action))
+    return menu
 
 
 class MicroManagerGUI(QMainWindow):
@@ -122,17 +131,7 @@ class MicroManagerGUI(QMainWindow):
     # that takes a CMMCorePlus instance and QMainWindow and returns a QMenu.
     MENUS: Mapping[str, MenuDictValue] = {
         Menu.PYMM_GUI: [WidgetAction.ABOUT],
-        Menu.WINDOW: [
-            WidgetAction.CONSOLE,
-            WidgetAction.PROP_BROWSER,
-            WidgetAction.INSTALL_DEVICES,
-            WidgetAction.MDA_WIDGET,
-            WidgetAction.STAGE_CONTROL,
-            WidgetAction.CAMERA_ROI,
-            WidgetAction.CONFIG_GROUPS,
-            WidgetAction.EXCEPTION_LOG,
-            WidgetAction.CONFIG_WIZARD,
-        ],
+        Menu.WINDOW: _create_window_menu,
         Menu.HELP: [CoreAction.LOAD_DEMO],
     }
 
@@ -146,11 +145,11 @@ class MicroManagerGUI(QMainWindow):
         # when the same action is requested multiple times. This is useful to
         # synchronize the state of actions that may appear in multiple menus or
         # toolbars.
-        self._qactions = WeakValueDictionary[ActionKey, QAction]()
+        self._qactions = WeakValueDictionary[str, QAction]()
         # widgets that are associated with a QAction
-        self._action_widgets = WeakValueDictionary[WidgetAction, QWidget]()
+        self._action_widgets = WeakValueDictionary[str, QWidget]()
         # the wrapping QDockWidget for widgets that are associated with a QAction
-        self._dock_widgets = WeakValueDictionary[WidgetAction, CDockWidget]()
+        self._dock_widgets = WeakValueDictionary[str, CDockWidget]()
 
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
@@ -210,7 +209,7 @@ class MicroManagerGUI(QMainWindow):
         self._central.setWidget(self._img_preview)
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
-        QTimer.singleShot(0, lambda: self._restore_state(True))
+        QTimer.singleShot(0, self._restore_state)
 
     # --------------------- Properties ----------------------
 
@@ -226,7 +225,7 @@ class MicroManagerGUI(QMainWindow):
     # --------------------- Public methods ----------------------
     # -----------------------------------------------------------
 
-    def get_action(self, key: ActionKey, create: bool = True) -> QAction:
+    def get_action(self, key: str, create: bool = True) -> QAction:
         """Create a QAction from this key."""
         if key not in self._qactions:
             if not create:  # pragma: no cover
@@ -234,10 +233,10 @@ class MicroManagerGUI(QMainWindow):
                     f"Action {key} has not been created yet, and 'create' is False"
                 )
             # create and cache it
-            info: WidgetActionInfo[QWidget] = WidgetActionInfo.for_key(key)
+            info = ActionInfo.for_key(key)
             self._qactions[key] = action = info.to_qaction(self._mmc, self)
             # connect WidgetActions to toggle their widgets
-            if isinstance(action.key, WidgetAction):
+            if isinstance(info, WidgetActionInfo):
                 action.triggered.connect(self._toggle_action_widget)
 
         return self._qactions[key]
@@ -269,9 +268,9 @@ class MicroManagerGUI(QMainWindow):
     def get_widget(self, key: Literal[WidgetAction.STAGE_CONTROL], create: bool = ...) -> StagesControlWidget: ...  # noqa: E501
     # generic fallback
     @overload
-    def get_widget(self, key: WidgetAction, create: bool = ...) -> QWidget: ...
+    def get_widget(self, key: str, create: bool = ...) -> QWidget: ...
     # fmt: on
-    def get_widget(self, key: WidgetAction, create: bool = True) -> QWidget:
+    def get_widget(self, key: str, create: bool = True) -> QWidget:
         """Get (or create) widget for `key` ensuring that it is linked to its QAction.
 
         If the widget has been "closed" (hidden), it will be re-shown.
@@ -296,9 +295,10 @@ class MicroManagerGUI(QMainWindow):
                 raise KeyError(
                     f"Widget {key} has not been created yet, and 'create' is False"
                 )
-            area = key.dock_area()
-            widget = key.create_widget(self)
-            widget.setObjectName(key.name)
+            info: WidgetActionInfo = WidgetActionInfo.for_key(key)
+            area = info.dock_area
+            widget = info.create_widget(self)
+            widget.setObjectName(info.key)
             if isinstance(widget, QDialog):
                 widget.exec()
                 return widget
@@ -306,9 +306,9 @@ class MicroManagerGUI(QMainWindow):
             self._action_widgets[key] = widget
 
             action = self.get_action(key)
-            dock = CDockWidget(key.value, self)
-            dock.setWidget(widget, key.scroll_mode())
-            dock.setObjectName(f"docked_{key.name}")
+            dock = CDockWidget(info.text, self)
+            dock.setWidget(widget, info.scroll_mode)
+            dock.setObjectName(f"docked_{info.key}")
             dock.setToggleViewAction(action)
             dock.setMinimumSize(widget.minimumSize())
             dock.setIcon(action.icon())
@@ -335,7 +335,7 @@ class MicroManagerGUI(QMainWindow):
 
         return self._action_widgets[key]
 
-    def get_dock_widget(self, key: WidgetAction) -> CDockWidget:
+    def get_dock_widget(self, key: str) -> CDockWidget:
         """Get the QDockWidget for `key`.
 
         Note, you can also get the QDockWidget by calling `get_widget(key)`, and then
@@ -406,7 +406,12 @@ class MicroManagerGUI(QMainWindow):
         initial_widgets = settings.window.initial_widgets
         # we need to create the widgets first, before calling restoreState.
         for key in initial_widgets:
-            self.get_widget(key)
+            try:
+                self.get_widget(key)
+            except KeyError:
+                self.nm.show_warning_message(
+                    f"Unable to reload widget key stored in settings: {key!r}",
+                )
 
         # restore position and size of the main window
         if geo := settings.window.geometry:
@@ -431,6 +436,7 @@ class MicroManagerGUI(QMainWindow):
 
         if show:
             self.show()
+            self.nm.reposition_notifications()
 
     def _save_state(self) -> None:
         """Save the state of the window to settings."""
@@ -449,7 +455,7 @@ class MicroManagerGUI(QMainWindow):
         # write to disk, blocking up to 5 seconds
         settings.flush(timeout=5000)
 
-    def _open_widgets(self) -> set[WidgetAction]:
+    def _open_widgets(self) -> set[str]:
         """Return the set of open widgets."""
         return {
             key
@@ -464,20 +470,17 @@ class MicroManagerGUI(QMainWindow):
         `get_action`, so it is assumed that the sender is a QCoreAction with a
         WidgetAction key.  Calling otherwise will do nothing.
         """
-        if not (
-            isinstance(action := self.sender(), QCoreAction)
-            and isinstance((key := action.key), WidgetAction)
-        ):
+        if not (isinstance(action := self.sender(), QCoreAction)):
             return
 
         # if the widget is a dock widget, we want to toggle the dock widget
         # rather than the inner widget
-        if key in self._dock_widgets:
-            widget: QWidget = self.get_dock_widget(key)
+        if action.key in self._dock_widgets:
+            widget: QWidget = self.get_dock_widget(action.key)
         else:
             # this will create the widget if it doesn't exist yet,
             # e.g. for a click event on a Toolbutton that doesn't yet have a widget
-            widget = self.get_widget(key)
+            widget = self.get_widget(action.key)
         widget.setVisible(checked)
         if checked:
             widget.raise_()

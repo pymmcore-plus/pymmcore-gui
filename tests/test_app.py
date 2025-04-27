@@ -8,6 +8,7 @@ from pytest import MonkeyPatch
 from pymmcore_gui import __main__, _app
 
 
+@pytest.mark.order(0)
 def test_main_app(monkeypatch: MonkeyPatch) -> None:
     with patch.object(
         _app.MMQApplication, "exec", lambda _: QApplication.processEvents()
