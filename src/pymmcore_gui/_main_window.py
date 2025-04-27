@@ -10,7 +10,7 @@ from weakref import WeakValueDictionary
 
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets import ConfigWizard
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QAction, QCloseEvent, QGuiApplication, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
@@ -209,7 +209,7 @@ class MicroManagerGUI(QMainWindow):
         self._central.setWidget(self._img_preview)
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
-        # QTimer.singleShot(0, self._restore_state)
+        QTimer.singleShot(0, self._restore_state)
 
     # --------------------- Properties ----------------------
 
