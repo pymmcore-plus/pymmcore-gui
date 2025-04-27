@@ -115,7 +115,8 @@ def _good_data_only(
                 cleaned[key] = _good_data_only(annotation, value, warn=warn)
             else:
                 try:
-                    cleaned[key] = TypeAdapter(field.annotation).validate_python(value)
+                    TypeAdapter(field.annotation).validate_python(value)
+                    cleaned[key] = value
                 except ValidationError as e:
                     if warn:
                         warnings.warn(
