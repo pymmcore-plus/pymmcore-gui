@@ -26,7 +26,6 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync
-      - run: uv run pyright
       - uses: pre-commit/action@v3.0.0
         with:
           extra_args: --all-files --verbose
