@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+from enum import Enum
 from typing import TYPE_CHECKING
 
 from PyQt6.QtGui import QAction, QIcon
 from superqt import QIconifyIcon
-from zmq import Enum
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
