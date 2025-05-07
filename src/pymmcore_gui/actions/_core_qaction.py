@@ -3,7 +3,8 @@ from __future__ import annotations
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from PyQt6.QtGui import QAction, QIcon
+from PyQt6.QtGui import QAction, QIcon, QPalette
+from PyQt6.QtWidgets import QApplication
 from superqt import QIconifyIcon
 
 if TYPE_CHECKING:
@@ -52,7 +53,8 @@ class QCoreAction(QAction):
             self.setEnabled(info.enabled)
         if info.icon is not None:
             if isinstance(info.icon, str):
-                icon: QIcon = QIconifyIcon(info.icon)
+                color = QApplication.palette().color(QPalette.ColorRole.WindowText)
+                icon: QIcon = QIconifyIcon(info.icon, color=color.name())
             else:
                 icon = QIcon(info.icon)
             self.setIcon(icon)
