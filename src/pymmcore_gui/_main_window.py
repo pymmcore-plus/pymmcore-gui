@@ -71,6 +71,7 @@ class Menu(str, Enum):
 
     PYMM_GUI = "pymmcore-gui"
     WINDOW = "Window"
+    DEVICE = "Device"
     HELP = "Help"
 
     def __str__(self) -> str:
@@ -127,6 +128,11 @@ class MicroManagerGUI(QMainWindow):
     MENUS: Mapping[str, MenuDictValue] = {
         Menu.PYMM_GUI: [WidgetAction.ABOUT],
         Menu.WINDOW: _create_window_menu,
+        Menu.DEVICE: [
+            WidgetAction.CONFIG_WIZARD,
+            WidgetAction.LOAD_CONFIG,
+            WidgetAction.SAVE_CONFIG,
+        ],
         Menu.HELP: [CoreAction.LOAD_DEMO],
     }
 
