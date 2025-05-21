@@ -35,12 +35,6 @@ from ._notification_manager import NotificationManager
 from ._settings import Settings
 from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionInfo
-
-try:
-    from .widgets._pygfx_image import PygfxImagePreview as ImagePreview
-except ImportError:
-    from pymmcore_widgets import ImagePreview  # type: ignore
-
 from .widgets._toolbars import OCToolBar
 
 if TYPE_CHECKING:
@@ -158,10 +152,9 @@ class MicroManagerGUI(QMainWindow):
             self._on_system_config_loaded
         )
 
-        self._img_preview = ImagePreview(self, mmcore=self._mmc)
-        self._img_preview.setObjectName("ImagePreview")
         self._viewers_manager = NDVViewersManager(self, self._mmc)
-        self._viewers_manager.viewerCreated.connect(self._on_viewer_created)
+        self._viewers_manager.mdaViewerCreated.connect(self._on_mda_viewer_created)
+        self._viewers_manager.previewViewerCreated.connect(self._on_previewer_created)
         self._notification_manager = NotificationManager(self)
         if app := QApplication.instance():
             if hasattr(app, "exceptionRaised"):
@@ -207,7 +200,13 @@ class MicroManagerGUI(QMainWindow):
 
         self._central = CDockWidget("Viewers", self)
         self._central.setFeature(CDockWidget.DockWidgetFeature.NoTab, True)
-        self._central.setWidget(self._img_preview)
+        blank = QWidget()
+        blank.setObjectName("blank")
+        blank.setStyleSheet(
+            "background-color: qlineargradient("
+            "x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #333, stop: 1 #111);"
+        )
+        self._central.setWidget(blank)
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
         # QTimer.singleShot(0, self._restore_state)
@@ -493,7 +492,7 @@ class MicroManagerGUI(QMainWindow):
         if checked:
             widget.raise_()
 
-    def _on_viewer_created(
+    def _on_mda_viewer_created(
         self, ndv_viewer: ndv.ArrayViewer, sequence: MDASequence
     ) -> None:
         q_viewer = cast("QWidget", ndv_viewer.widget())
@@ -504,8 +503,15 @@ class MicroManagerGUI(QMainWindow):
         q_viewer.setWindowFlags(Qt.WindowType.Dialog)
 
         dw = CDockWidget(f"ndv-{sha}")
+        # small hack ... we need to retain a pointer to the viewer
+        # otherwise the viewer will be garbage collected
+        dw._viewer = ndv_viewer  # type: ignore
         dw.setWidget(q_viewer)
+        dw.setFeature(dw.DockWidgetFeature.DockWidgetFloatable, False)
         self.dock_manager.addDockWidgetTabToArea(dw, self._central_dock_area)
+
+    def _on_previewer_created(self, dock_widget: CDockWidget) -> None:
+        self.dock_manager.addDockWidgetTabToArea(dock_widget, self._central_dock_area)
 
     def _on_exception(self, exc: BaseException) -> None:
         """Show a notification when an exception is raised."""
