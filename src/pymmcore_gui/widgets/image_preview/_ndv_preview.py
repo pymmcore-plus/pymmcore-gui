@@ -35,7 +35,7 @@ class NDVPreview(ImagePreviewBase):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(qwdg)
 
-    def set_data(self, data: np.ndarray) -> None:
+    def append(self, data: np.ndarray) -> None:
         if self._buffer is None:
             self._setup_viewer()
         if self._buffer is not None:
@@ -44,19 +44,37 @@ class NDVPreview(ImagePreviewBase):
             if self.process_events_on_update:
                 QApplication.processEvents()
 
-    def _setup_viewer(self) -> None:
+    @property
+    def dtype_shape(self) -> tuple[str, tuple[int, ...]] | None:
+        return self._core_dtype
+
+    def _get_core_dtype_shape(self) -> tuple[str, tuple[int, ...]] | None:
         if (core := self._mmc) is not None:
             if bits := core.getImageBitDepth():
                 img_width = core.getImageWidth()
                 img_height = core.getImageHeight()
-                shape: tuple[int, ...] = (img_height, img_width)
                 if core.getNumberOfComponents() > 1:
-                    shape = (*shape, 3)
+                    shape: tuple[int, ...] = (img_height, img_width, 3)
+                else:
+                    shape = (img_height, img_width)
+                return (f"uint{bits}", shape)
+        return None
 
-                self._buffer = RingBuffer(
-                    max_capacity=100, dtype=(f"uint{bits}", shape)
-                )
-                self._viewer.data = self._buffer
+    def _setup_viewer(self) -> None:
+        if (core_dtype := self._get_core_dtype_shape()) is None:
+            return
+
+        self._core_dtype = core_dtype
+        self._viewer.data = self._buffer = RingBuffer(
+            max_capacity=100, dtype=core_dtype
+        )
+        self._viewer.display_model.visible_axes = (1, 2)
+        if core_dtype[1][-1] == 3:  # RGB
+            self._viewer.display_model.channel_axis = 3
+            self._viewer.display_model.channel_mode = ndv.models.ChannelMode.RGBA
+        else:
+            self._viewer.display_model.channel_mode = ndv.models.ChannelMode.GRAYSCALE
+            self._viewer.display_model.channel_axis = None
 
     def _on_system_config_loaded(self) -> None:
         self._setup_viewer()

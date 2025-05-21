@@ -187,7 +187,7 @@ class NDVViewersManager(QObject):
     def _on_image_snapped(self) -> None:
         if not self._is_mda_running:
             if preview := self._create_or_show_img_preview():
-                preview.set_data(self._mmc.getImage())
+                preview.append(self._mmc.getImage())
 
     def __repr__(self) -> str:  # pragma: no cover
         return f"<{self.__class__.__name__} {hex(id(self))} ({len(self)} viewer)>"
@@ -202,10 +202,12 @@ class NDVViewersManager(QObject):
         if self._mmc is None:
             return
 
-        # if we change camera, reconfigure the viewer
+        # if we change any camera property
         if dev == self._mmc.getCameraDevice() or (dev == "Core" and prop == "Camera"):
             if self._current_image_preview:
+                # check if the existing viewer still has a valid shape and dtype
+                # (dtype is actually tuple of (dtype, shape))
                 preview = cast("NDVPreview", self._current_image_preview.widget())
-                preview.detach()
-
-            self._current_image_preview = None
+                if preview._get_core_dtype_shape() != preview.dtype_shape:
+                    preview.detach()
+                    self._current_image_preview = None

@@ -123,7 +123,7 @@ class PygfxImagePreview(ImagePreviewBase):
         """Return current texture data."""
         return self._texture.data  # type: ignore [no-any-return]
 
-    def set_data(self, data: np.ndarray) -> None:
+    def append(self, data: np.ndarray) -> None:
         """Set texture data.
 
         The dtype must be compatible with wgpu texture formats.

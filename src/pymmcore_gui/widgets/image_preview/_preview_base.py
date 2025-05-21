@@ -62,7 +62,7 @@ class ImagePreviewBase(QWidget):
             ev.exposureChanged.disconnect(self._on_exposure_changed)
 
     @abstractmethod
-    def set_data(self, data: np.ndarray) -> None:
+    def append(self, data: np.ndarray) -> None:
         """Set texture data.
 
         The dtype must be compatible with wgpu texture formats.
@@ -82,7 +82,7 @@ class ImagePreviewBase(QWidget):
         if (core := self._mmc) and core.getRemainingImageCount() > 0:
             try:
                 img = core.fixImage(core.getLastImage())
-                self.set_data(img)
+                self.append(img)
             except Exception as e:
                 warnings.warn(
                     f"Failed to get image from core: {e}", RuntimeWarning, stacklevel=2
@@ -95,7 +95,7 @@ class ImagePreviewBase(QWidget):
             return  # pragma: no cover
 
         last = core.getImage()
-        self.set_data(last)
+        self.append(last)
 
     def _on_streaming_start(self) -> None:
         if (core := self._mmc) is not None:
