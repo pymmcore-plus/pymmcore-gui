@@ -36,7 +36,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "ndv[vispy]>=0.2.2",
+    "ndv[vispy]>=0.4.0",
     "pydantic-settings>=2.7.1",
     "pymmcore-plus[cli]>=0.13.2",
     "pymmcore-widgets>=0.9.0",
