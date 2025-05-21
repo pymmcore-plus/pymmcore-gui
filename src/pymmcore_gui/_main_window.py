@@ -153,7 +153,7 @@ class MicroManagerGUI(QMainWindow):
         )
 
         self._viewers_manager = NDVViewersManager(self, self._mmc)
-        self._viewers_manager.mdaViewerCreated.connect(self._on_viewer_created)
+        self._viewers_manager.mdaViewerCreated.connect(self._on_mda_viewer_created)
         self._viewers_manager.previewViewerCreated.connect(self._on_previewer_created)
         self._notification_manager = NotificationManager(self)
         if app := QApplication.instance():
@@ -492,7 +492,7 @@ class MicroManagerGUI(QMainWindow):
         if checked:
             widget.raise_()
 
-    def _on_viewer_created(
+    def _on_mda_viewer_created(
         self, ndv_viewer: ndv.ArrayViewer, sequence: MDASequence
     ) -> None:
         q_viewer = cast("QWidget", ndv_viewer.widget())

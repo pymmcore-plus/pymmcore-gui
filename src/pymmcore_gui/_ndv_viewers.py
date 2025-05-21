@@ -54,7 +54,7 @@ class NDVViewersManager(QObject):
         self._seq_viewers = WeakValueDictionary[str, ndv.ArrayViewer]()
         self._preview_dock_widgets = WeakSet[CDockWidget]()
         # currently active viewer
-        self._active_viewer: ndv.ArrayViewer | None = None
+        self._active_mda_viewer: ndv.ArrayViewer | None = None
 
         # We differentiate between handlers that were created by someone else, and
         # gathered using mda.get_output_handlers(), vs handlers that were created by us.
@@ -81,7 +81,7 @@ class NDVViewersManager(QObject):
         parent.destroyed.connect(self._cleanup)
 
     def _cleanup(self, obj: QObject | None = None) -> None:
-        self._active_viewer = None
+        self._active_mda_viewer = None
         self._handler = None
         self._own_handler = None
 
@@ -105,7 +105,7 @@ class NDVViewersManager(QObject):
             self._own_handler.reset(sequence)
 
         # since the handler is empty at this point, create a ndv viewer with no data
-        self._active_viewer = self._create_ndv_viewer(sequence)
+        self._active_mda_viewer = self._create_ndv_viewer(sequence)
 
     def _on_frame_ready(
         self, frame: np.ndarray, event: useq.MDAEvent, meta: FrameMetaV1
@@ -115,7 +115,7 @@ class NDVViewersManager(QObject):
         if self._own_handler is not None:
             self._own_handler.frameReady(frame, event, meta)
 
-        if (viewer := self._active_viewer) is None:
+        if (viewer := self._active_mda_viewer) is None:
             return  # pragma: no cover
 
         # if the viewer does not yet have data, it's likely the very first frame
@@ -168,7 +168,7 @@ class NDVViewersManager(QObject):
         if self._current_image_preview is None:
             preview = NDVPreview(mmcore=self._mmc)
             if not isinstance((parent := self.parent()), QWidget):
-                parent = None
+                parent = None  # pragma: no cover
             self._current_image_preview = dw = CDockWidget("Preview", parent)
             self._preview_dock_widgets.add(dw)
             dw.setWidget(preview)
@@ -200,7 +200,7 @@ class NDVViewersManager(QObject):
 
     def _on_property_changed(self, dev: str, prop: str, value: str) -> None:
         if self._mmc is None:
-            return
+            return  # pragma: no cover
 
         # if we change any camera property
         if dev == self._mmc.getCameraDevice() or (dev == "Core" and prop == "Camera"):

@@ -61,8 +61,9 @@ class NDVPreview(ImagePreviewBase):
         return None
 
     def _setup_viewer(self) -> None:
+        # TODO: maybe we should let this continue if core_dtype != self.dtype_shape
         if (core_dtype := self._get_core_dtype_shape()) is None:
-            return
+            return  # pragma: no cover
 
         self._core_dtype = core_dtype
         self._viewer.data = self._buffer = RingBuffer(

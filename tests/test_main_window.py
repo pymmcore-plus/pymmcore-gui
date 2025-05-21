@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 from unittest.mock import patch
 
+import ndv
 import pytest
 import useq
 from pymmcore_widgets import MDAWidget
@@ -16,7 +17,7 @@ from pymmcore_gui.actions import CoreAction, WidgetAction
 from pymmcore_gui.widgets._toolbars import ShuttersToolbar
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    from collections.abc import Iterator
 
     from PyQt6Ads import CDockAreaWidget
     from pytestqt.qtbot import QtBot
@@ -24,10 +25,16 @@ if TYPE_CHECKING:
     from pymmcore_gui._settings import Settings
 
 
-@pytest.mark.parametrize("w_action", list(WidgetAction))
-def test_main_window(qtbot: QtBot, qapp: QApplication, w_action: WidgetAction) -> None:
+@pytest.fixture
+def gui(qtbot: QtBot, qapp: QApplication) -> Iterator[MicroManagerGUI]:
     gui = MicroManagerGUI()
     qtbot.addWidget(gui)
+    yield gui
+
+
+@pytest.mark.parametrize("w_action", list(WidgetAction))
+def test_main_window(gui: MicroManagerGUI, w_action: WidgetAction) -> None:
+    gui = MicroManagerGUI()
     action = gui.get_action(w_action)
     with patch.object(QDialog, "exec", lambda x: x.show()):
         wdg = gui.get_widget(w_action)
@@ -48,11 +55,7 @@ def test_main_window(qtbot: QtBot, qapp: QApplication, w_action: WidgetAction) -
     assert isinstance(gui.get_dock_widget(WidgetAction.MDA_WIDGET), CDockWidget)
 
 
-def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path: Path) -> None:
-    # make sure that when we load a new cfg the shutters toolbar is updated
-    gui = MicroManagerGUI()
-    qtbot.addWidget(gui)
-
+def test_shutter_toolbar(gui: MicroManagerGUI) -> None:
     sh_toolbar = ShuttersToolbar(gui._mmc, gui)
 
     # in our test cfg we have 3 shutters
@@ -67,11 +70,7 @@ def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path: Path) -> No
     assert len(sh_toolbar.actions()) == 2
 
 
-def test_save_restore_state(
-    qtbot: QtBot, qapp: QApplication, settings: Settings
-) -> None:
-    gui = MicroManagerGUI()
-    qtbot.addWidget(gui)
+def test_save_restore_state(gui: MicroManagerGUI, settings: Settings) -> None:
     assert not gui._open_widgets()
     settings.window.open_widgets.clear()
 
@@ -90,9 +89,7 @@ def test_save_restore_state(
     assert WidgetAction.STAGE_CONTROL not in gui._open_widgets()
 
 
-def test_ndv_viewers_in_main_window(qtbot: QtBot) -> None:
-    gui = MicroManagerGUI()
-    qtbot.addWidget(gui)
+def test_ndv_viewers_in_main_window(gui: MicroManagerGUI) -> None:
     central_area = cast("CDockAreaWidget", gui._central_dock_area)
     assert central_area.dockWidgetsCount() == 1
     gui.mmcore.mda.run(
@@ -104,10 +101,8 @@ def test_ndv_viewers_in_main_window(qtbot: QtBot) -> None:
     assert central_area.dockWidgetsCount() == 2
 
 
-def test_main_window_notifications(qtbot: QtBot) -> None:
+def test_main_window_notifications(gui: MicroManagerGUI) -> None:
     """Test that notifications are created and removed correctly."""
-    gui = MicroManagerGUI()
-    qtbot.addWidget(gui)
     assert isinstance(gui.nm, NotificationManager)
 
     with patch.object(gui.nm, "show_error_message") as mock_show_error:
@@ -117,3 +112,68 @@ def test_main_window_notifications(qtbot: QtBot) -> None:
         app.exceptionRaised.emit(err)
         mock_show_error.assert_called_once()
         assert mock_show_error.call_args[0][0] == "Boom!"
+
+
+def test_snap(gui: MicroManagerGUI, qtbot: QtBot) -> None:
+    """Test that snapping creates a new image preview."""
+    vm = gui._viewers_manager
+    assert vm._current_image_preview is None
+    core = gui._mmc
+    with qtbot.waitSignal(vm.previewViewerCreated):
+        core.snapImage()
+    preview = vm._current_image_preview
+    assert preview is not None
+    assert len(vm._preview_dock_widgets) == 1
+
+    # change image dtype/shape.
+    # We should end up with a second preview widget
+    core.setProperty(core.getCameraDevice(), "PixelType", "32bitRGB")
+    with qtbot.waitSignal(vm.previewViewerCreated):
+        core.snapImage()
+    assert vm._current_image_preview is not preview
+    preview = vm._current_image_preview
+    assert preview is not None
+    assert len(vm._preview_dock_widgets) == 2
+
+    # but this should *not* create a new preview
+    core.setProperty(core.getCameraDevice(), "Exposure", "42")
+    with qtbot.waitSignal(core.events.imageSnapped):
+        core.snapImage()
+    assert vm._current_image_preview is preview
+    assert len(vm._preview_dock_widgets) == 2
+
+
+def test_stream(gui: MicroManagerGUI, qtbot: QtBot) -> None:
+    """Test that streaming creates a new image preview."""
+    vm = gui._viewers_manager
+    current = vm._current_image_preview
+    assert current is None
+    core = gui._mmc
+    with qtbot.waitSignal(vm.previewViewerCreated):
+        core.startContinuousSequenceAcquisition()
+
+    assert vm._current_image_preview is not None
+    ndv_viewer = vm._current_image_preview.widget()._viewer  # type: ignore
+    assert isinstance(ndv_viewer, ndv.ArrayViewer)
+
+    # we should be able to change the exposure
+    core.setExposure(11)
+    # wait until the ndv viewer actually changes the current index (sanity check)
+    change_signal = ndv_viewer.display_model.current_index.value_changed
+    qtbot.waitSignals([change_signal] * 4)
+    qtbot.wait(40)
+    core.stopSequenceAcquisition()
+
+
+def test_mda(gui: MicroManagerGUI, qtbot: QtBot) -> None:
+    vm = gui._viewers_manager
+    assert vm._active_mda_viewer is None
+    core = gui._mmc
+    with qtbot.waitSignal(vm.mdaViewerCreated):
+        core.mda.run(
+            useq.MDASequence(
+                time_plan=useq.TIntervalLoops(interval=1, loops=2),  # pyright: ignore
+                channels=["DAPI", "FITC"],  #  pyright: ignore
+            ),
+        )
+    assert vm._active_mda_viewer is not None

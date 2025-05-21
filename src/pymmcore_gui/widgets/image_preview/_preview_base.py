@@ -52,7 +52,7 @@ class ImagePreviewBase(QWidget):
     def detach(self) -> None:
         """Detach this widget from events in `core`."""
         if self._mmc is None:
-            return
+            return  # pragma: no cover
         with suppress(Exception):
             ev, self._mmc = self._mmc.events, None
             ev.imageSnapped.disconnect(self._on_image_snapped)
