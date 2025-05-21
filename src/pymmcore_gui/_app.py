@@ -3,11 +3,12 @@ from __future__ import annotations
 import importlib
 import importlib.util
 import os
+import signal
 import sys
 import traceback
 import warnings
 from contextlib import suppress
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from PyQt6.QtCore import QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
@@ -131,6 +132,13 @@ def create_mmgui(
             RuntimeWarning,
             stacklevel=2,
         )
+
+    def _quit(*_: Any) -> None:
+        if app := QApplication.instance():
+            app.quit()
+
+    signal.signal(signal.SIGINT, _quit)
+    signal.signal(signal.SIGTERM, _quit)
 
     win = MicroManagerGUI(mmcore=mmcore)
     QTimer.singleShot(0, lambda: win.restore_state(show=True))
