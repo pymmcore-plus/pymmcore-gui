@@ -121,7 +121,7 @@ class PygfxImagePreview(ImagePreviewBase):
     @property
     def data(self) -> np.ndarray | None:
         """Return current texture data."""
-        return self._texture.data
+        return self._texture.data  # type: ignore [no-any-return]
 
     def set_data(self, data: np.ndarray) -> None:
         """Set texture data.

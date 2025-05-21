@@ -4,16 +4,21 @@ ci:
   autoupdate_commit_msg: "ci(pre-commit.ci): autoupdate"
 
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ".*\\.md"
+      - id: end-of-file-fixer
+      - id: check-toml
+      - id: check-yaml
+        args: ["--unsafe"]
+      - id: check-added-large-files
+
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.24.1
     hooks:
       - id: validate-pyproject
-
-  - repo: https://github.com/crate-ci/typos
-    rev: v1.31.1
-    hooks:
-      - id: typos
-        args: [--force-exclude] # omitting --write-changes
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.44.0
@@ -24,62 +29,37 @@ repos:
             --disable=MD036, # no-emphasis-as-heading
           ]
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.5
+  - repo: local
     hooks:
-      - id: ruff
-        args: [--fix, --unsafe-fixes]
       - id: ruff-format
-
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.15.0
-    hooks:
+        name: ruff format
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+        entry: uv run ruff format --force-exclude
+      - id: ruff-check
+        name: ruff check
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+        entry: uv run ruff check --force-exclude
+        args: [--output-format=full, --show-fixes, --exit-non-zero-on-fix]
       - id: mypy
-        files: "^src/"
-        # The dependencies are listed here in a somewhat unusual way...
-        # pre-commit.ci has a strict limit of 250MB for the entire environment
-        # which is much smaller than all of the transitive dependencies of this repo
-        # so we use --no-deps, and then add just enough to make sure we cover all of
-        # our typing use cases.  Note also the custom PyQt6-stubs repo.
-        additional_dependencies:
-          - "--no-deps"
-          # required for mypy
-          - mypy
-          - typing_extensions
-          - mypy_extensions
-          # required for mypy to find the installed packages
-          - cmap
-          - git+https://github.com/tlambert03/PyQt6-stubs.git@v6.7.3
-          - iconify
-          - ipykernel
-          - ipython
-          - ndv
-          - pygfx
-          - pydantic==2.10.6
-          - pydantic_core==2.27.2
-          - pymmcore
-          - pymmcore-plus>=0.13.2
-          - pymmcore-widgets
-          - pyyaml
-          - qtconsole
-          - rich
-          - superqt
-          - tifffile
-          - tqdm
-          - traitlets
-          - types-Pygments
-          - types-PyYAML
-          - zarr<3.0
-
-  # as an alternative to that annoying list of packages,
-  # pyright can use a virtual environment to find the installed packages
-  # here we direct it to look in the current directory for a .venv folder
-  # however, this won't work for pre-commit.ci (because of environment creation limits)
-  # so we use stages: [manual], and run it manually in ci.yml
-  - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.399
-    hooks:
+        name: mypy
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+        entry: uv run mypy
       - id: pyright
-        files: "^src/"
-        args: [--venvpath, "."]
-        stages: [manual]
+        name: pyright
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+        entry: uv run pyright
+
+
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.31.1
+    hooks:
+      - id: typos
+        args: [--force-exclude] # omitting --write-changes

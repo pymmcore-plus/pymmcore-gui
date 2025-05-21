@@ -9,12 +9,15 @@ from pymmcore_widgets import MDAWidget
 from PyQt6.QtWidgets import QApplication, QDialog
 from PyQt6Ads import CDockWidget
 
-from pymmcore_gui import CoreAction, MicroManagerGUI, WidgetAction
+from pymmcore_gui import MicroManagerGUI
 from pymmcore_gui._app import MMQApplication
 from pymmcore_gui._notification_manager import NotificationManager
+from pymmcore_gui.actions import CoreAction, WidgetAction
 from pymmcore_gui.widgets._toolbars import ShuttersToolbar
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from PyQt6Ads import CDockAreaWidget
     from pytestqt.qtbot import QtBot
 
@@ -45,7 +48,7 @@ def test_main_window(qtbot: QtBot, qapp: QApplication, w_action: WidgetAction) -
     assert isinstance(gui.get_dock_widget(WidgetAction.MDA_WIDGET), CDockWidget)
 
 
-def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path) -> None:
+def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path: Path) -> None:
     # make sure that when we load a new cfg the shutters toolbar is updated
     gui = MicroManagerGUI()
     qtbot.addWidget(gui)
@@ -53,13 +56,14 @@ def test_shutter_toolbar(qtbot: QtBot, qapp: QApplication, tmp_path) -> None:
     sh_toolbar = ShuttersToolbar(gui._mmc, gui)
 
     # in our test cfg we have 3 shutters
-    assert sh_toolbar.layout().count() == 3  # pyright: ignore
+    assert (layout := sh_toolbar.layout()) is not None
+    assert layout.count() == 3
     assert len(sh_toolbar.actions()) == 3
 
     # loading default cfg
     gui._mmc.loadSystemConfiguration()
     # in our test cfg we have 2 shutters
-    assert sh_toolbar.layout().count() == 2  # pyright: ignore
+    assert layout.count() == 2
     assert len(sh_toolbar.actions()) == 2
 
 
@@ -68,12 +72,11 @@ def test_save_restore_state(
 ) -> None:
     gui = MicroManagerGUI()
     qtbot.addWidget(gui)
-    qapp.processEvents()  # force the initial _restore_state to run.
-
-    # the thing we're going to restore
-    assert WidgetAction.STAGE_CONTROL not in gui._open_widgets()
+    assert not gui._open_widgets()
+    settings.window.open_widgets.clear()
 
     # save the state
+    assert not settings.window.open_widgets
     assert not settings.window.geometry
     gui._save_state()
     assert settings.window.geometry
@@ -82,7 +85,8 @@ def test_save_restore_state(
     gui.get_widget(WidgetAction.STAGE_CONTROL)
     assert WidgetAction.STAGE_CONTROL in gui._open_widgets()
     # restore the state
-    gui._restore_state()
+    assert not settings.window.open_widgets
+    gui.restore_state()
     assert WidgetAction.STAGE_CONTROL not in gui._open_widgets()
 
 

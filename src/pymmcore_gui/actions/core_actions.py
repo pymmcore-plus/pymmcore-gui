@@ -1,4 +1,4 @@
-"""Define actions that act on the global CMMCore instance."""
+"""Defines actions that act on the global CMMCore instance."""
 
 from __future__ import annotations
 
@@ -10,15 +10,13 @@ if TYPE_CHECKING:
     from ._core_qaction import QCoreAction
 
 
+# ######################## Functions acting on the Core #########################
 class CoreAction(ActionKey):
     """Actions that act on the global CMMCore instance."""
 
-    SNAP = "Snap Image"
-    TOGGLE_LIVE = "Toggle Live"
-    LOAD_DEMO = "Load Demo Configuration"
-
-
-# ######################## Functions acting on the Core #########################
+    SNAP = "pymmcore_gui.snap_image"
+    TOGGLE_LIVE = "pymmcore_gui.toggle_live"
+    LOAD_DEMO = "pymmcore_gui.load_demo_config"
 
 
 # TODO: perhaps have alternate signatures for these functions that take a
@@ -58,8 +56,10 @@ def load_demo_config(action: QCoreAction, checked: bool) -> None:
 
 # ########################## Action Info Instances #############################
 
+
 snap_action = ActionInfo(
     key=CoreAction.SNAP,
+    text="Snap Image",
     shortcut="Ctrl+K",
     auto_repeat=True,
     icon="mdi-light:camera",
@@ -69,6 +69,7 @@ snap_action = ActionInfo(
 
 toggle_live_action = ActionInfo(
     key=CoreAction.TOGGLE_LIVE,
+    text="Toggle Live",
     shortcut="Ctrl+L",
     auto_repeat=True,
     icon="mdi:video-outline",
@@ -79,5 +80,6 @@ toggle_live_action = ActionInfo(
 
 load_demo_action = ActionInfo(
     key=CoreAction.LOAD_DEMO,
+    text="Load Demo Configuration",
     on_triggered=load_demo_config,
 )

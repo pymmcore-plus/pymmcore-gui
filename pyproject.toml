@@ -22,8 +22,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "BSD-3-Clause" }
 authors = [
-    { email = "federico.gasparoli@gmail.com", name = "Federico Gasparoli" },
     { name = "Talley Lambert", email = "talley.lambert@gmail.com" },
+    { name = "Federico Gasparoli", email = "federico.gasparoli@gmail.com" },
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -40,8 +40,8 @@ dependencies = [
     "pydantic-settings>=2.7.1",
     "pymmcore-plus[cli]>=0.13.2",
     "pymmcore-widgets>=0.9.0",
-    "PyQt6==6.7.1",
-    "pyqt6ads>=4.4.0.post1",
+    "PyQt6==6.9.0",
+    "PyQt6Ads>=4.4.0.post2",
     "pyright>=1.1.393",
     "pyyaml>=6.0.2",
     "qtconsole>=5.6.1",
@@ -56,22 +56,27 @@ dependencies = [
 # TO USE pymmcore-nano, you need to add pymmcore-nano to dependencies
 # and uncomment the override-dependencies line below
 # currently, pymmcore-nano has some issues related to threading that need to be solved
-# 
+#
 # "pymmcore-nano",
 # [tool.uv]
 # override-dependencies = ["pymmcore ;  sys_platform == 'never'"]
 
 [dependency-groups]
-dev = [
-    "ipython>=8.30.0",
-    "mypy>=1.13.0",
-    "pre-commit>=4.0.1",
-    "pyautogui>=0.9.54",
-    "pyinstaller>=6.11.1",
-    "pyright>=1.1.392.post0",
+test = [
     "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
     "pytest-qt>=4.4.0",
+    "pyautogui>=0.9.54",
+    "pytest-order>=1.3.0",
+]
+dev = [
+    { include-group = "test" },
+    "diff-cover>=9.2.4",
+    "ipython>=8.30.0",
+    "mypy>=1.13.0",
+    "pre-commit>=4.0.1",
+    "pyinstaller>=6.11.1",
+    "pyright>=1.1.392.post0",
     "rich>=13.9.4",
     "ruff>=0.8.3",
     "rust-just>=1.38.0",
@@ -86,7 +91,7 @@ allow-direct-references = true
 
 # same as console_scripts entry point
 [project.scripts]
-mmgui = "pymmcore_gui._app:main"
+mmgui = "pymmcore_gui.__main__:main"
 
 [project.urls]
 homepage = "https://github.com/tlambert03/pymmcore-gui"
@@ -98,6 +103,8 @@ repository = "https://github.com/tlambert03/pymmcore-gui"
 line-length = 88
 target-version = "py310"
 src = ["src", "tests"]
+fix = true
+unsafe-fixes = true
 
 # https://docs.astral.sh/ruff/rules
 [tool.ruff.lint]
@@ -114,6 +121,7 @@ select = [
     "B",    # flake8-bugbear
     "A001", # flake8-builtins
     "RUF",  # ruff-specific rules
+    "T100", # no breakpoints
     "TC",   # flake8-type-checking
     "TID",  # flake8-tidy-imports
 ]
@@ -125,6 +133,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*.py" = ["D", "S"]
+"_cli.py" = ["B008"]
 
 # https://docs.astral.sh/ruff/formatter/
 [tool.ruff.format]
@@ -133,7 +142,6 @@ skip-magic-trailing-comma = false # default is false
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
-files = "src/**/*.py"
 strict = true
 disallow_any_generics = false
 disallow_subclassing_any = false
@@ -142,8 +150,9 @@ pretty = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["qtconsole.*", "pydevd.*", "pygfx.*", "rendercanvas.*"]
+module = ["qtconsole.*", "pydevd.*", "pygfx.*", "rendercanvas.*", "pytestqt.*"]
 ignore_missing_imports = true
+
 
 [tool.pyright]
 include = ["src", "tests"]
