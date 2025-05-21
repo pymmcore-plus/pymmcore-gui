@@ -34,6 +34,7 @@ ORG_NAME = "pymmcore-plus"
 ORG_DOMAIN = "pymmcore-plus"
 APP_ID = f"{ORG_DOMAIN}.{ORG_NAME}.{APP_NAME}.{APP_VERSION}"
 IS_FROZEN = getattr(sys, "frozen", False)
+_QAPP: MMQApplication | None = None
 
 
 def _set_osx_app_name(app_title: str) -> None:
@@ -117,10 +118,12 @@ def create_mmgui(
         False, the event loop will not be started, and the caller is responsible for
         starting it with `QApplication.instance().exec()`.
     """
+    global _QAPP
     # Note: in practice this should almost never be None,
     # but in the case of testing, it's conceivable that it could be.
     if (app := QApplication.instance()) is None:
-        app = MMQApplication(sys.argv)
+        # store the app instance in a global variable to prevent garbage collection
+        _QAPP = app = MMQApplication(sys.argv)
     elif not isinstance(app, MMQApplication):  # pragma: no cover
         warnings.warn(
             "A QApplication instance already exists, but it is not MMQApplication. "
