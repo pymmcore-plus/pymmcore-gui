@@ -116,10 +116,6 @@ def test_main_window_notifications(gui: MicroManagerGUI) -> None:
         assert mock_show_error.call_args[0][0] == "Boom!"
 
 
-@pytest.mark.skipif(
-    bool(os.getenv("CI") and sys.platform == "darwin"),
-    reason="need to debug hanging test on macOS CI",
-)
 def test_snap(gui: MicroManagerGUI, qtbot: QtBot) -> None:
     """Test that snapping creates a new image preview."""
     vm = gui._viewers_manager
