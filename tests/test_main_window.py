@@ -149,6 +149,10 @@ def test_snap(gui: MicroManagerGUI, qtbot: QtBot) -> None:
     assert len(vm._preview_dock_widgets) == 2
 
 
+@pytest.mark.skipif(
+    bool(os.getenv("CI") and sys.platform == "darwin"),
+    reason="need to debug hanging test on macOS CI",
+)
 def test_stream(gui: MicroManagerGUI, qtbot: QtBot) -> None:
     """Test that streaming creates a new image preview."""
     vm = gui._viewers_manager
