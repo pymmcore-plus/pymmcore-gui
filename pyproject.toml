@@ -166,7 +166,10 @@ venv = ".venv"
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
-filterwarnings = ["error"]
+filterwarnings = [
+    "error",
+    "ignore:Parsing dates involving a day of month::ipykernel",
+]
 
 # https://coverage.readthedocs.io/
 [tool.coverage.report]
