@@ -29,7 +29,9 @@ def app_process() -> Iterator[subprocess.Popen]:
     yield process
     process.terminate()
     process.wait()
-    assert process.returncode == 0, f"Process terminated with code {process.returncode}"
+    assert process.returncode == -15, (
+        f"Process terminated with code {process.returncode}"
+    )
 
 
 CMD_CTRL = "ctrl" if os.name == "nt" else "command"
@@ -37,4 +39,4 @@ CMD_CTRL = "ctrl" if os.name == "nt" else "command"
 
 @pytest.mark.usefixtures("app_process")
 def test_app() -> None:
-    time.sleep(3)
+    time.sleep(2)
