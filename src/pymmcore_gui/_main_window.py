@@ -503,7 +503,9 @@ class MicroManagerGUI(QMainWindow):
         q_viewer.setWindowFlags(Qt.WindowType.Dialog)
 
         dw = CDockWidget(f"ndv-{sha}")
-        dw._viewer = ndv_viewer  # pyright: ignore
+        # small hack ... we need to retain a pointer to the viewer
+        # otherwise the viewer will be garbage collected
+        dw._viewer = ndv_viewer  # type: ignore
         dw.setWidget(q_viewer)
         dw.setFeature(dw.DockWidgetFeature.DockWidgetFloatable, False)
         self.dock_manager.addDockWidgetTabToArea(dw, self._central_dock_area)
