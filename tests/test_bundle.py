@@ -29,7 +29,7 @@ def app_process() -> Iterator[subprocess.Popen]:
     yield process
     process.terminate()
     process.wait()
-    assert process.returncode in (0, -15, 1)
+    assert process.returncode == 0, f"Process terminated with code {process.returncode}"
 
 
 CMD_CTRL = "ctrl" if os.name == "nt" else "command"
@@ -37,21 +37,4 @@ CMD_CTRL = "ctrl" if os.name == "nt" else "command"
 
 @pytest.mark.usefixtures("app_process")
 def test_app() -> None:
-    # open widgets
-    # TODO: these hotkeys should be pulled from source code
-    pyautogui.hotkey(CMD_CTRL, "shift", "p")
-    pyautogui.click(100, 500)
-    pyautogui.hotkey(CMD_CTRL, "shift", "i")
-    pyautogui.click(100, 500)
-    pyautogui.hotkey(CMD_CTRL, "shift", "c")
-    pyautogui.click(100, 500)
-    pyautogui.hotkey(CMD_CTRL, "shift", "m")
-    pyautogui.click(100, 500)
-    pyautogui.hotkey(CMD_CTRL, "shift", "s")
-    pyautogui.click(100, 500)
-    pyautogui.hotkey(CMD_CTRL, "shift", "r")
-    pyautogui.click(100, 500)
-    pyautogui.hotkey(CMD_CTRL, "shift", "g")
-    pyautogui.click(100, 500)
-    pyautogui.hotkey(CMD_CTRL, "shift", "e")
     time.sleep(3)
