@@ -23,7 +23,9 @@ def app_process() -> Iterator[subprocess.Popen]:
     kwargs: dict = {}
     if sys.platform == "win32":
         # needed so SIGINT / CTRL_BREAK only hit this child
-        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+        kwargs["creationflags"] = (
+            subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NEW_CONSOLE
+        )
 
     proc = subprocess.Popen(
         [str(APP)],
