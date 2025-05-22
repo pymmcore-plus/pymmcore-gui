@@ -1,4 +1,5 @@
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -45,9 +46,12 @@ def app_process() -> Iterator[subprocess.Popen]:
     finally:
         # --- teardown ---
         if proc.poll() is None:
-            proc.terminate()
+            if sys.platform == "win32":
+                proc.send_signal(signal.CTRL_BREAK_EVENT)
+            else:
+                os.killpg(proc.pid, signal.SIGTERM)
+
             try:
-                # pyautogui.FAILSAFE = False
                 pyautogui.moveTo(1200, 600, duration=0.1)
                 proc.wait(timeout=4)
             except subprocess.TimeoutExpired:
