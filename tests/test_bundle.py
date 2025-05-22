@@ -40,9 +40,10 @@ def app_process() -> Iterator[subprocess.Popen]:
             break
         time.sleep(0.1)
 
-    with proc:
+    try:
         yield proc
-
+    finally:
+        # --- teardown ---
         if proc.poll() is None:
             proc.terminate()
             try:
@@ -53,16 +54,16 @@ def app_process() -> Iterator[subprocess.Popen]:
                 proc.kill()
                 proc.wait()
 
-    if proc.returncode != 0:
-        # raise an exception explaining the error
+        # read any leftover output _before_ closing
+        err_info = ""
         if proc.stdout:
             err_info = proc.stdout.read()
-        else:
-            err_info = ""
+            proc.stdout.close()
 
-        raise RuntimeError(
-            f"App process exited with code {proc.returncode}:\n{err_info}"
-        )
+        if proc.returncode != 0:
+            raise RuntimeError(
+                f"App process exited with code {proc.returncode!r}:\n{err_info}"
+            )
 
 
 CMD_CTRL = "ctrl" if os.name == "nt" else "command"
