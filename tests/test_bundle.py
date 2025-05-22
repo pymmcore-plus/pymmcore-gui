@@ -40,7 +40,7 @@ def app_process() -> Iterator[subprocess.Popen]:
         try:
             pyautogui.FAILSAFE = False
             pyautogui.moveTo(0, 0)
-            pyautogui.moveTo(800, 1200, duration=0.1)
+            pyautogui.moveTo(800, 600, duration=0.1)
             proc.wait(timeout=10)
         except subprocess.TimeoutExpired:
             proc.kill()
