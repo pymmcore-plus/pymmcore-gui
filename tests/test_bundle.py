@@ -20,31 +20,32 @@ import pyautogui  # noqa: E402
 
 @pytest.fixture
 def app_process() -> Iterator[subprocess.Popen]:
-    kwargs: dict = {}
-    if sys.platform == "win32":
-        # needed so SIGINT / CTRL_BREAK only hit this child
-        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    proc = subprocess.Popen(
+        [str(APP)],
+        start_new_session=True,
+        stdout=subprocess.PIPE,
+    )
 
-    proc = subprocess.Popen([str(APP)], **kwargs)
-    if sys.platform == "darwin":
-        time.sleep(1)
-    elif sys.platform == "win32":
-        time.sleep(2)
-    yield proc
+    # --- wait for the GUI to tell us it's ready ---
+    while True:
+        # this "READY" line is printed in _app.create_mmgui
+        # when "PYTEST_VERSION" is set in the environment
+        if proc.stdout and proc.stdout.readline().strip() == b"READY":
+            break
+        time.sleep(0.1)
 
-    if proc.poll() is None:
-        if sys.platform == "win32":
-            proc.send_signal(signal.CTRL_BREAK_EVENT)
-        else:
-            proc.send_signal(signal.SIGTERM)
-        try:
-            pyautogui.FAILSAFE = False
-            pyautogui.moveTo(0, 0)
-            pyautogui.moveTo(800, 600, duration=0.1)
-            proc.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            proc.wait()
+    with proc:
+        yield proc
+
+        if proc.poll() is None:
+            proc.terminate()
+            try:
+                # pyautogui.FAILSAFE = False
+                pyautogui.moveTo(1200, 600, duration=0.1)
+                proc.wait(timeout=4)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
 
     assert proc.returncode == 0
 

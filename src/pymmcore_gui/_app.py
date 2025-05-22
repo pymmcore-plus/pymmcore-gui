@@ -133,12 +133,18 @@ def create_mmgui(
             stacklevel=2,
         )
 
-    def _quit(*_: Any) -> None:
-        if app := QApplication.instance():
-            app.quit()
+    if "PYTEST_VERSION" in os.environ:
 
-    signal.signal(signal.SIGINT, _quit)
-    signal.signal(signal.SIGTERM, _quit)
+        def _quit(*_: Any) -> None:
+            if app := QApplication.instance():
+                QTimer.singleShot(0, app.quit)
+
+        signal.signal(signal.SIGINT, _quit)
+        if hasattr(signal, "SIGTERM"):
+            signal.signal(signal.SIGTERM, _quit)
+
+        # when the main window shows:
+        print("READY", flush=True)
 
     win = MicroManagerGUI(mmcore=mmcore)
     QTimer.singleShot(0, lambda: win.restore_state(show=True))
