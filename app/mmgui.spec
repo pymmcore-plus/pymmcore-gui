@@ -140,7 +140,7 @@ exe = EXE(
     strip=False,
     upx=UPX,
     # whether to use the console executable or the windowed executable
-    console=bool(os.getenv("CI")),
+    console=False,
     # windows only
     # In console-enabled executable, hide or minimize the console window if the program
     # owns the console window (i.e., was not launched from existing console window).

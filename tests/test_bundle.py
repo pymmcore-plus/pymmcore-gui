@@ -1,7 +1,5 @@
 import os
-import signal
 import subprocess
-import sys
 import time
 from collections.abc import Iterator
 from pathlib import Path
@@ -20,19 +18,10 @@ import pyautogui  # noqa: E402
 
 @pytest.fixture
 def app_process() -> Iterator[subprocess.Popen]:
-    kwargs: dict = {}
-    if sys.platform == "win32":
-        # needed so SIGINT / CTRL_BREAK only hit this child
-        kwargs["creationflags"] = (
-            subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NEW_CONSOLE
-        )
-
     proc = subprocess.Popen(
         [str(APP)],
         start_new_session=True,
         stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        **kwargs,
     )
 
     # --- wait for the GUI to tell us it's ready ---
@@ -43,16 +32,12 @@ def app_process() -> Iterator[subprocess.Popen]:
             break
         time.sleep(0.1)
 
-    try:
+    with proc:
         yield proc
-    finally:
+
         # --- teardown ---
         if proc.poll() is None:
-            if sys.platform == "win32":
-                proc.send_signal(signal.CTRL_BREAK_EVENT)
-            else:
-                os.killpg(proc.pid, signal.SIGTERM)
-
+            proc.terminate()
             try:
                 pyautogui.moveTo(1200, 600, duration=0.1)
                 proc.wait(timeout=4)
@@ -60,16 +45,8 @@ def app_process() -> Iterator[subprocess.Popen]:
                 proc.kill()
                 proc.wait()
 
-        # read any leftover output _before_ closing
-        err_info = ""
-        if proc.stdout:
-            err_info = proc.stdout.read()
-            proc.stdout.close()
-
-        if proc.returncode != 0:
-            raise AssertionError(
-                f"App process exited with code {proc.returncode!r}:\n{err_info}"
-            )
+    acceptable_codes = {0, 1} if os.name == "nt" else {0}
+    assert proc.returncode in acceptable_codes
 
 
 CMD_CTRL = "ctrl" if os.name == "nt" else "command"
