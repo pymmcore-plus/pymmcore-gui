@@ -1,7 +1,5 @@
 import os
-import signal
 import subprocess
-import sys
 import time
 from collections.abc import Iterator
 from pathlib import Path
