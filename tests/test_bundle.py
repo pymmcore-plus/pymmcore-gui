@@ -45,6 +45,8 @@ def app_process() -> Iterator[subprocess.Popen]:
                 proc.kill()
                 proc.wait()
 
+    # FIXME: allowing 1 on windows is a cop-out
+    # can't figure out how to send a signal to gracefully close the app
     acceptable_codes = {0, 1} if os.name == "nt" else {0}
     assert proc.returncode in acceptable_codes
 
