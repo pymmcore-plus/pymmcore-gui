@@ -61,7 +61,7 @@ def app_process() -> Iterator[subprocess.Popen]:
             proc.stdout.close()
 
         if proc.returncode != 0:
-            raise RuntimeError(
+            raise AssertionError(
                 f"App process exited with code {proc.returncode!r}:\n{err_info}"
             )
 
