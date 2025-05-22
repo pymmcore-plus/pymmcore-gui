@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 import time
 from collections.abc import Iterator
 from pathlib import Path
@@ -18,10 +19,17 @@ import pyautogui  # noqa: E402
 
 @pytest.fixture
 def app_process() -> Iterator[subprocess.Popen]:
+    kwargs: dict = {}
+    if sys.platform == "win32":
+        # needed so SIGINT / CTRL_BREAK only hit this child
+        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+
     proc = subprocess.Popen(
         [str(APP)],
         start_new_session=True,
         stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        **kwargs,
     )
 
     # --- wait for the GUI to tell us it's ready ---
@@ -45,7 +53,16 @@ def app_process() -> Iterator[subprocess.Popen]:
                 proc.kill()
                 proc.wait()
 
-    assert proc.returncode == 0
+    if proc.returncode != 0:
+        # raise an exception explaining the error
+        if proc.stdout:
+            err_info = proc.stdout.read()
+        else:
+            err_info = ""
+
+        raise RuntimeError(
+            f"App process exited with code {proc.returncode}:\n{err_info}"
+        )
 
 
 CMD_CTRL = "ctrl" if os.name == "nt" else "command"

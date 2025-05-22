@@ -34,6 +34,7 @@ APP_VERSION = __version__
 ORG_NAME = "pymmcore-plus"
 ORG_DOMAIN = "pymmcore-plus"
 APP_ID = f"{ORG_DOMAIN}.{ORG_NAME}.{APP_NAME}.{APP_VERSION}"
+TESTING = bool(os.getenv("PYTEST_VERSION"))
 IS_FROZEN = getattr(sys, "frozen", False)
 _QAPP: MMQApplication | None = None
 
@@ -133,7 +134,9 @@ def create_mmgui(
             stacklevel=2,
         )
 
-    if "PYTEST_VERSION" in os.environ:
+    # prepare graceful shutdown from SIGINT/SIGTERM when running tests
+
+    if TESTING:
 
         def _quit(*_: Any) -> None:
             if app := QApplication.instance():
@@ -143,8 +146,11 @@ def create_mmgui(
         if hasattr(signal, "SIGTERM"):
             signal.signal(signal.SIGTERM, _quit)
 
-        # when the main window shows:
+        # when the main window shows up, print "READY" to stdout
+        # this is used in test_bundle.py to know when the app is ready
         print("READY", flush=True)
+
+    # -------------------------------------------------
 
     win = MicroManagerGUI(mmcore=mmcore)
     QTimer.singleShot(0, lambda: win.restore_state(show=True))
