@@ -3,11 +3,12 @@ from __future__ import annotations
 import importlib
 import importlib.util
 import os
+import signal
 import sys
 import traceback
 import warnings
 from contextlib import suppress
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from PyQt6.QtCore import QTimer, pyqtSignal
 from PyQt6.QtGui import QIcon
@@ -33,6 +34,7 @@ APP_VERSION = __version__
 ORG_NAME = "pymmcore-plus"
 ORG_DOMAIN = "pymmcore-plus"
 APP_ID = f"{ORG_DOMAIN}.{ORG_NAME}.{APP_NAME}.{APP_VERSION}"
+TESTING = bool(os.getenv("PYTEST_VERSION"))
 IS_FROZEN = getattr(sys, "frozen", False)
 _QAPP: MMQApplication | None = None
 
@@ -131,6 +133,24 @@ def create_mmgui(
             RuntimeWarning,
             stacklevel=2,
         )
+
+    # prepare graceful shutdown from SIGINT/SIGTERM when running tests
+
+    if TESTING:
+
+        def _quit(*_: Any) -> None:
+            if app := QApplication.instance():
+                QTimer.singleShot(0, app.quit)
+
+        signal.signal(signal.SIGINT, _quit)
+        if hasattr(signal, "SIGTERM"):
+            signal.signal(signal.SIGTERM, _quit)
+
+        # when the main window shows up, print "READY" to stdout
+        # this is used in test_bundle.py to know when the app is ready
+        print("READY", flush=True)
+
+    # -------------------------------------------------
 
     win = MicroManagerGUI(mmcore=mmcore)
     QTimer.singleShot(0, lambda: win.restore_state(show=True))

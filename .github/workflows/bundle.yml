@@ -28,6 +28,8 @@ jobs:
         with:
           enable-cache: true
 
+      - uses: pymmcore-plus/setup-mm-test-adapters@main
+
       - name: Install the project
         run: uv sync --all-extras --dev
         env:
@@ -39,6 +41,9 @@ jobs:
           uv run pyinstaller app/mmgui.spec --clean --noconfirm
           ls -la dist/pymmgui
 
+      - name: Test Bundle
+        run: uv run pytest -v --color=yes tests/test_bundle.py
+
       - name: Upload bundle
         # upload-artifact@v2 does not preserve symlinks, this fork does
         # https://github.com/actions/upload-artifact/issues/93#issuecomment-2304775030
@@ -48,6 +53,3 @@ jobs:
           name: pymmgui-${{ runner.os }}
           path: ${{ runner.os == 'macos' && 'dist' || runner.os == 'windows' && 'dist/pymmgui' }}
           follow-symlinks: false
-
-      # - name: Test Bundle
-      #   run: uv run pytest -v --color=yes tests/test_bundle.py

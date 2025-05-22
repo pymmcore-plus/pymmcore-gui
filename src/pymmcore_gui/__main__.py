@@ -1,4 +1,4 @@
-from ._cli import main
+from pymmcore_gui._cli import main
 
 __all__ = ["main"]
 
