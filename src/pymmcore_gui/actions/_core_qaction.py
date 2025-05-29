@@ -42,7 +42,8 @@ class QCoreAction(QAction):
         if not (text := info.text):
             text = info.key.value if isinstance(info.key, Enum) else info.key
 
-        self.setText(text)
+        # Avoid mnemonics - use the shortcuts below instead.
+        self.setText(text.replace("&", "&&"))
         if info.auto_repeat is not None:
             self.setAutoRepeat(info.auto_repeat)
         if info.checkable is not None:
