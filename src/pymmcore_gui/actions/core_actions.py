@@ -38,8 +38,24 @@ def toggle_live(action: QCoreAction, checked: bool) -> None:
         mmc.startContinuousSequenceAcquisition(0)
 
 
+def _init_snap_image(action: QCoreAction) -> None:
+    mmc = action.mmc
+
+    def _on_load() -> None:
+        action.setEnabled(bool(mmc.getCameraDevice()))
+
+    mmc.events.systemConfigurationLoaded.connect(_on_load)
+
+    _on_load()
+
+
 def _init_toggle_live(action: QCoreAction) -> None:
     mmc = action.mmc
+
+    def _on_load() -> None:
+        action.setEnabled(bool(mmc.getCameraDevice()))
+
+    mmc.events.systemConfigurationLoaded.connect(_on_load)
 
     def _on_change() -> None:
         action.setChecked(mmc.isSequenceRunning())
@@ -47,6 +63,8 @@ def _init_toggle_live(action: QCoreAction) -> None:
     mmc.events.sequenceAcquisitionStarted.connect(_on_change)
     mmc.events.continuousSequenceAcquisitionStarted.connect(_on_change)
     mmc.events.sequenceAcquisitionStopped.connect(_on_change)
+
+    _on_load()
 
 
 def load_demo_config(action: QCoreAction, checked: bool) -> None:
@@ -64,6 +82,7 @@ snap_action = ActionInfo(
     auto_repeat=True,
     icon="mdi-light:camera",
     on_triggered=snap_image,
+    on_created=_init_snap_image,
 )
 
 
