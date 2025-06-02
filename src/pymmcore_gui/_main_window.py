@@ -503,6 +503,8 @@ class MicroManagerGUI(QMainWindow):
         q_viewer.setWindowFlags(Qt.WindowType.Dialog)
 
         dw = CDockWidget(f"ndv-{sha}")
+        dw.setFeature(dw.DockWidgetFeature.DockWidgetDeleteOnClose, True)
+        dw.setFeature(dw.DockWidgetFeature.DeleteContentOnClose, True)
         # small hack ... we need to retain a pointer to the viewer
         # otherwise the viewer will be garbage collected
         dw._viewer = ndv_viewer  # type: ignore
