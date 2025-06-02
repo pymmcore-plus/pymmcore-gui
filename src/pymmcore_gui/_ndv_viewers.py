@@ -175,9 +175,7 @@ class NDVViewersManager(QObject):
             dw.setFeature(dw.DockWidgetFeature.DockWidgetFloatable, False)
             dw.setFeature(dw.DockWidgetFeature.DockWidgetDeleteOnClose, True)
             self.previewViewerCreated.emit(dw)
-            dw.destroyed.connect(
-                lambda: setattr(self, "_current_image_preview", None)
-            )
+            dw.destroyed.connect(lambda: setattr(self, "_current_image_preview", None))
         else:
             self._current_image_preview.toggleView(True)
 

@@ -10,7 +10,6 @@ from pymmcore_gui import MicroManagerGUI
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    import pytest_memray.marks
     from PyQt6.QtWidgets import QApplication
     from pytestqt.qtbot import QtBot
 
