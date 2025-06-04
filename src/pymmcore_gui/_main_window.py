@@ -71,7 +71,7 @@ class Menu(str, Enum):
 
     PYMM_GUI = "pymmcore-gui"
     WINDOW = "Window"
-    DEVICE = "Device"
+    DEVICE = "Devices"
     HELP = "Help"
 
     def __str__(self) -> str:
