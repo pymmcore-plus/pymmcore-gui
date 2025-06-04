@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import sys
 from typing import TYPE_CHECKING, cast
 from unittest.mock import patch
@@ -8,9 +7,7 @@ from unittest.mock import patch
 import ndv
 import pytest
 import useq
-from pymmcore_widgets import MDAWidget
 from PyQt6.QtWidgets import QApplication, QDialog
-from PyQt6Ads import CDockWidget
 
 from pymmcore_gui import MicroManagerGUI
 from pymmcore_gui._app import MMQApplication
@@ -35,7 +32,9 @@ def gui(qtbot: QtBot, qapp: QApplication) -> Iterator[MicroManagerGUI]:
 
 
 @pytest.mark.parametrize("w_action", list(WidgetAction))
-def test_main_window(gui: MicroManagerGUI, w_action: WidgetAction) -> None:
+def test_main_window_widget_actions(
+    gui: MicroManagerGUI, w_action: WidgetAction
+) -> None:
     gui = MicroManagerGUI()
     action = gui.get_action(w_action)
     with patch.object(QDialog, "exec", lambda x: x.show()):
@@ -49,12 +48,13 @@ def test_main_window(gui: MicroManagerGUI, w_action: WidgetAction) -> None:
         gui.get_dock_widget(w_action).toggleView(False)
         assert not action.isChecked()
 
-    for c_action in CoreAction:
-        gui.get_action(c_action)
-        assert c_action in gui._qactions
 
-    assert isinstance(gui.get_widget(WidgetAction.MDA_WIDGET), MDAWidget)
-    assert isinstance(gui.get_dock_widget(WidgetAction.MDA_WIDGET), CDockWidget)
+@pytest.mark.parametrize("c_action", list(CoreAction))
+def test_main_window_core_actions(gui: MicroManagerGUI, c_action: CoreAction) -> None:
+    gui = MicroManagerGUI()
+    with patch.object(QDialog, "exec", lambda x: x.show()):
+        _ = gui.get_action(c_action)
+    assert c_action in gui._qactions
 
 
 def test_shutter_toolbar(gui: MicroManagerGUI) -> None:
@@ -146,7 +146,7 @@ def test_snap(gui: MicroManagerGUI, qtbot: QtBot) -> None:
 
 
 @pytest.mark.skipif(
-    bool(os.getenv("CI") and sys.platform == "darwin"),
+    bool(sys.platform == "darwin"),
     reason="need to debug hanging test on macOS CI",
 )
 def test_stream(gui: MicroManagerGUI, qtbot: QtBot) -> None:

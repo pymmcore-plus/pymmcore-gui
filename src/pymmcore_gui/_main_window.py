@@ -27,13 +27,10 @@ from PyQt6.QtWidgets import (
 from PyQt6Ads import CDockManager, CDockWidget, SideBarLocation
 from superqt import QIconifyIcon
 
-from pymmcore_gui.actions._action_info import WidgetActionInfo
-from pymmcore_gui.actions._core_qaction import QCoreAction
-
 from ._ndv_viewers import NDVViewersManager
 from ._notification_manager import NotificationManager
 from ._settings import Settings
-from .actions import CoreAction, WidgetAction
+from .actions import CoreAction, QCoreAction, WidgetAction, WidgetActionInfo
 from .actions._action_info import ActionInfo
 from .widgets._toolbars import OCToolBar
 
@@ -90,8 +87,8 @@ class Toolbar(str, Enum):
         return str(self.value)
 
 
-ToolDictValue = list[str] | Callable[[CMMCorePlus, "MicroManagerGUI"], QToolBar]
-MenuDictValue = list[str] | Callable[[CMMCorePlus, "MicroManagerGUI"], QMenu]
+ToolDictValue = list[str | None] | Callable[[CMMCorePlus, "MicroManagerGUI"], QToolBar]
+MenuDictValue = list[str | None] | Callable[[CMMCorePlus, "MicroManagerGUI"], QMenu]
 
 
 def _create_window_menu(mmc: CMMCorePlus, parent: MicroManagerGUI) -> QMenu:
@@ -144,12 +141,15 @@ class MicroManagerGUI(QMainWindow):
         Menu.WINDOW: _create_window_menu,
         Menu.DEVICE: [
             WidgetAction.PROP_BROWSER,
-            WidgetAction.LOAD_CONFIG,
             WidgetAction.CONFIG_WIZARD,
-            WidgetAction.SAVE_CONFIG,
+            None,
+            CoreAction.LOAD_CONFIG,
+            CoreAction.LOAD_DEMO,
+            CoreAction.SAVE_CONFIG,
+            None,
             WidgetAction.INSTALL_DEVICES,
         ],
-        Menu.HELP: [CoreAction.LOAD_DEMO],
+        Menu.HELP: [],
     }
 
     def __init__(self, *, mmcore: CMMCorePlus | None = None) -> None:
@@ -400,7 +400,10 @@ class MicroManagerGUI(QMainWindow):
         else:
             tb = cast("QToolBar", self.addToolBar(name))
             for action in tb_entry:
-                tb.addAction(self.get_action(action))
+                if action is None:
+                    tb.addSeparator()
+                else:
+                    tb.addAction(self.get_action(action))
         tb.setObjectName(name)
 
     def _add_menubar(self, name: str, menu_entry: MenuDictValue) -> None:
@@ -411,7 +414,10 @@ class MicroManagerGUI(QMainWindow):
         else:
             menu = cast("QMenu", mb.addMenu(name))
             for action in menu_entry:
-                menu.addAction(self.get_action(action))
+                if action is None:
+                    menu.addSeparator()
+                else:
+                    menu.addAction(self.get_action(action))
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self._save_state()
