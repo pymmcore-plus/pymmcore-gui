@@ -45,6 +45,31 @@ class WidgetAction(ActionKey):
     SAVE_CONFIG = "pymmcore_gui.save_config_file"
 
 
+# ######################## Widget classes #########################
+
+
+class _LoadConfigDialog(QFileDialog):
+    def exec(self) -> int:
+        (filename, _) = super().getOpenFileName(
+            None, "Select a Micro-Manager configuration file", "", "cfg(*.cfg)"
+        )
+        if filename:
+            mmc = _get_core(cast("QWidget", self.parent())) or CMMCorePlus.instance()
+            mmc.loadSystemConfiguration(filename)
+        return 1 if filename else 0
+
+
+class _SaveConfigDialog(QFileDialog):
+    def exec(self) -> int:
+        (filename, _) = super().getSaveFileName(
+            None, "Save current Micro-Manager configuration", "", "cfg(*.cfg)"
+        )
+        if filename:
+            mmc = _get_core(cast("QWidget", self.parent())) or CMMCorePlus.instance()
+            mmc.saveSystemConfiguration(filename)
+        return 1 if filename else 0
+
+
 # ######################## Functions that create widgets #########################
 
 
@@ -93,35 +118,12 @@ def create_install_widgets(parent: QWidget) -> pmmw.InstallWidget:
 
 def create_load_config(parent: QWidget) -> QDialog:
     """Open file dialog to select a config file."""
-
-    class LoadConfigDialog(QFileDialog):
-        def exec(self) -> int:
-            (filename, _) = super().getOpenFileName(
-                None, "Select a Micro-Manager configuration file", "", "cfg(*.cfg)"
-            )
-            if filename:
-                mmc = _get_core(parent) or CMMCorePlus.instance()
-                mmc.unloadAllDevices()
-                mmc.loadSystemConfiguration(filename)
-            return 1 if filename else 0
-
-    return LoadConfigDialog(parent=parent)
+    return _LoadConfigDialog(parent=parent)
 
 
 def create_save_config(parent: QWidget) -> QDialog:
     """Open file dialog to select a config file."""
-
-    class SaveConfigDialog(QFileDialog):
-        def exec(self) -> int:
-            (filename, _) = super().getSaveFileName(
-                None, "Save current Micro-Manager configuration", "", "cfg(*.cfg)"
-            )
-            if filename:
-                mmc = _get_core(parent) or CMMCorePlus.instance()
-                mmc.saveSystemConfiguration(filename)
-            return 1 if filename else 0
-
-    return SaveConfigDialog(parent=parent)
+    return _SaveConfigDialog(parent=parent)
 
 
 def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
