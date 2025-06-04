@@ -194,7 +194,7 @@ def create_about_widget(parent: QWidget) -> QWidget:
 
 show_about = WidgetActionInfo(
     key=WidgetAction.ABOUT,
-    text="About Pymmcore Gui",
+    text="About Pymmcore Gui...",
     create_widget=create_about_widget,
     dock_area=None,
     checkable=False,
@@ -213,7 +213,7 @@ show_console = WidgetActionInfo(
 
 show_property_browser = WidgetActionInfo(
     key=WidgetAction.PROP_BROWSER,
-    text="Property Browser",
+    text="Device Property Browser...",
     shortcut="Ctrl+Shift+P",
     icon="mdi-light:format-list-bulleted",
     create_widget=create_property_browser,
@@ -222,7 +222,7 @@ show_property_browser = WidgetActionInfo(
 
 show_install_devices = WidgetActionInfo(
     key=WidgetAction.INSTALL_DEVICES,
-    text="Install Devices",
+    text="Install Devices...",
     shortcut="Ctrl+Shift+I",
     icon="mdi-light:download",
     create_widget=create_install_widgets,
@@ -286,7 +286,7 @@ show_stage_control = WidgetActionInfo(
 
 show_config_wizard = WidgetActionInfo(
     key=WidgetAction.CONFIG_WIZARD,
-    text="Hardware Config Wizard",
+    text="Hardware Config Wizard...",
     icon="mdi:cog",
     create_widget=create_config_wizard,
     dock_area=None,
@@ -295,7 +295,7 @@ show_config_wizard = WidgetActionInfo(
 
 load_config = WidgetActionInfo(
     key=WidgetAction.LOAD_CONFIG,
-    text="Load Configuration File",
+    text="Load Configuration File...",
     icon="mdi:content-save",
     create_widget=create_load_config,
     dock_area=None,
@@ -304,7 +304,7 @@ load_config = WidgetActionInfo(
 
 save_config = WidgetActionInfo(
     key=WidgetAction.SAVE_CONFIG,
-    text="Save Configuration File",
+    text="Save Configuration File...",
     icon="mdi:content-save",
     create_widget=create_save_config,
     dock_area=None,

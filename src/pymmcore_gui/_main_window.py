@@ -143,9 +143,11 @@ class MicroManagerGUI(QMainWindow):
         Menu.PYMM_GUI: [WidgetAction.ABOUT],
         Menu.WINDOW: _create_window_menu,
         Menu.DEVICE: [
-            WidgetAction.CONFIG_WIZARD,
+            WidgetAction.PROP_BROWSER,
             WidgetAction.LOAD_CONFIG,
+            WidgetAction.CONFIG_WIZARD,
             WidgetAction.SAVE_CONFIG,
+            WidgetAction.INSTALL_DEVICES,
         ],
         Menu.HELP: [CoreAction.LOAD_DEMO],
     }
