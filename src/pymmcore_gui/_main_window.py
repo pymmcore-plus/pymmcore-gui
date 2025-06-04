@@ -71,6 +71,7 @@ class Menu(str, Enum):
 
     PYMM_GUI = "pymmcore-gui"
     WINDOW = "Window"
+    DEVICE = "Devices"
     HELP = "Help"
 
     def __str__(self) -> str:
@@ -94,10 +95,24 @@ MenuDictValue = list[str] | Callable[[CMMCorePlus, "MicroManagerGUI"], QMenu]
 
 
 def _create_window_menu(mmc: CMMCorePlus, parent: MicroManagerGUI) -> QMenu:
-    """Create the Window menu."""
+    """
+    Create the Window menu, containing all WidgetActions not in other menus.
+
+    This function assumes lazy evaluation, i.e. that all Actions that want to be on
+    other menus are already there.
+    """
+    all_actions = set(ActionInfo.widget_actions())
+
+    # Ignore those already in other menus
+    parented_actions: set[str] = set()
+    for other_menu in parent.MENUS.values():
+        if isinstance(other_menu, list):
+            parented_actions.update(str(action) for action in other_menu)
+    parentless_actions = all_actions - parented_actions
+
+    # Create a new menu with the remaining parentless actions
     menu = QMenu(Menu.WINDOW.value, parent)
-    actions = sorted(ActionInfo.widget_actions())
-    for action in actions:
+    for action in sorted(parentless_actions):
         menu.addAction(parent.get_action(action))
     return menu
 
@@ -127,6 +142,13 @@ class MicroManagerGUI(QMainWindow):
     MENUS: Mapping[str, MenuDictValue] = {
         Menu.PYMM_GUI: [WidgetAction.ABOUT],
         Menu.WINDOW: _create_window_menu,
+        Menu.DEVICE: [
+            WidgetAction.PROP_BROWSER,
+            WidgetAction.LOAD_CONFIG,
+            WidgetAction.CONFIG_WIZARD,
+            WidgetAction.SAVE_CONFIG,
+            WidgetAction.INSTALL_DEVICES,
+        ],
         Menu.HELP: [CoreAction.LOAD_DEMO],
     }
 

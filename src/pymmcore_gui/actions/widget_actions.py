@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Annotated, TypeVar, cast
 from pymmcore_plus import CMMCorePlus
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QDialog, QWidget
+from PyQt6.QtWidgets import QDialog, QFileDialog, QWidget
 from PyQt6Ads import CDockWidget, DockWidgetArea, SideBarLocation
 
 from ._action_info import ActionKey, WidgetActionInfo, _ensure_isinstance
@@ -41,6 +41,47 @@ class WidgetAction(ActionKey):
     EXCEPTION_LOG = "pymmcore_gui.exception_log"
     STAGE_CONTROL = "pymmcore_gui.stage_control_widget"
     CONFIG_WIZARD = "pymmcore_gui.hardware_config_wizard"
+    LOAD_CONFIG = "pymmcore_gui.load_config_file"
+    SAVE_CONFIG = "pymmcore_gui.save_config_file"
+
+
+# ######################## Widget classes #########################
+
+
+class _LoadConfigDialog(QFileDialog):
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Select a Micro-Manager configuration file")
+        self.setNameFilter("cfg(*.cfg)")
+        self.setFileMode(QFileDialog.FileMode.ExistingFile)
+        self.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
+
+        self.accepted.connect(self._load_config)
+
+    def _load_config(self) -> None:
+        selected_files = self.selectedFiles()
+        if selected_files:
+            filename = selected_files[0]
+            mmc = _get_core(cast("QWidget", self.parent())) or CMMCorePlus.instance()
+            mmc.loadSystemConfiguration(filename)
+
+
+class _SaveConfigDialog(QFileDialog):
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Save current Micro-Manager configuration")
+        self.setNameFilter("cfg(*.cfg)")
+        self.setFileMode(QFileDialog.FileMode.AnyFile)
+        self.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+
+        self.accepted.connect(self._save_config)
+
+    def _save_config(self) -> None:
+        selected_files = self.selectedFiles()
+        if selected_files:
+            filename = selected_files[0]
+            mmc = _get_core(cast("QWidget", self.parent())) or CMMCorePlus.instance()
+            mmc.saveSystemConfiguration(filename)
 
 
 # ######################## Functions that create widgets #########################
@@ -87,6 +128,16 @@ def create_install_widgets(parent: QWidget) -> pmmw.InstallWidget:
     wdg.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Window)
     wdg.resize(800, 400)
     return wdg
+
+
+def create_load_config(parent: QWidget) -> QDialog:
+    """Open file dialog to select a config file."""
+    return _LoadConfigDialog(parent=parent)
+
+
+def create_save_config(parent: QWidget) -> QDialog:
+    """Open file dialog to select a config file."""
+    return _SaveConfigDialog(parent=parent)
 
 
 def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
@@ -159,7 +210,7 @@ def create_about_widget(parent: QWidget) -> QWidget:
 
 show_about = WidgetActionInfo(
     key=WidgetAction.ABOUT,
-    text="About Pymmcore Gui",
+    text="About Pymmcore Gui...",
     create_widget=create_about_widget,
     dock_area=None,
     checkable=False,
@@ -178,7 +229,7 @@ show_console = WidgetActionInfo(
 
 show_property_browser = WidgetActionInfo(
     key=WidgetAction.PROP_BROWSER,
-    text="Property Browser",
+    text="Device Property Browser...",
     shortcut="Ctrl+Shift+P",
     icon="mdi-light:format-list-bulleted",
     create_widget=create_property_browser,
@@ -187,7 +238,7 @@ show_property_browser = WidgetActionInfo(
 
 show_install_devices = WidgetActionInfo(
     key=WidgetAction.INSTALL_DEVICES,
-    text="Install Devices",
+    text="Install Devices...",
     shortcut="Ctrl+Shift+I",
     icon="mdi-light:download",
     create_widget=create_install_widgets,
@@ -251,9 +302,27 @@ show_stage_control = WidgetActionInfo(
 
 show_config_wizard = WidgetActionInfo(
     key=WidgetAction.CONFIG_WIZARD,
-    text="Hardware Config Wizard",
+    text="Hardware Config Wizard...",
     icon="mdi:cog",
     create_widget=create_config_wizard,
+    dock_area=None,
+    checkable=False,
+)
+
+load_config = WidgetActionInfo(
+    key=WidgetAction.LOAD_CONFIG,
+    text="Load Configuration File...",
+    icon="mdi:content-save",
+    create_widget=create_load_config,
+    dock_area=None,
+    checkable=False,
+)
+
+save_config = WidgetActionInfo(
+    key=WidgetAction.SAVE_CONFIG,
+    text="Save Configuration File...",
+    icon="mdi:content-save",
+    create_widget=create_save_config,
     dock_area=None,
     checkable=False,
 )
