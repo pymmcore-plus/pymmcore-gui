@@ -49,25 +49,39 @@ class WidgetAction(ActionKey):
 
 
 class _LoadConfigDialog(QFileDialog):
-    def exec(self) -> int:
-        (filename, _) = super().getOpenFileName(
-            None, "Select a Micro-Manager configuration file", "", "cfg(*.cfg)"
-        )
-        if filename:
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Select a Micro-Manager configuration file")
+        self.setNameFilter("cfg(*.cfg)")
+        self.setFileMode(QFileDialog.FileMode.ExistingFile)
+        self.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
+
+        self.accepted.connect(self._load_config)
+
+    def _load_config(self) -> None:
+        selected_files = self.selectedFiles()
+        if selected_files:
+            filename = selected_files[0]
             mmc = _get_core(cast("QWidget", self.parent())) or CMMCorePlus.instance()
             mmc.loadSystemConfiguration(filename)
-        return 1 if filename else 0
 
 
 class _SaveConfigDialog(QFileDialog):
-    def exec(self) -> int:
-        (filename, _) = super().getSaveFileName(
-            None, "Save current Micro-Manager configuration", "", "cfg(*.cfg)"
-        )
-        if filename:
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Save current Micro-Manager configuration")
+        self.setNameFilter("cfg(*.cfg)")
+        self.setFileMode(QFileDialog.FileMode.AnyFile)
+        self.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+
+        self.accepted.connect(self._save_config)
+
+    def _save_config(self) -> None:
+        selected_files = self.selectedFiles()
+        if selected_files:
+            filename = selected_files[0]
             mmc = _get_core(cast("QWidget", self.parent())) or CMMCorePlus.instance()
             mmc.saveSystemConfiguration(filename)
-        return 1 if filename else 0
 
 
 # ######################## Functions that create widgets #########################
