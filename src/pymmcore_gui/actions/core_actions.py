@@ -17,6 +17,8 @@ class CoreAction(ActionKey):
     SNAP = "pymmcore_gui.snap_image"
     TOGGLE_LIVE = "pymmcore_gui.toggle_live"
     LOAD_DEMO = "pymmcore_gui.load_demo_config"
+    LOAD_CONFIG = "pymmcore_gui.load_config"
+    SAVE_CONFIG = "pymmcore_gui.save_config"
 
 
 # TODO: perhaps have alternate signatures for these functions that take a
@@ -72,6 +74,34 @@ def load_demo_config(action: QCoreAction, checked: bool) -> None:
     action.mmc.loadSystemConfiguration()
 
 
+def load_sys_config_dialog(action: QCoreAction, checked: bool) -> None:
+    """Open a dialog to load a system configuration."""
+    from qtpy.QtWidgets import QFileDialog
+
+    (path, _filter) = QFileDialog.getOpenFileName(
+        None,
+        "Select a Micro-Manager configuration file",
+        "",
+        "cfg(*.cfg)",
+    )
+    if path:
+        action.mmc.loadSystemConfiguration(path)
+
+
+def save_sys_config_dialog(action: QCoreAction, checked: bool) -> None:
+    """Open a dialog to save a system configuration."""
+    from qtpy.QtWidgets import QFileDialog
+
+    (path, _filter) = QFileDialog.getSaveFileName(
+        None,
+        "Save Micro-Manager configuration file",
+        "",
+        "cfg(*.cfg)",
+    )
+    if path:
+        action.mmc.saveSystemConfiguration(path)
+
+
 # ########################## Action Info Instances #############################
 
 
@@ -101,4 +131,16 @@ load_demo_action = ActionInfo(
     key=CoreAction.LOAD_DEMO,
     text="Load Demo Configuration",
     on_triggered=load_demo_config,
+)
+
+load_config_action = ActionInfo(
+    key="pymmcore_gui.load_config",
+    text="Load System Configuration ...",
+    on_triggered=load_sys_config_dialog,
+)
+
+load_config_action = ActionInfo(
+    key="pymmcore_gui.save_config",
+    text="Save System Configuration ...",
+    on_triggered=save_sys_config_dialog,
 )
