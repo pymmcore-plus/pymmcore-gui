@@ -27,10 +27,13 @@ from PyQt6.QtWidgets import (
 from PyQt6Ads import CDockManager, CDockWidget, SideBarLocation
 from superqt import QIconifyIcon
 
+from pymmcore_gui.actions._action_info import WidgetActionInfo
+from pymmcore_gui.actions._core_qaction import QCoreAction
+
 from ._ndv_viewers import NDVViewersManager
 from ._notification_manager import NotificationManager
 from ._settings import Settings
-from .actions import CoreAction, QCoreAction, WidgetAction, WidgetActionInfo
+from .actions import CoreAction, WidgetAction
 from .actions._action_info import ActionInfo
 from .widgets._toolbars import OCToolBar
 
@@ -68,7 +71,6 @@ class Menu(str, Enum):
 
     PYMM_GUI = "pymmcore-gui"
     WINDOW = "Window"
-    DEVICE = "Devices"
     HELP = "Help"
 
     def __str__(self) -> str:
@@ -87,29 +89,15 @@ class Toolbar(str, Enum):
         return str(self.value)
 
 
-ToolDictValue = list[str | None] | Callable[[CMMCorePlus, "MicroManagerGUI"], QToolBar]
-MenuDictValue = list[str | None] | Callable[[CMMCorePlus, "MicroManagerGUI"], QMenu]
+ToolDictValue = list[str] | Callable[[CMMCorePlus, "MicroManagerGUI"], QToolBar]
+MenuDictValue = list[str] | Callable[[CMMCorePlus, "MicroManagerGUI"], QMenu]
 
 
 def _create_window_menu(mmc: CMMCorePlus, parent: MicroManagerGUI) -> QMenu:
-    """
-    Create the Window menu, containing all WidgetActions not in other menus.
-
-    This function assumes lazy evaluation, i.e. that all Actions that want to be on
-    other menus are already there.
-    """
-    all_actions = set(ActionInfo.widget_actions())
-
-    # Ignore those already in other menus
-    parented_actions: set[str] = set()
-    for other_menu in parent.MENUS.values():
-        if isinstance(other_menu, list):
-            parented_actions.update(str(action) for action in other_menu)
-    parentless_actions = all_actions - parented_actions
-
-    # Create a new menu with the remaining parentless actions
+    """Create the Window menu."""
     menu = QMenu(Menu.WINDOW.value, parent)
-    for action in sorted(parentless_actions):
+    actions = sorted(ActionInfo.widget_actions())
+    for action in actions:
         menu.addAction(parent.get_action(action))
     return menu
 
@@ -139,17 +127,7 @@ class MicroManagerGUI(QMainWindow):
     MENUS: Mapping[str, MenuDictValue] = {
         Menu.PYMM_GUI: [WidgetAction.ABOUT],
         Menu.WINDOW: _create_window_menu,
-        Menu.DEVICE: [
-            WidgetAction.PROP_BROWSER,
-            WidgetAction.CONFIG_WIZARD,
-            None,
-            CoreAction.LOAD_CONFIG,
-            CoreAction.LOAD_DEMO,
-            CoreAction.SAVE_CONFIG,
-            None,
-            WidgetAction.INSTALL_DEVICES,
-        ],
-        Menu.HELP: [],
+        Menu.HELP: [CoreAction.LOAD_DEMO],
     }
 
     def __init__(self, *, mmcore: CMMCorePlus | None = None) -> None:
@@ -400,10 +378,7 @@ class MicroManagerGUI(QMainWindow):
         else:
             tb = cast("QToolBar", self.addToolBar(name))
             for action in tb_entry:
-                if action is None:
-                    tb.addSeparator()
-                else:
-                    tb.addAction(self.get_action(action))
+                tb.addAction(self.get_action(action))
         tb.setObjectName(name)
 
     def _add_menubar(self, name: str, menu_entry: MenuDictValue) -> None:
@@ -414,10 +389,7 @@ class MicroManagerGUI(QMainWindow):
         else:
             menu = cast("QMenu", mb.addMenu(name))
             for action in menu_entry:
-                if action is None:
-                    menu.addSeparator()
-                else:
-                    menu.addAction(self.get_action(action))
+                menu.addAction(self.get_action(action))
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self._save_state()

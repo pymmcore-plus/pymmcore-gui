@@ -174,12 +174,20 @@ class NDVViewersManager(QObject):
             dw.setWidget(preview)
             dw.setFeature(dw.DockWidgetFeature.DockWidgetFloatable, False)
             dw.setFeature(dw.DockWidgetFeature.DockWidgetDeleteOnClose, True)
+            dw.closed.connect(self._cleanup_current_image_preview)
             self.previewViewerCreated.emit(dw)
-            dw.destroyed.connect(lambda: setattr(self, "_current_image_preview", None))
         else:
             self._current_image_preview.toggleView(True)
 
         return preview
+
+    def _cleanup_current_image_preview(self) -> None:
+        if self._current_image_preview is not None:
+            # Ensure the preview widget is properly detached
+            preview_widget = self._current_image_preview.widget()
+            if isinstance(preview_widget, NDVPreview):
+                preview_widget.detach()
+        self._current_image_preview = None
 
     def _on_streaming_started(self) -> None:
         if not self._is_mda_running:
