@@ -53,13 +53,32 @@ class ImagePreviewBase(QWidget):
         """Detach this widget from events in `core`."""
         if self._mmc is None:
             return  # pragma: no cover
+
+        # Stop any running timer first
+        if self._timer_id is not None:
+            self.killTimer(self._timer_id)
+            self._timer_id = None
+
         with suppress(Exception):
-            ev, self._mmc = self._mmc.events, None
+            ev, core = self._mmc.events, self._mmc
+            self._mmc = None
+
+            # Disconnect all event signals
             ev.imageSnapped.disconnect(self._on_image_snapped)
             ev.continuousSequenceAcquisitionStarted.disconnect(self._on_streaming_start)
             ev.sequenceAcquisitionStarted.disconnect(self._on_streaming_start)
             ev.sequenceAcquisitionStopped.disconnect(self._on_streaming_stop)
             ev.exposureChanged.disconnect(self._on_exposure_changed)
+            ev.systemConfigurationLoaded.disconnect(self._on_system_config_loaded)
+            ev.roiSet.disconnect(self._on_roi_set)
+            ev.propertyChanged.disconnect(self._on_property_changed)
+
+            # Disconnect MDA events
+            try:
+                core.mda.events.sequenceStarted.disconnect()
+                core.mda.events.sequenceFinished.disconnect()
+            except Exception:
+                pass  # These may have lambda connections that can't be disconnected
 
     @abstractmethod
     def append(self, data: np.ndarray) -> None:
