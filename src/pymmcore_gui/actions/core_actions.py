@@ -135,12 +135,12 @@ load_demo_action = ActionInfo(
 
 load_config_action = ActionInfo(
     key="pymmcore_gui.load_config",
-    text="Load System Configuration ...",
+    text="Load System Configuration...",
     on_triggered=load_sys_config_dialog,
 )
 
 load_config_action = ActionInfo(
     key="pymmcore_gui.save_config",
-    text="Save System Configuration ...",
+    text="Save System Configuration...",
     on_triggered=save_sys_config_dialog,
 )
