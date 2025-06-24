@@ -66,9 +66,18 @@ class NDVPreview(ImagePreviewBase):
             return  # pragma: no cover
 
         self._core_dtype = core_dtype
+        # START OF CHANGE
+        # Coerce non-standard integer dtypes to a supported numpy dtype for the buffer.
+        # A 12-bit image is stored in a 16-bit buffer.
+        dtype_str, shape = core_dtype
+        if dtype_str == "uint12":
+            buffer_dtype = ("uint16", shape)
+        else:
+            buffer_dtype = core_dtype
+
         self._viewer.data = self._buffer = RingBuffer(
-            max_capacity=100, dtype=core_dtype
-        )
+        max_capacity=100, dtype=buffer_dtype)
+        # END OF CHANGE
         self._viewer.display_model.visible_axes = (1, 2)
         if core_dtype[1][-1] == 3:  # RGB
             self._viewer.display_model.channel_axis = 3
