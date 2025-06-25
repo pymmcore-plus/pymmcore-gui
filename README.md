@@ -10,15 +10,16 @@ traditional Java-based [Micro-Manager
 GUI](https://github.com/micro-manager/micro-manager), leveraging modern Python
 tools for device control, image acquisition, and visualization.
 
-## Project Status
+## ✅ Project Status
 
 `pymmcore-gui` has evolved from an experimental prototype into a working
 application with:
 
 - ✅ Complete device control and configuration
-- ✅ Multi-dimensional acquisition workflows  
-- ✅ Real-time image preview and acquisition visualization
-- ✅ Flexible docking interface
+- ✅ Multi-dimensional acquisition workflows *(time, z, channels, plates, etc.)*
+- ✅ Real-time image preview and acquisition visualization (2D and 3D)
+- ✅ Customizable layouts and docking interface
+- ✅ Integrated interactive IPython console
 - ✅ Application bundle for easy distribution
 
 Primary targets for improvement include:
@@ -30,7 +31,34 @@ Primary targets for improvement include:
 - 📈 Clearer paths for customizing the user interface (custom widgets, etc...)
 - 📈 Theming and styles
 
-## pymmcore-plus Ecosystem
+## 👋 Have Question?  Looking for Help?
+
+We love knowing that you're out there!  There are several ways to get in touch
+with the pymmcore-plus community:
+
+- [![GitHub
+  Discussions](https://img.shields.io/badge/GitHub-Discussions-purple?style=for-the-badge&logo=github)](https://github.com/orgs/pymmcore-plus/discussions)  
+  Great for [general
+  questions](https://github.com/orgs/pymmcore-plus/discussions): "How do I
+  ...?", "Are you planning to ...?", "Why is this happening?", etc.
+- [![GitHub
+  Issues](https://img.shields.io/badge/GitHub-Issues-red?style=for-the-badge&logo=github)](https://github.com/pymmcore-plus/pymmcore-gui/issues)  
+  [Open an issue]((https://github.com/pymmcore-plus/pymmcore-gui/issues)) if you
+  find a bug, experience a crash, or want to request a specific feature.
+- [![Zulip
+  chat](https://img.shields.io/badge/Zulip-Chat-blue?style=for-the-badge&logo=zulip)](https://imagesc.zulipchat.com/#narrow/channel/442785-pymmcore.5B-plus.5D)  
+  Join our [Zulip chat
+  channel]((https://imagesc.zulipchat.com/#narrow/channel/442785-pymmcore.5B-plus.5D))
+  for real-time discussions. Great for getting immediate help, sharing ideas, or
+  discussing development topics.
+- [![Image.sc
+  Forum](https://img.shields.io/badge/Image.sc-Forum-green?style=for-the-badge&logo=discourse)](https://forum.image.sc/tag/pymmcore-plus)  
+  We monitor [image.sc](https://forum.image.sc/tag/pymmcore-plus) posts tagged
+  with `pymmcore-plus`.  Posting there is absolutely fine, particularly for
+  broader community discussions or if you prefer that platform. (We may redirect
+  you to a specific Github issue or discussion)
+
+## 🛠️ pymmcore-plus Ecosystem
 
 pymmcore-gui combines functionality from the following components into one
 cohesive desktop app:
@@ -66,7 +94,7 @@ and user-extensible, benefitting from the Python ecosystem.
 All of these components are designed to work together, but can also be used
 independently.
 
-## Installation
+## 🚀 Installation
 
 There are two primary ways to install and use pymmcore-gui:
 
@@ -111,7 +139,7 @@ There are two primary ways to install and use pymmcore-gui:
 > Install Devices ...` menu in the GUI, or by running `mmcore install` from
 > the command line.)
 
-## Usage
+## 🖥️ Usage
 
 ### Launching the GUI (Standalone)
 
