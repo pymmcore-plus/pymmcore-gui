@@ -98,7 +98,7 @@ independently.
 
 There are two primary ways to install and use pymmcore-gui:
 
-- **Install into a Python environment**:
+### 🐍 Python Package
   
   ```sh
   # install this package (For now, just install from github)
@@ -123,7 +123,7 @@ There are two primary ways to install and use pymmcore-gui:
 > ]
 >
 
-- **Download the Standalone Application**:
+### 📦 Bundled Application
 
   For those wanting a fully-contained, double-clickable application, we provide
   pre-built, bundles that include the Python runtime and all necessary
@@ -138,6 +138,15 @@ There are two primary ways to install and use pymmcore-gui:
 > these must be installed separately. (This may be done using the `Devices >
 > Install Devices ...` menu in the GUI, or by running `mmcore install` from
 > the command line.)
+
+**Licensing:**
+
+> [!NOTE]
+> The bundled application currently includes PyQt6, which is licensed under the
+> GNU General Public License v3.0. This means the bundled application is
+> distributed as a combined work under the terms of the GNU General Public
+> License v3.0.  (If that is limiting for you, please reach out, we may be
+> able to provide a PySide6-based version in the future)
 
 ## 🖥️ Usage
 
@@ -245,6 +254,10 @@ or feature requests, and join in the discussion.
 
 This project and all pymmcore-plus ecosystem projects are provided under the
 BSD-3-Clause license.  
+
+The self-contained [application](#-bundled-application) includes PyQt6 and
+therefore is distributed as a combined work under the terms of the GNU General
+Public License v3.0.
 
 It depends on the [C++ MMCore and
 Devices](https://github.com/micro-manager/mmCoreAndDevices) which are licensed
