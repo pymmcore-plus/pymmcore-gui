@@ -169,7 +169,18 @@ class NDVViewersManager(QObject):
             preview = NDVPreview(mmcore=self._mmc)
             if not isinstance((parent := self.parent()), QWidget):
                 parent = None  # pragma: no cover
-            self._current_image_preview = dw = CDockWidget("Preview", parent)
+
+            # this is a hacky workaround:
+            # Calling CDockWidget('title', parent) is deprecated
+            # It is preferred to instantiate with a CDockManager.
+            # parent will almost always be the MainWindow that dock_manager
+            # (and in reality, will never be None)
+            if dm := getattr(parent, "dock_manager", None):
+                dw = CDockWidget(dm, "Preview", parent)
+            else:  # pragma: no cover
+                dw = CDockWidget("Preview", parent)
+
+            self._current_image_preview = dw
             self._preview_dock_widgets.add(dw)
             dw.setWidget(preview)
             dw.setFeature(dw.DockWidgetFeature.DockWidgetFloatable, False)

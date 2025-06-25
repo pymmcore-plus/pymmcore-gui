@@ -31,15 +31,21 @@ jobs:
           extra_args: --all-files --verbose
 
   test:
-    name: ${{ matrix.platform }} py${{ matrix.python-version }}
-    runs-on: ${{ matrix.platform }}
+    name: ${{ matrix.os }} py${{ matrix.python-version }} ${{ matrix.qt }}
+    runs-on: ${{ matrix.os }}
     env:
       UV_FROZEN: 1
+      UV_NO_SYNC: 1
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, windows-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        os: [macos-latest, windows-latest]
+        python-version: ["3.10", "3.12", "3.13"]
+        qt: ["PyQt6"]
+        include:
+          - os: windows-latest
+            python-version: "3.13"
+            qt: "PySide6"
 
     steps:
       - uses: actions/checkout@v4
@@ -55,10 +61,27 @@ jobs:
         with:
           qt: true
 
-      - name: Test
-        run: uv run pytest -v --cov=pymmcore_gui --cov-report=xml --color=yes
+      - name: Install
+        shell: bash
+        run: |
+          if [[ "${{ matrix.qt }}" == "PySide6" ]]; then
+            uv sync --group PySide6 --no-install-package PyQt6 --no-install-package PyQt6Ads
+          else
+            uv sync
 
-      - name: Coverage
-        uses: codecov/codecov-action@v5
+      - name: Test
+        run: uv run coverage run -p -m pytest -v --color=yes
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          name: covreport-${{ matrix.os }}-py${{ matrix.python-version }}-${{ matrix.qt }}
+          path: ./.coverage*
+          include-hidden-files: true
+
+  upload_coverage:
+    if: always()
+    needs: [test]
+    uses: pyapp-kit/workflows/.github/workflows/upload-coverage.yml@v2
+    secrets:
+      codecov_token: ${{ secrets.CODECOV_TOKEN }}

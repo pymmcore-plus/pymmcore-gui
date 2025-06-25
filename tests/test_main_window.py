@@ -57,6 +57,8 @@ def test_main_window_core_actions(gui: MicroManagerGUI, c_action: CoreAction) ->
     assert c_action in gui._qactions
 
 
+# this warning only occurs on PySide6 for some reason
+@pytest.mark.filterwarnings("ignore:No device with label")
 def test_shutter_toolbar(gui: MicroManagerGUI) -> None:
     sh_toolbar = ShuttersToolbar(gui._mmc, gui)
 
