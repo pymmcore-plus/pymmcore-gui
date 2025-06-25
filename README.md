@@ -115,11 +115,12 @@ There are two primary ways to install and use pymmcore-gui:
 
   For those wanting a fully contained, double-clickable application, we provide
   pre-built bundles that include the Python runtime and all necessary
-  dependencies.
+  dependencies. Just download and extract the archive, then run the application.
   
-  You can download the latest nightly bundled applications
-  [here](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main).
-  Simply download and extract the archive, then run the application.
+  | Platform | Latest Nightly Build |
+  | :--: | :--- |
+  | Windows | [pymmgui-Windows.zip](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main/pymmgui-Windows.zip) |
+  | macOS | [pymmgui-macOS.zip](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main/pymmgui-macOS.zip) |
 
 > [!NOTE]
 > The bundled application does *not* include Micro-Manager device adapters,
