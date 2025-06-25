@@ -99,8 +99,8 @@ mmcore install
 mmgui
 ```
 
-> *More info on the `mmcore install` command
-> [here](https://pymmcore-plus.github.io/pymmcore-plus/install/#installing-micro-manager-device-adapters)*
+*More info on the `mmcore install` command
+[here](https://pymmcore-plus.github.io/pymmcore-plus/install/#installing-micro-manager-device-adapters)*
 
 > [!NOTE]
 > Since the GitHub version may change at any time, it is recommended
@@ -124,7 +124,7 @@ dependencies. Just download and extract the archive, then run the application.
 
 > [!TIP]
 > You will have to accept the scary "this app is going to destroy your computer!"
->  message, until we start paying for a certificate.
+> message, until we start paying for a certificate.
 >
 > Sorry!
 
@@ -136,12 +136,13 @@ dependencies. Just download and extract the archive, then run the application.
 > [!IMPORTANT]
 > The bundled application does *not* include Micro-Manager device adapters,
 > these must be installed separately. This may be done by:
+>
 > - Using the `Devices > Install Devices ...` menu in the GUI
 > - Running `uv run --with pymmcore-plus mmcore install` from the command line  
 >   *this requires [having uv
 >   installed](https://docs.astral.sh/uv/getting-started/installation/)*
-> - Installing the [latest micro-manager nightly build
-> ](https://micro-manager.org/Micro-Manager_Nightly_Builds)
+> - Installing the [latest micro-manager nightly
+>   build](https://micro-manager.org/Micro-Manager_Nightly_Builds)
 
 ## 🖥️ Usage
 
