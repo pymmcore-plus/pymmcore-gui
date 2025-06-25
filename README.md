@@ -87,40 +87,51 @@ independently.
 There are two primary ways to install and use pymmcore-gui:
 
 ### 🐍 Python Package
-  
-  ```sh
-  # install this package (for now, just install from GitHub)
-  pip install git+https://github.com/pymmcore-plus/pymmcore-gui
-  
-  # install micro-manager device adapters
-  mmcore install
 
-  # run the app
-  mmgui
-  ```
+```sh
+# install this package (for now, just install from GitHub)
+pip install git+https://github.com/pymmcore-plus/pymmcore-gui
+
+# install micro-manager device adapters
+mmcore install
+
+# run the app
+mmgui
+```
+
+> *More info on the `mmcore install` command
+> [here](https://pymmcore-plus.github.io/pymmcore-plus/install/#installing-micro-manager-device-adapters)*
 
 > [!NOTE]
 > Since the GitHub version may change at any time, it is recommended
-> to pin a specific `<commit-or-tag>` if you are adding this to your
+> to pin a specific `<commit>` if you are adding this to your
 > pyproject.toml dependencies.
 >
 > ```toml
+> # pyproject.toml
+> 
 > [project]
 > dependencies = [
->     "pymmcore-gui @ git+https://github.com/pymmcore-plus/pymmcore-gui@<commit-or-tag>"
+>     "pymmcore-gui @ git+https://github.com/pymmcore-plus/pymmcore-gui@<commit>"
 > ]
 >
 
 ### 📦 Bundled Application
 
-  For those wanting a fully contained, double-clickable application, we provide
-  pre-built bundles that include the Python runtime and all necessary
-  dependencies. Just download and extract the archive, then run the application.
-  
-  | Platform | Latest Nightly Build |
-  | :--: | :--- |
-  | Windows | [pymmgui-Windows.zip](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main/pymmgui-Windows.zip) |
-  | macOS | [pymmgui-macOS.zip](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main/pymmgui-macOS.zip) |
+For those wanting a fully contained, double-clickable application, we provide
+pre-built bundles that include the Python runtime and all necessary
+dependencies. Just download and extract the archive, then run the application.
+
+> [!TIP]
+> You will have to accept the scary "this app is going to destroy your computer!"
+>  message, until we start paying for a certificate.
+>
+> Sorry!
+
+| Platform | Latest Nightly Build |
+| :--: | :--- |
+| Windows | [pymmgui-Windows.zip](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main/pymmgui-Windows.zip) |
+| macOS | [pymmgui-macOS.zip](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main/pymmgui-macOS.zip) |
 
 > [!NOTE]
 > The bundled application does *not* include Micro-Manager device adapters,
