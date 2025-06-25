@@ -85,11 +85,15 @@ There are two primary ways to install and use pymmcore-gui:
 
 > [!NOTE]
 > Since the github version may change at any time, it is recommended
-> to pin a specific `<commit-or-tag>` when installing, e.g.:
+> to pin a specific `<commit-or-tag>` if you are adding this to your
+> pyproject.toml dependencies.
 >
-> ```sh
-> pip install git+https://github.com/pymmcore-plus/pymmcore-gui@<commit-or-tag>
-> ```
+> ```toml
+> [project]
+> dependencies = [
+>     "pymmcore-gui @ git+https://github.com/pymmcore-plus/pymmcore-gui@<commit-or-tag>"
+> ]
+>
 
 - **Download the Standalone Application**:
 
