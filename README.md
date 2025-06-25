@@ -10,9 +10,9 @@ traditional Java-based [Micro-Manager
 GUI](https://github.com/micro-manager/micro-manager), leveraging modern Python
 tools for device control, image acquisition, and visualization.
 
-## Status
+## Project Status
 
-pymmcore-gui has evolved from an experimental prototype into a working
+`pymmcore-gui` has evolved from an experimental prototype into a working
 application with:
 
 - ✅ Complete device control and configuration
@@ -113,31 +113,50 @@ There are two primary ways to install and use pymmcore-gui:
 
 ## Usage
 
-**Launching the GUI (Standalone)**: If you installed the bundled app, simply
-double-click the application to launch it. You should see the main window
-appear, which includes menus and panels for device control, configuration, live
-view, etc. By default, if no configuration is loaded, the GUI will use
-Micro-Manager’s Demo devices (so you can try it even without real hardware). You
-can then load a different hardware configuration (from the "Devices" menu) or use
-the Hardware Config Wizard to connect to hardware.
+### Launching the GUI (Standalone)
 
-**Launching via Python**: You can also start the GUI from an interactive Python
-session or script. This is useful if you want to script around the GUI or
-integrate it with other Python code. Simply import the library and call the
-`create_mmgui()` function:
+If you installed the bundled app, simply double-click the application to launch
+it. You should see the main window appear, which includes menus and panels for
+device control, configuration, live view, etc. By default, if no configuration
+is loaded, the GUI will use Micro-Manager’s Demo devices (so you can try it even
+without real hardware). You can then load a different hardware configuration
+(from the "Devices" menu) or use the Hardware Config Wizard to connect to
+hardware.
+
+### Launching via Python (CLI)
+
+If you installed pymmcore-gui into a Python environment, you can launch the
+GUI from the command line using the `mmgui` command:
+
+```bash
+mmgui
+```
+
+### Launching via Python (Script)
+
+You can also start the GUI from a Python session or script. This is
+useful if you want to script around the GUI or integrate it with other Python
+code. Simply import the library and call the `create_mmgui()` function:
 
 ```python
 from pymmcore_gui import create_mmgui
+
 create_mmgui()
 ```
 
 This will initialize the application and show the main GUI window.
 
-If you would like to further customize the GUI before starting the application:
+### Customizing Before Launch (Script)
+
+If you would like to *further* customize the GUI before starting the application,
+pass `exec_app=False` to `create_mmgui()`. This will return the main window,
+allowing you to modify it before starting the Qt event loop:
 
 ```python
 from pymmcore_gui import create_mmgui
 from PyQt6.QtWidgets import QApplication
+
+# (you do not need to create a QApplication instance)
 
 window = create_mmgui(exec_app=False)
 
@@ -147,32 +166,10 @@ window = create_mmgui(exec_app=False)
 QApplication.instance().exec()  # Start the Qt event loop
 ```
 
-If you already have a CMMCorePlus instance you want the GUI to use, you
+If you already have a `CMMCorePlus` instance that you want the GUI to use, you
 can pass it to `create_mmgui(mmcore=my_core)`. By default the GUI will first
-check if there is a global singleton (`CMMCorePlus.instance()`), and if not,
-it will create a new instance.
-
-Once launched, you can interact with the GUI just as you would with
-Micro-Manager Studio: select devices, adjust properties, snap images, start live
-view, and run multi-dimensional acquisitions. Images acquired will be displayed
-in the `ndv` viewer component embedded in the GUI. You can save images or datasets
-via the GUI’s save functions – by default using Micro-Manager’s image file
-formats.
-
-## Getting Started for Developers
-
-```bash
-git clone https://github.com/pymmcore-plus/pymmcore-gui.git
-cd pymmcore-gui
-uv sync
-uv run mmgui
-```
-
-The [contributing guide](CONTRIBUTING.md) covers development environment setup,
-and architectural patterns used in the project.
-
-We welcome contributions and feedback! Feel free to open issues for bug reports
-or feature requests, and join in the discussion.
+check if there is a global singleton (`CMMCorePlus.instance()`), and if not, it
+will create a new instance.
 
 ## Prior Work
 
@@ -196,6 +193,27 @@ to Micro-Manager users (for example, one prototype mimicked the MMStudio layout
 ￼), while taking advantage of Python’s flexibility and the growing ecosystem of
 scientific libraries.
 
+## Getting Started for Developers
+
+The [contributing guide](CONTRIBUTING.md) covers development environment setup,
+and architectural patterns used in the project.  Briefly:
+
+```bash
+git clone https://github.com/pymmcore-plus/pymmcore-gui.git
+cd pymmcore-gui
+uv sync
+uv run mmgui
+uv run pytest
+```
+
+We welcome contributions and feedback! Feel free to open issues for bug reports
+or feature requests, and join in the discussion.
+
 ------------------------------------------
 
-**License**: This project is provided under the BSD-3-Clause license.
+### Licenses
+
+This project and all pymmcore-plus ecosystem projects are provided under the BSD-3-Clause license.  
+
+It depends on the [C++ MMCore and Devices](https://github.com/micro-manager/mmCoreAndDevices)
+which are licensed under either LGPL and BSD-3-Clause, depending on the device or module.
