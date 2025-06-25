@@ -133,11 +133,15 @@ dependencies. Just download and extract the archive, then run the application.
 | Windows | [pymmgui-Windows.zip](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main/pymmgui-Windows.zip) |
 | macOS | [pymmgui-macOS.zip](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main/pymmgui-macOS.zip) |
 
-> [!NOTE]
+> [!IMPORTANT]
 > The bundled application does *not* include Micro-Manager device adapters,
-> these must be installed separately. (This may be done using the `Devices >
-> Install Devices ...` menu in the GUI, or by running `mmcore install` from
-> the command line.)
+> these must be installed separately. This may be done by:
+> - Using the `Devices > Install Devices ...` menu in the GUI
+> - Running `uv run --with pymmcore-plus mmcore install` from the command line  
+>   *this requires [having uv
+>   installed](https://docs.astral.sh/uv/getting-started/installation/)*
+> - Installing the [latest micro-manager nightly build
+> ](https://micro-manager.org/Micro-Manager_Nightly_Builds)
 
 ## 🖥️ Usage
 
