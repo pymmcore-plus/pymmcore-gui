@@ -68,6 +68,7 @@ jobs:
             uv sync --group PySide6 --no-install-package PyQt6 --no-install-package PyQt6Ads
           else
             uv sync
+          fi
 
       - name: Test
         run: uv run coverage run -p -m pytest -v --color=yes
