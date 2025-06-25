@@ -1,95 +1,165 @@
 # pymmcore-gui
 
-This is a stub repo for discussing a unified effort towards a GUI application
-for [`pymmcore-plus`](https://github.com/pymmcore-plus/pymmcore-plus) &
-[`pymmcore-widgets`](https://github.com/pymmcore-plus/pymmcore-widgets)
+**pymmcore-gui** is a Graphical User Interface application for controlling
+microscopes via the Micro-Manager core – completely in Python. It unifies the
+capabilities of several libraries in the pymmcore-plus ecosystem under one
+application. The goal is to provide a pure-Python replacement for the
+traditional Java-based [Micro-Manager
+GUI](https://github.com/micro-manager/micro-manager), leveraging modern Python
+tools for device control, image acquisition, and visualization.
 
-<details>
+## Overview
 
-  <summary><em>For developers</em></summary>
+pymmcore-gui combines functionality from the following components into one
+cohesive desktop app:
 
-  <h2>This repo now contains a working GUI prototype 🎉🚀</h2>
+- [**pymmcore-plus**](https://github.com/pymmcore-plus/pymmcore-plus): Pythonic
+  interface to the Micro-Manager C++ core (MMCore), with an integrated
+  multi-dimensional acquisition engine and event system. This provides the
+  foundation for microscope device control and complex experiments (using
+  `CMMCorePlus` and the `MDAEngine`). `pymmcore-plus` provides the core
+  programmatic interface, and may be used independently.
+- [**useq-schema**](https://github.com/pymmcore-plus/useq-schema): A schema for
+  describing multi-dimensional acquisitions ("MDA sequences") in a
+  hardware-agnostic way. `pymmcore-gui` uses this to define and run rich imaging
+  protocols (timelapses, z-stacks, channel series, well-plates, grids, etc.).
+- [**pymmcore-widgets**](https://github.com/pymmcore-plus/pymmcore-widgets): A
+  collection of re-usable Qt widgets for microscope devices and settings ￼.
+  These are the building blocks of the GUI’s panels (e.g. camera controls, stage
+  control, property browsers, acquisition setup forms), ensuring that all device
+  control UI is robust and consistent.
+- [**ndv**](https://github.com/pyapp-kit/ndv): A lightweight – but capable –
+  n-dimensional image viewer for live and captured images. NDV provides fast,
+  minimal-dependency image visualization, allowing `pymmcore-gui` to display
+  camera feeds and multi-dimensional datasets without relying on heavier/slower
+  frameworks (i.e. it avoids the need for napari).
 
-  See [CONTRIBUTING](CONTRIBUTING.md) for local setup instructions.
+By integrating these components, `pymmcore-gui` offers a comprehensive
+microscope control interface similar in spirit to Micro-Manager’s MMStudio, but
+running entirely in Python (via Qt for the GUI) instead of Java, and
+facilitating Python devices and image-processing and analysis routines. The
+interface should be familiar to Micro-Manager users, but more flexible, modern,
+and user-extensible, benefitting from the Python ecosystem.
 
-  You can download the latest nightly bundled applications [here](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main)
+### Status
 
-</details>
+This project is under active development, but it is already a working
+product (no longer just an aspirational prototype). Many planned features have
+been implemented, and it can be used for real microscope control and image
+acquisition.
 
-## Goals (and non-goals) of unification
+## Installation
 
-### Goals
+There are two primary ways to install and use pymmcore-gui:
 
-- Provide a napari-independent GUI for controlling micro-manager via
-  pymmcore-plus (i.e. pure python micro-manager control).  We'd like to have a
-  primary application that we can point interested parties to (rather than
-  having to describe all the related efforts and explain how to compose
-  pymmcore-widgets directly).
-- Avoid duplicate efforts.  While independent related projects are excellent in
-  that they allow rapid exploration and experimentation, we'd like to be able to
-  share the results of these efforts.  In some ways that is done via
-  pymmcore-widgets, but all of the application level stuff (persistence of
-  settings, complex layouts, coordination of data saving, viewing & processing)
-  is explicitly not part of pymmcore widgets.
-- Establish patterns for persistence and application state.
+- **Download the Standalone Application**: We provide pre-built, double-clickable
+  application packages for easy installation. These bundles include the Python
+  runtime and all necessary dependencies. You can download the latest automated
+  build for Windows or macOS from our [Nightly Builds server] ￼ ￼ (look for the
+  pymmgui-Windows.zip or pymmgui-macOS.zip). Simply download and extract the
+  archive, then run the application:
+  - On **Windows**: run the pymmcore-gui.exe (after extracting the zip).
+  - On **macOS**: open the pymmcore-gui.app (you may need to bypass Gatekeeper on the
+    first run).
+  - On **Linux**: a Linux bundle may be provided in the future. For now, Linux
+    users can run from source – see below.)
+- **Install via Python for use as a library**: You may also install pymmcore-gui
+  into a python environment:
+  
+  ```sh
+  pip install git+https://github.com/pymmcore-plus/pymmcore-gui
+  mmcore install
+  ```
 
-### Non-Goals
+  This will install the `pymmcore_gui` Python package, and `mmcore install` will
+  fetch the latest micro-manager device adapters, allowing you to launch the GUI
+  from a Python session or integrate it into custom scripts.
 
-- Working on a shared application is *not* meant to discourage independent
-  experimentation and repositories.  (One of the real strengths in doing this
-  all in python is the ease of creating custom widgets and GUIs!).  One possible
-  pattern would be forks & branches off of a main central repository.
+## Usage
 
-## Purpose of this repo
+**Launching the GUI (Standalone)**: If you installed the bundled app, simply
+double-click the application to launch it. You should see the main window
+appear, which includes menus and panels for device control, configuration, live
+view, etc. By default, if no configuration is loaded, the GUI will use
+Micro-Manager’s Demo devices (so you can try it even without real hardware). You
+can then load a different hardware configuration (from the "Devices" menu) or use
+the Hardware Config Wizard to connect to hardware.
 
-For now, this serves as place to store TODO issues and discussion items.  Please
-open an issue if you are interested, (even just to say hi! 🙂)
+**Launching via Python**: You can also start the GUI from an interactive Python
+session or script. This is useful if you want to script around the GUI or
+integrate it with other Python code. Simply import the library and call the
+`create_mmgui()` function:
 
-## Existing Efforts
+```python
+from pymmcore_gui import create_mmgui
+create_mmgui()
+```
 
-### napari-micromanager
+This will initialize the application and show the main GUI window.
 
-<img width="1840" alt="napari-micromanager"
-src="https://github.com/pymmcore-plus/napari-micromanager/assets/1609449/e1f395cd-2d57-488e-89e2-b1923310fc2a">
+If you would like to further customize the GUI before starting the application:
 
-An initial effort towards a pure python micro-manager gui based on the
-pymmcore-plus ecosystem was
-[napari-micromanager](https://github.com/pymmcore-plus/napari-micromanager). It
-uses [napari](https://github.com/napari/napari) as the primary viewer, and
-[pymmcore-widgets](https://github.com/pymmcore-plus/pymmcore-widgets) for most
-of the UI related to micro-manager functionality. It still works and will
-continue to be maintained for the foreseable future, but we are also interested
-in exploring options that do not depend on napari.
+```python
+from pymmcore_gui import create_mmgui
+from PyQt6.QtWidgets import QApplication
 
-One candidate to replace the viewing functionality provided by napari is
-[`ndv`](https://github.com/pyapp-kit/ndv), a slim multi-dimensional viewer with
-minimal dependencies.  Two experimental efforts exist to build a micro-manager
-gui using ndv
+window = create_mmgui(exec_app=False)
 
-### micromanager-gui
+# customize the app or do other setup here
+# mmcore = window.mmcore  # access the CMMCorePlus used by the GUI
 
-<img width="1840" alt="Screenshot 2024-06-03 at 11 49 45 PM"
-src="https://github.com/fdrgsp/micromanager-gui/assets/70725613/d8148931-1153-405e-96d6-67abe57f88a3">
+QApplication.instance().exec()  # Start the Qt event loop
+```
 
-[micromanager-gui](https://github.com/fdrgsp/micromanager-gui) is a standalone
-application written by Federico Gasparoli
-([@fdrgsp](https://github.com/fdrgsp)), and currently lives in federico's
-personal org while we experiment with it.
+If you already have a CMMCorePlus instance you want the GUI to use, you
+can pass it to `create_mmgui(mmcore=my_core)`. By default the GUI will first
+check if there is a global singleton (`CMMCorePlus.instance()`), and if not,
+it will create a new instance.
 
-### pymmcore-plus-sandbox
+Once launched, you can interact with the GUI just as you would with
+Micro-Manager Studio: select devices, adjust properties, snap images, start live
+view, and run multi-dimensional acquisitions. Images acquired will be displayed
+in the `ndv` viewer component embedded in the GUI. You can save images or datasets
+via the GUI’s save functions – by default using Micro-Manager’s image file
+formats.
 
-<img width="1190" alt="Screenshot 2024-10-13 at 2 50 57 PM"
-src="https://github.com/user-attachments/assets/cd1d81aa-1bab-48ca-ad31-420dc08e72a5">
+## Getting Started for Developers
 
-[`pymmcore-plus-sandbox`](https://github.com/gselzer/pymmcore-plus-sandbox) is
-another experimental standalone GUI written by Gabe Selzer
-([@gselzer](https://github.com/gselzer) with input from
-[@marktsuchida](https://github.com/marktsuchida).  One initial goal here is to
-create a main window that looks very similar to the java based MMStudio (which
-would make it familiar to existing users of the java ecosystem).
+If you are interested in contributing to pymmcore-gui or running it from source
+for development, please see our [CONTRIBUTING.md](./CONTRIBUTING.md) guide for
+setup instructions and development notes ￼. In brief, you can clone this
+repository and set up a development environment to run the latest code. The
+contributing guide covers how to install in editable mode, run tests, and the
+architectural patterns (e.g. settings management, plugins) used in the project.
 
-### LEB-EPFL
+We welcome contributions and feedback! Feel free to open issues for bug reports
+or feature requests, and join in the discussion. The intent of this project is
+to bring together the community’s efforts on a Python-based Micro-Manager GUI
+into a single application, without hindering the ability to experiment
+independently. By collaborating here, we hope to avoid duplicate work and
+create a robust, extensible tool for microscope control in Python.
 
-Willi Stepp ([@wl-stepp](https://github.com/wl-stepp)) has been an active
-contributor to pymmcore-widgets and uses some of these widgets in his
-event-driven microscopy controllers.
+## Background
+
+This project builds upon several prior efforts in the Python microscopy
+community:
+
+- [**napari-micromanager**](https://github.com/pymmcore-plus/napari-micromanager):
+  A plugin using Napari as the viewer and pymmcore-widgets for UI. It
+  demonstrated Micro-Manager control in a python GUI. While it doesn't receive
+  active updates, it remains usable for those who prefer a napari-based
+  workflow.
+- **Independent GUIs**: Experimental apps like [micromanager-gui by @fdrgsp】 and
+  [pymmcore-plus-sandbox by @gselzer] explored standalone interfaces ￼ ￼.
+  Lessons from these prototypes (and others at labs like LEB-EPFL) have
+  influenced pymmcore-gui’s design.
+
+By unifying ideas from these projects, pymmcore-gui aims to provide a single,
+officially supported application. Our design goal is a user experience familiar
+to Micro-Manager users (for example, one prototype mimicked the MMStudio layout
+￼), while taking advantage of Python’s flexibility and the growing ecosystem of
+scientific libraries.
+
+------------------------------------------
+
+**License**: This project is provided under the BSD-3-Clause license.
