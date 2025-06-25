@@ -6,18 +6,19 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Annotated, TypeVar, cast
 
 from pymmcore_plus import CMMCorePlus
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QDialog, QWidget
-from PyQt6Ads import CDockWidget, DockWidgetArea, SideBarLocation
+
+from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea, SideBarLocation
+from pymmcore_gui._qt.QtCore import Qt
+from pymmcore_gui._qt.QtGui import QAction
+from pymmcore_gui._qt.QtWidgets import QDialog, QWidget
 
 from ._action_info import ActionKey, WidgetActionInfo, _ensure_isinstance
 
 if TYPE_CHECKING:
     import pymmcore_widgets as pmmw
-    from PyQt6.QtCore import QObject
 
     from pymmcore_gui._main_window import MicroManagerGUI
+    from pymmcore_gui._qt.QtCore import QObject
     from pymmcore_gui.widgets._exception_log import ExceptionLog
     from pymmcore_gui.widgets._mm_console import MMConsole
     from pymmcore_gui.widgets._stage_control import StagesControlWidget

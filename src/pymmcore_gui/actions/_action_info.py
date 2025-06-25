@@ -6,19 +6,19 @@ from typing import TYPE_CHECKING, Annotated, Any, ClassVar
 
 from pydantic import BaseModel, PlainValidator
 from pymmcore_plus import CMMCorePlus
-from PyQt6.QtCore import QObject, Qt  # noqa: TC002
-from PyQt6.QtGui import QAction, QIcon, QKeySequence
-from PyQt6Ads import CDockWidget, DockWidgetArea, SideBarLocation
 
+from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea, SideBarLocation
+from pymmcore_gui._qt.QtCore import QObject, Qt  # noqa: TC001
+from pymmcore_gui._qt.QtGui import QAction, QIcon, QKeySequence
 from pymmcore_gui.actions._core_qaction import QCoreAction
 
 if TYPE_CHECKING:
     from typing import TypeAlias
 
     from pymmcore_plus import CMMCorePlus
-    from PyQt6.QtWidgets import QWidget
     from typing_extensions import Self
 
+    from pymmcore_gui._qt.QtWidgets import QWidget
     from pymmcore_gui.actions.widget_actions import QWidgetType
 
 

@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 import useq
-from PyQt6.QtWidgets import QApplication, QWidget
 from useq import MDASequence
 
 from pymmcore_gui._ndv_viewers import NDVViewersManager
+from pymmcore_gui._qt.QtWidgets import QApplication, QWidget
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus

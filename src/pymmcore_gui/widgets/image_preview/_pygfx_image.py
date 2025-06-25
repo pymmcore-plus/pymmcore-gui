@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pygfx
 from cmap import Colormap
-from PyQt6.QtCore import QObject, QSize
-from PyQt6.QtWidgets import QVBoxLayout, QWidget
+
+from pymmcore_gui._qt.QtCore import QObject, QSize
+from pymmcore_gui._qt.QtWidgets import QVBoxLayout, QWidget
 
 from ._preview_base import ImagePreviewBase
 

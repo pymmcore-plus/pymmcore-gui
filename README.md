@@ -187,7 +187,7 @@ allowing you to modify it before starting the Qt event loop:
 
 ```python
 from pymmcore_gui import create_mmgui
-from PyQt6.QtWidgets import QApplication
+from pymmcore_gui._qt.QtWidgets import QApplication
 
 # (you do not need to create a QApplication instance)
 

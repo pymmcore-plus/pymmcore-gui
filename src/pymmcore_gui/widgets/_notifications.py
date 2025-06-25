@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
-from PyQt6.QtCore import QPoint, QPropertyAnimation, Qt, QTimer
-from PyQt6.QtWidgets import (
+from superqt import QIconifyIcon
+
+from pymmcore_gui._qt.QtCore import QPoint, QPropertyAnimation, Qt, QTimer
+from pymmcore_gui._qt.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -11,7 +13,6 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from superqt import QIconifyIcon
 
 if TYPE_CHECKING:
     from pymmcore_gui._notification_manager import Notification, NotificationManager

@@ -10,13 +10,13 @@ import warnings
 from contextlib import suppress
 from typing import TYPE_CHECKING, Any, Literal, cast
 
-from PyQt6.QtCore import QTimer, pyqtSignal
-from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QApplication, QCheckBox, QMessageBox, QWidget
 from superqt.utils import WorkerBase
 
 from pymmcore_gui import __version__
 from pymmcore_gui._main_window import ICON, MicroManagerGUI
+from pymmcore_gui._qt.QtCore import QTimer, Signal
+from pymmcore_gui._qt.QtGui import QIcon
+from pymmcore_gui._qt.QtWidgets import QApplication, QCheckBox, QMessageBox, QWidget
 from pymmcore_gui._settings import Settings
 
 from . import _sentry
@@ -58,7 +58,7 @@ def _set_osx_app_name(app_title: str) -> None:
 
 
 class MMQApplication(QApplication):
-    exceptionRaised = pyqtSignal(BaseException)
+    exceptionRaised = Signal(BaseException)
 
     def __init__(self, argv: list[str]) -> None:
         super().__init__(argv)

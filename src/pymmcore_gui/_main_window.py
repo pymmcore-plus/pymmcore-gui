@@ -11,9 +11,12 @@ from weakref import WeakValueDictionary
 
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets import ConfigWizard
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction, QCloseEvent, QGuiApplication, QIcon
-from PyQt6.QtWidgets import (
+from superqt import QIconifyIcon
+
+from pymmcore_gui._qt.QtAds import CDockManager, CDockWidget, SideBarLocation
+from pymmcore_gui._qt.QtCore import Qt
+from pymmcore_gui._qt.QtGui import QAction, QCloseEvent, QGuiApplication, QIcon
+from pymmcore_gui._qt.QtWidgets import (
     QApplication,
     QDialog,
     QMainWindow,
@@ -24,8 +27,6 @@ from PyQt6.QtWidgets import (
     QToolBar,
     QWidget,
 )
-from PyQt6Ads import CDockManager, CDockWidget, SideBarLocation
-from superqt import QIconifyIcon
 
 from ._ndv_viewers import NDVViewersManager
 from ._notification_manager import NotificationManager

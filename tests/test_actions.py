@@ -1,7 +1,7 @@
 import pytest
-from PyQt6.QtWidgets import QMenu, QWidget
 
 from pymmcore_gui import MicroManagerGUI
+from pymmcore_gui._qt.QtWidgets import QMenu, QWidget
 from pymmcore_gui.actions import ActionInfo, CoreAction, WidgetAction, WidgetActionInfo
 
 

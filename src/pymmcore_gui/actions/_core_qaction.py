@@ -3,13 +3,15 @@ from __future__ import annotations
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from PyQt6.QtGui import QAction, QIcon, QPalette
-from PyQt6.QtWidgets import QApplication
 from superqt import QIconifyIcon
+
+from pymmcore_gui._qt.QtGui import QAction, QIcon, QPalette
+from pymmcore_gui._qt.QtWidgets import QApplication
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
-    from PyQt6.QtCore import QObject
+
+    from pymmcore_gui._qt.QtCore import QObject
 
     from ._action_info import ActionInfo, ActionTriggeredFunc
 

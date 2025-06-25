@@ -13,17 +13,18 @@ from site import getsitepackages, getusersitepackages
 from subprocess import run
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QDialog, QDialogButtonBox, QLabel, QVBoxLayout
+from pymmcore_gui._qt.QtCore import Qt
+from pymmcore_gui._qt.QtWidgets import QDialog, QDialogButtonBox, QLabel, QVBoxLayout
 
 from ._settings import Settings
 
 if TYPE_CHECKING:
-    from PyQt6.QtGui import QCloseEvent, QKeyEvent
     from sentry_sdk._types import (
         Event,  # pyright: ignore[reportPrivateImportUsage]
         Hint,  # pyright: ignore[reportPrivateImportUsage]
     )
+
+    from pymmcore_gui._qt.QtGui import QCloseEvent, QKeyEvent
 else:
     try:
         from rich import print
