@@ -7,20 +7,20 @@ from unittest.mock import patch
 import ndv
 import pytest
 import useq
-from PyQt6.QtWidgets import QApplication, QDialog
 
 from pymmcore_gui import MicroManagerGUI
 from pymmcore_gui._app import MMQApplication
 from pymmcore_gui._notification_manager import NotificationManager
+from pymmcore_gui._qt.QtWidgets import QApplication, QDialog
 from pymmcore_gui.actions import CoreAction, WidgetAction
 from pymmcore_gui.widgets._toolbars import ShuttersToolbar
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from PyQt6Ads import CDockAreaWidget
     from pytestqt.qtbot import QtBot
 
+    from pymmcore_gui._qt.QtAds import CDockAreaWidget
     from pymmcore_gui._settings import Settings
 
 
@@ -57,6 +57,8 @@ def test_main_window_core_actions(gui: MicroManagerGUI, c_action: CoreAction) ->
     assert c_action in gui._qactions
 
 
+# this warning only occurs on PySide6 for some reason
+@pytest.mark.filterwarnings("ignore:No device with label")
 def test_shutter_toolbar(gui: MicroManagerGUI) -> None:
     sh_toolbar = ShuttersToolbar(gui._mmc, gui)
 

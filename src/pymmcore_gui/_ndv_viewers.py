@@ -7,10 +7,10 @@ from weakref import WeakSet, WeakValueDictionary
 import ndv
 import useq
 from pymmcore_plus.mda.handlers import TensorStoreHandler
-from PyQt6.QtCore import QObject, QTimer, pyqtSignal
-from PyQt6.QtWidgets import QWidget
-from PyQt6Ads import CDockWidget
 
+from pymmcore_gui._qt.QtAds import CDockWidget
+from pymmcore_gui._qt.QtCore import QObject, QTimer, Signal
+from pymmcore_gui._qt.QtWidgets import QWidget
 from pymmcore_gui.widgets.image_preview._ndv_preview import NDVPreview
 
 if TYPE_CHECKING:
@@ -42,9 +42,9 @@ class NDVViewersManager(QObject):
         The CMMCorePlus instance.
     """
 
-    mdaViewerCreated = pyqtSignal(ndv.ArrayViewer, useq.MDASequence)
-    previewViewerCreated = pyqtSignal(CDockWidget)
-    viewerDestroyed = pyqtSignal(str)
+    mdaViewerCreated = Signal(ndv.ArrayViewer, useq.MDASequence)
+    previewViewerCreated = Signal(CDockWidget)
+    viewerDestroyed = Signal(str)
 
     def __init__(self, parent: QWidget, mmcore: CMMCorePlus):
         super().__init__(parent)
@@ -169,7 +169,18 @@ class NDVViewersManager(QObject):
             preview = NDVPreview(mmcore=self._mmc)
             if not isinstance((parent := self.parent()), QWidget):
                 parent = None  # pragma: no cover
-            self._current_image_preview = dw = CDockWidget("Preview", parent)
+
+            # this is a hacky workaround:
+            # Calling CDockWidget('title', parent) is deprecated
+            # It is preferred to instantiate with a CDockManager.
+            # parent will almost always be the MainWindow that dock_manager
+            # (and in reality, will never be None)
+            if dm := getattr(parent, "dock_manager", None):
+                dw = CDockWidget(dm, "Preview", parent)
+            else:  # pragma: no cover
+                dw = CDockWidget("Preview", parent)
+
+            self._current_image_preview = dw
             self._preview_dock_widgets.add(dw)
             dw.setWidget(preview)
             dw.setFeature(dw.DockWidgetFeature.DockWidgetFloatable, False)

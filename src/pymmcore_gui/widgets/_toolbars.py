@@ -4,7 +4,8 @@ from typing import cast
 
 from pymmcore_plus import CMMCorePlus, DeviceType
 from pymmcore_widgets import ShuttersWidget
-from PyQt6.QtWidgets import QToolBar, QWidget, QWidgetAction
+
+from pymmcore_gui._qt.QtWidgets import QToolBar, QWidget, QWidgetAction
 
 
 class OCToolBar(QToolBar):

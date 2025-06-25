@@ -5,7 +5,8 @@ from typing import cast
 
 from pymmcore_plus import CMMCorePlus, DeviceType
 from pymmcore_widgets import StageWidget
-from PyQt6.QtWidgets import (
+
+from pymmcore_gui._qt.QtWidgets import (
     QGridLayout,
     QGroupBox,
     QHBoxLayout,

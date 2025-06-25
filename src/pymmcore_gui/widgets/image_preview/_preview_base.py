@@ -4,8 +4,9 @@ from contextlib import suppress
 
 import numpy as np
 from pymmcore_plus import CMMCorePlus
-from PyQt6.QtCore import Qt, QTimerEvent
-from PyQt6.QtWidgets import QWidget
+
+from pymmcore_gui._qt.QtCore import Qt, QTimerEvent
+from pymmcore_gui._qt.QtWidgets import QWidget
 
 _DEFAULT_WAIT = 10
 

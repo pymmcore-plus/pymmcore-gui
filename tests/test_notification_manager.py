@@ -3,9 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import Mock, patch
 
-from PyQt6.QtWidgets import QPushButton, QWidget
-
 from pymmcore_gui._notification_manager import Notification, NotificationManager
+from pymmcore_gui._qt.QtWidgets import QPushButton, QWidget
 from pymmcore_gui.widgets._notifications import NotificationToast
 
 if TYPE_CHECKING:

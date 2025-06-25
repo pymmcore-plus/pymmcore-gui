@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 
 import ndv
 from ndv.models import RingBuffer
-from PyQt6.QtWidgets import QApplication, QVBoxLayout, QWidget
 
+from pymmcore_gui._qt.QtWidgets import QApplication, QVBoxLayout, QWidget
 from pymmcore_gui.widgets.image_preview._preview_base import ImagePreviewBase
 
 if TYPE_CHECKING:

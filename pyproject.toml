@@ -40,11 +40,11 @@ dependencies = [
     "pydantic-settings>=2.7.1",
     "pymmcore-plus[cli]>=0.13.2",
     "pymmcore-widgets>=0.9.0",
-    "PyQt6==6.9.0",
-    "PyQt6Ads>=4.4.0.post2",
+    "PyQt6==6.9.1",
+    "PyQt6Ads==4.4.0.post2",
     "pyyaml>=6.0.2",
     "qtconsole>=5.6.1",
-    "rich",                         # also in pymmcore-plus[cli] above
+    "rich",
     "superqt[cmap,iconify]>=0.7.1",
     "tifffile>=2024.12.12",
     "tqdm>=4.67.1",
@@ -61,6 +61,9 @@ dependencies = [
 # override-dependencies = ["pymmcore ;  sys_platform == 'never'"]
 
 [dependency-groups]
+# should only be used after manually uninstalling PyQt6 and PyQt6Ads
+# uv sync --group pyside --no-install-package PyQt6 --no-install-package PyQt6Ads
+PySide6 = ["PySide6==6.9.1", "PySide6-QtAds==4.4.0.1"]
 test = [
     "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
@@ -73,7 +76,7 @@ dev = [
     "diff-cover>=9.2.4",
     "ipython>=8.30.0",
     "mypy>=1.13.0",
-    "pre-commit>=4.0.1",
+    "pre-commit-uv>=4.0",
     "pyinstaller>=6.11.1",
     "pyright>=1.1.392.post0",
     "rich>=13.9.4",
@@ -131,6 +134,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
+"src/pymmcore_gui/_qt/**/*.py" = ["F401", "F403", "F405"]
 "tests/*.py" = ["D", "S"]
 "_cli.py" = ["B008"]
 
@@ -168,6 +172,7 @@ testpaths = ["tests"]
 filterwarnings = [
     "error",
     "ignore:Parsing dates involving a day of month::ipykernel",
+    "ignore:Failed to disconnect:RuntimeWarning"
 ]
 
 # https://coverage.readthedocs.io/
