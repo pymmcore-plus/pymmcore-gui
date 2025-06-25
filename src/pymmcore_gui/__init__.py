@@ -31,6 +31,7 @@ if sys.platform == "win32":
     # Note 3: In fact the Python interpreter itself bundles vcruntime140.dll
     # and vcruntime140_1.dll; but these are usually new enough if using the
     # latest Python versions.
+    import contextlib
     import ctypes
 
     msvc_runtimes = [
@@ -42,7 +43,8 @@ if sys.platform == "win32":
         "vcruntime140_1",
     ]
     for dll in msvc_runtimes:
-        ctypes.WinDLL(dll)
+        with contextlib.suppress(OSError):
+            ctypes.WinDLL(dll)
 
 from ._app import create_mmgui
 from ._main_window import MicroManagerGUI
