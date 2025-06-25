@@ -5,10 +5,10 @@
 **pymmcore-gui** is a Graphical User Interface application for controlling
 microscopes via the Micro-Manager core – completely in Python. It unifies the
 capabilities of several libraries in the pymmcore-plus ecosystem under one
-application. The goal is to provide a pure-Python replacement for the
-traditional Java-based [Micro-Manager
-GUI](https://github.com/micro-manager/micro-manager), leveraging modern Python
-tools for device control, image acquisition, and visualization.
+application. The goal is to provide a pure-Python replacement the traditional
+Java-based Micro-Manager GUI, also known as [MMStudio, and its
+plugins](https://github.com/micro-manager/micro-manager), leveraging modern
+Python tools for device control, image acquisition, and visualization.
 
 ## ✅ Project Status
 
