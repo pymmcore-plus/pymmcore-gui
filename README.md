@@ -10,6 +10,9 @@ traditional Java-based Micro-Manager GUI (also known as [MMStudio, and its
 plugins](https://github.com/micro-manager/micro-manager)), leveraging modern
 Python tools for device control, image acquisition, and visualization.
 
+| [🔗 Skip to Installation ...](#-installation)|
+| :--- |
+
 ## ✅ Project Status
 
 `pymmcore-gui` has evolved from an experimental prototype into a working
