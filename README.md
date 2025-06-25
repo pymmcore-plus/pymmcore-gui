@@ -1,5 +1,7 @@
 # pymmcore-gui
 
+*Name pending – this is a working title for the project*
+
 **pymmcore-gui** is a Graphical User Interface application for controlling
 microscopes via the Micro-Manager core – completely in Python. It unifies the
 capabilities of several libraries in the pymmcore-plus ecosystem under one
@@ -8,7 +10,26 @@ traditional Java-based [Micro-Manager
 GUI](https://github.com/micro-manager/micro-manager), leveraging modern Python
 tools for device control, image acquisition, and visualization.
 
-## Overview
+## Status
+
+pymmcore-gui has evolved from an experimental prototype into a working application with:
+
+- ✅ Complete device control and configuration
+- ✅ Multi-dimensional acquisition workflows  
+- ✅ Real-time image preview and acquisition visualization
+- ✅ Flexible docking interface
+- ✅ Application bundle for easy distribution
+
+Primary targets for improvement include:
+
+- 📈 Better file I/O (there are currently ways to save to OME-TIFF and OME-ZARR,
+     but we want to improve them)
+- 📈 Better metadata preservation in file outputs
+- 📈 Performance optimizations
+- 📈 Clearer paths for customizing the user interface (custom widgets, etc...)
+- 📈 Theming and styles
+
+## pymmcore-plus Ecosystem
 
 pymmcore-gui combines functionality from the following components into one
 cohesive desktop app:
@@ -41,39 +62,45 @@ facilitating Python devices and image-processing and analysis routines. The
 interface should be familiar to Micro-Manager users, but more flexible, modern,
 and user-extensible, benefitting from the Python ecosystem.
 
-### Status
-
-This project is under active development, but it is already a working
-product (no longer just an aspirational prototype). Many planned features have
-been implemented, and it can be used for real microscope control and image
-acquisition.
+All of these components are designed to work together, but can also be used
+independently.
 
 ## Installation
 
 There are two primary ways to install and use pymmcore-gui:
 
-- **Download the Standalone Application**: We provide pre-built, double-clickable
-  application packages for easy installation. These bundles include the Python
-  runtime and all necessary dependencies. You can download the latest automated
-  build for Windows or macOS from our [Nightly Builds server] ￼ ￼ (look for the
-  pymmgui-Windows.zip or pymmgui-macOS.zip). Simply download and extract the
-  archive, then run the application:
-  - On **Windows**: run the pymmcore-gui.exe (after extracting the zip).
-  - On **macOS**: open the pymmcore-gui.app (you may need to bypass Gatekeeper on the
-    first run).
-  - On **Linux**: a Linux bundle may be provided in the future. For now, Linux
-    users can run from source – see below.)
-- **Install via Python for use as a library**: You may also install pymmcore-gui
-  into a python environment:
+- **Install into a Python environment**:
   
   ```sh
+  # install this package (For now, just install from github)
   pip install git+https://github.com/pymmcore-plus/pymmcore-gui
+  
+  # install micro-manager device adapters
   mmcore install
+
+  # run the app
+  mmgui
   ```
 
-  This will install the `pymmcore_gui` Python package, and `mmcore install` will
-  fetch the latest micro-manager device adapters, allowing you to launch the GUI
-  from a Python session or integrate it into custom scripts.
+  >[!NOTE]
+  >Since the github version may change at any time, it is recommended
+  >to pin a specific `<commit-or-tag>` when installing, e.g.:
+  >
+  >```sh
+  >pip install git+https://github.com/pymmcore-plus/pymmcore-gui@<commit-or-tag>
+  >```
+
+- **Download the Standalone Application**:
+
+  For those wanting a fully-contained, double-clickable application, we provide pre-built, bundles that include the Python
+  runtime and all necessary dependencies.
+  
+  You can download the latest nightly bundled applications [here](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main). Simply download and extract the archive, then run the application.
+
+  >[!NOTE]
+  > The bundled application does *not* include Micro-Manager device adapters, these must
+  > be installed separately. (This may be done using the `Devices > Install Devices ...`
+  > menu in the GUI, or by running `mmcore install` from the command line.)
 
 ## Usage
 
@@ -125,21 +152,20 @@ formats.
 
 ## Getting Started for Developers
 
-If you are interested in contributing to pymmcore-gui or running it from source
-for development, please see our [CONTRIBUTING.md](./CONTRIBUTING.md) guide for
-setup instructions and development notes ￼. In brief, you can clone this
-repository and set up a development environment to run the latest code. The
-contributing guide covers how to install in editable mode, run tests, and the
-architectural patterns (e.g. settings management, plugins) used in the project.
+```bash
+git clone https://github.com/pymmcore-plus/pymmcore-gui.git
+cd pymmcore-gui
+uv sync
+uv run mmgui
+```
+
+The [contributing guide](CONTRIBUTING.md) covers development environment setup,
+and architectural patterns used in the project.
 
 We welcome contributions and feedback! Feel free to open issues for bug reports
-or feature requests, and join in the discussion. The intent of this project is
-to bring together the community’s efforts on a Python-based Micro-Manager GUI
-into a single application, without hindering the ability to experiment
-independently. By collaborating here, we hope to avoid duplicate work and
-create a robust, extensible tool for microscope control in Python.
+or feature requests, and join in the discussion.
 
-## Background
+## Prior Work
 
 This project builds upon several prior efforts in the Python microscopy
 community:
@@ -149,10 +175,11 @@ community:
   demonstrated Micro-Manager control in a python GUI. While it doesn't receive
   active updates, it remains usable for those who prefer a napari-based
   workflow.
-- **Independent GUIs**: Experimental apps like [micromanager-gui by @fdrgsp】 and
-  [pymmcore-plus-sandbox by @gselzer] explored standalone interfaces ￼ ￼.
-  Lessons from these prototypes (and others at labs like LEB-EPFL) have
-  influenced pymmcore-gui’s design.
+- [**micromanager-gui**](https://github.com/fdrgsp/micromanager-gui) by Federico Gasparoli.
+- [**pymmcore-plus-sandbox**](https://github.com/gselzer/pymmcore-plus-sandbox) by Gabe Selzer.
+
+Lessons from these prototypes (and others at labs like LEB-EPFL) have influenced
+pymmcore-gui’s design.
 
 By unifying ideas from these projects, pymmcore-gui aims to provide a single,
 officially supported application. Our design goal is a user experience familiar
