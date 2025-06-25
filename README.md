@@ -181,8 +181,10 @@ community:
   demonstrated Micro-Manager control in a python GUI. While it doesn't receive
   active updates, it remains usable for those who prefer a napari-based
   workflow.
-- [**micromanager-gui**](https://github.com/fdrgsp/micromanager-gui) by Federico Gasparoli.
-- [**pymmcore-plus-sandbox**](https://github.com/gselzer/pymmcore-plus-sandbox) by Gabe Selzer.
+- [**micromanager-gui**](https://github.com/fdrgsp/micromanager-gui) by Federico
+  Gasparoli.
+- [**pymmcore-plus-sandbox**](https://github.com/gselzer/pymmcore-plus-sandbox)
+  by Gabe Selzer.
 
 Lessons from these prototypes (and others at labs like LEB-EPFL) have influenced
 pymmcore-gui’s design.
@@ -213,7 +215,9 @@ or feature requests, and join in the discussion.
 
 ### Licenses
 
-This project and all pymmcore-plus ecosystem projects are provided under the BSD-3-Clause license.  
+This project and all pymmcore-plus ecosystem projects are provided under the
+BSD-3-Clause license.  
 
-It depends on the [C++ MMCore and Devices](https://github.com/micro-manager/mmCoreAndDevices)
-which are licensed under either LGPL and BSD-3-Clause, depending on the device or module.
+It depends on the [C++ MMCore and
+Devices](https://github.com/micro-manager/mmCoreAndDevices) which are licensed
+under either LGPL and BSD-3-Clause, depending on the device or module.
