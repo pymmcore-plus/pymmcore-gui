@@ -74,7 +74,7 @@ cohesive desktop app:
   hardware-agnostic way. `pymmcore-gui` uses this to define and run rich imaging
   protocols (timelapses, z-stacks, channel series, well-plates, grids, etc.).
 - [**pymmcore-widgets**](https://github.com/pymmcore-plus/pymmcore-widgets): A
-  collection of re-usable Qt widgets for microscope devices and settings ￼.
+  collection of re-usable Qt widgets for microscope devices and settings.
   These are the building blocks of the GUI’s panels (e.g. camera controls, stage
   control, property browsers, acquisition setup forms), ensuring that all device
   control UI is robust and consistent.
@@ -228,9 +228,9 @@ pymmcore-gui’s design.
 
 By unifying ideas from these projects, pymmcore-gui aims to provide a single,
 officially supported application. Our design goal is a user experience familiar
-to Micro-Manager users (for example, one prototype mimicked the MMStudio layout
-￼), while taking advantage of Python’s flexibility and the growing ecosystem of
-scientific libraries.
+to Micro-Manager users (for example, one prototype mimicked the MMStudio
+layout), while taking advantage of Python’s flexibility and the growing
+ecosystem of scientific libraries.
 
 ## Getting Started for Developers
 
