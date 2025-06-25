@@ -57,6 +57,14 @@ class NDVPreview(ImagePreviewBase):
                     shape: tuple[int, ...] = (img_height, img_width, 3)
                 else:
                     shape = (img_height, img_width)
+                # coerce packed bits to byte-aligned numpy dtype
+                # (this is how the data will actually come from pymmcore)
+                if bits <= 8:
+                    bits = 8
+                elif bits <= 16:
+                    bits = 16
+                elif bits <= 32:
+                    bits = 32
                 return (f"uint{bits}", shape)
         return None
 
