@@ -83,13 +83,13 @@ There are two primary ways to install and use pymmcore-gui:
   mmgui
   ```
 
-  >[!NOTE]
-  >Since the github version may change at any time, it is recommended
-  >to pin a specific `<commit-or-tag>` when installing, e.g.:
-  >
-  >```sh
-  >pip install git+https://github.com/pymmcore-plus/pymmcore-gui@<commit-or-tag>
-  >```
+  > [!NOTE]
+  > Since the github version may change at any time, it is recommended
+  > to pin a specific `<commit-or-tag>` when installing, e.g.:
+  > 
+  > ```sh
+  > pip install git+https://github.com/pymmcore-plus/pymmcore-gui@<commit-or-tag>
+  > ```
 
 - **Download the Standalone Application**:
 
@@ -101,7 +101,7 @@ There are two primary ways to install and use pymmcore-gui:
   [here](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main).
   Simply download and extract the archive, then run the application.
 
-  >[!NOTE]
+  > [!NOTE]
   > The bundled application does *not* include Micro-Manager device adapters,
   > these must be installed separately. (This may be done using the `Devices >
   > Install Devices ...` menu in the GUI, or by running `mmcore install` from
