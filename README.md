@@ -5,9 +5,9 @@
 **pymmcore-gui** is a Graphical User Interface application for controlling
 microscopes via the Micro-Manager core – completely in Python. It unifies the
 capabilities of several libraries in the pymmcore-plus ecosystem under one
-application. The goal is to provide a pure-Python replacement the traditional
-Java-based Micro-Manager GUI, also known as [MMStudio, and its
-plugins](https://github.com/micro-manager/micro-manager), leveraging modern
+application. The goal is to provide a pure-Python replacement for the
+traditional Java-based Micro-Manager GUI (also known as [MMStudio, and its
+plugins](https://github.com/micro-manager/micro-manager)), leveraging modern
 Python tools for device control, image acquisition, and visualization.
 
 ## ✅ Project Status
@@ -24,43 +24,28 @@ application with:
 
 Primary targets for improvement include:
 
-- 📈 Better file I/O (there are currently ways to save to OME-TIFF and OME-ZARR,
-     but we want to improve them)
+- 📈 Better file I/O  
+  *there are currently ways to save to OME-TIFF and OME-ZARR, but we want to
+  improve them*
 - 📈 Better metadata preservation in file outputs
 - 📈 Performance optimizations
 - 📈 Clearer paths for customizing the user interface (custom widgets, etc...)
 - 📈 Theming and styles
 
-## 👋 Have Question?  Looking for Help?
+## 👋 Have Questions or Ideas?  Looking for Help?
 
 We love knowing that you're out there!  There are several ways to get in touch
 with the pymmcore-plus community:
 
-- [![GitHub
-  Discussions](https://img.shields.io/badge/GitHub-Discussions-purple?style=for-the-badge&logo=github)](https://github.com/orgs/pymmcore-plus/discussions)  
-  Great for [general
-  questions](https://github.com/orgs/pymmcore-plus/discussions): "How do I
-  ...?", "Are you planning to ...?", "Why is this happening?", etc.
-- [![GitHub
-  Issues](https://img.shields.io/badge/GitHub-Issues-red?style=for-the-badge&logo=github)](https://github.com/pymmcore-plus/pymmcore-gui/issues)  
-  [Open an issue]((https://github.com/pymmcore-plus/pymmcore-gui/issues)) if you
-  find a bug, experience a crash, or want to request a specific feature.
-- [![Zulip
-  chat](https://img.shields.io/badge/Zulip-Chat-blue?style=for-the-badge&logo=zulip)](https://imagesc.zulipchat.com/#narrow/channel/442785-pymmcore.5B-plus.5D)  
-  Join our [Zulip chat
-  channel]((https://imagesc.zulipchat.com/#narrow/channel/442785-pymmcore.5B-plus.5D))
-  for real-time discussions. Great for getting immediate help, sharing ideas, or
-  discussing development topics.
-- [![Image.sc
-  Forum](https://img.shields.io/badge/Image.sc-Forum-green?style=for-the-badge&logo=discourse)](https://forum.image.sc/tag/pymmcore-plus)  
-  We monitor [image.sc](https://forum.image.sc/tag/pymmcore-plus) posts tagged
-  with `pymmcore-plus`.  Posting there is absolutely fine, particularly for
-  broader community discussions or if you prefer that platform. (We may redirect
-  you to a specific Github issue or discussion)
+|If you want to... | Go here! |
+|-|-|
+| 🙋‍♀️ Ask a general question to the community | [![Image.sc Forum](https://img.shields.io/badge/Image.sc-Forum-green?style=for-the-badge&logo=discourse)](https://forum.image.sc/tag/pymmcore-plus) |
+| 🐛 Report a bug<br>✨ Request a feature | [![GitHub Issues](https://img.shields.io/badge/GitHub-Issues-magenta?style=for-the-badge&logo=github)](https://github.com/pymmcore-plus/pymmcore-gui/issues) |
+| 💬 Chat in real-time with developers | [![Zulip chat](https://img.shields.io/badge/Zulip-Chat-blue?style=for-the-badge&logo=zulip)](https://imagesc.zulipchat.com/#narrow/channel/442785-pymmcore.5B-plus.5D) |
 
 ## 🛠️ pymmcore-plus Ecosystem
 
-pymmcore-gui combines functionality from the following components into one
+`pymmcore-gui` combines functionality from the following components into one
 cohesive desktop app:
 
 - [**pymmcore-plus**](https://github.com/pymmcore-plus/pymmcore-plus): Pythonic
@@ -74,7 +59,7 @@ cohesive desktop app:
   hardware-agnostic way. `pymmcore-gui` uses this to define and run rich imaging
   protocols (timelapses, z-stacks, channel series, well-plates, grids, etc.).
 - [**pymmcore-widgets**](https://github.com/pymmcore-plus/pymmcore-widgets): A
-  collection of re-usable Qt widgets for microscope devices and settings.
+  collection of reusable Qt widgets for microscope devices and settings.
   These are the building blocks of the GUI’s panels (e.g. camera controls, stage
   control, property browsers, acquisition setup forms), ensuring that all device
   control UI is robust and consistent.
@@ -89,7 +74,7 @@ microscope control interface similar in spirit to Micro-Manager’s MMStudio, bu
 running entirely in Python (via Qt for the GUI) instead of Java, and
 facilitating Python devices and image-processing and analysis routines. The
 interface should be familiar to Micro-Manager users, but more flexible, modern,
-and user-extensible, benefitting from the Python ecosystem.
+and user-extensible, benefiting from the Python ecosystem.
 
 All of these components are designed to work together, but can also be used
 independently.
@@ -101,7 +86,7 @@ There are two primary ways to install and use pymmcore-gui:
 ### 🐍 Python Package
   
   ```sh
-  # install this package (For now, just install from github)
+  # install this package (for now, just install from GitHub)
   pip install git+https://github.com/pymmcore-plus/pymmcore-gui
   
   # install micro-manager device adapters
@@ -112,7 +97,7 @@ There are two primary ways to install and use pymmcore-gui:
   ```
 
 > [!NOTE]
-> Since the github version may change at any time, it is recommended
+> Since the GitHub version may change at any time, it is recommended
 > to pin a specific `<commit-or-tag>` if you are adding this to your
 > pyproject.toml dependencies.
 >
@@ -125,8 +110,8 @@ There are two primary ways to install and use pymmcore-gui:
 
 ### 📦 Bundled Application
 
-  For those wanting a fully-contained, double-clickable application, we provide
-  pre-built, bundles that include the Python runtime and all necessary
+  For those wanting a fully contained, double-clickable application, we provide
+  pre-built bundles that include the Python runtime and all necessary
   dependencies.
   
   You can download the latest nightly bundled applications
@@ -215,7 +200,7 @@ community:
 
 - [**napari-micromanager**](https://github.com/pymmcore-plus/napari-micromanager):
   A plugin using Napari as the viewer and pymmcore-widgets for UI. It
-  demonstrated Micro-Manager control in a python GUI. While it doesn't receive
+  demonstrated Micro-Manager control in a Python GUI. While it doesn't receive
   active updates, it remains usable for those who prefer a napari-based
   workflow.
 - [**micromanager-gui**](https://github.com/fdrgsp/micromanager-gui) by Federico
@@ -235,7 +220,7 @@ ecosystem of scientific libraries.
 ## Getting Started for Developers
 
 The [contributing guide](CONTRIBUTING.md) covers development environment setup,
-and architectural patterns used in the project.  Briefly:
+and architectural patterns used in the project. Briefly:
 
 ```bash
 git clone https://github.com/pymmcore-plus/pymmcore-gui.git
