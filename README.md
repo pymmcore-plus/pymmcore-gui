@@ -12,7 +12,8 @@ tools for device control, image acquisition, and visualization.
 
 ## Status
 
-pymmcore-gui has evolved from an experimental prototype into a working application with:
+pymmcore-gui has evolved from an experimental prototype into a working
+application with:
 
 - ✅ Complete device control and configuration
 - ✅ Multi-dimensional acquisition workflows  
@@ -92,15 +93,19 @@ There are two primary ways to install and use pymmcore-gui:
 
 - **Download the Standalone Application**:
 
-  For those wanting a fully-contained, double-clickable application, we provide pre-built, bundles that include the Python
-  runtime and all necessary dependencies.
+  For those wanting a fully-contained, double-clickable application, we provide
+  pre-built, bundles that include the Python runtime and all necessary
+  dependencies.
   
-  You can download the latest nightly bundled applications [here](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main). Simply download and extract the archive, then run the application.
+  You can download the latest nightly bundled applications
+  [here](https://nightly.link/pymmcore-plus/pymmcore-gui/workflows/bundle/main).
+  Simply download and extract the archive, then run the application.
 
   >[!NOTE]
-  > The bundled application does *not* include Micro-Manager device adapters, these must
-  > be installed separately. (This may be done using the `Devices > Install Devices ...`
-  > menu in the GUI, or by running `mmcore install` from the command line.)
+  > The bundled application does *not* include Micro-Manager device adapters,
+  > these must be installed separately. (This may be done using the `Devices >
+  > Install Devices ...` menu in the GUI, or by running `mmcore install` from
+  > the command line.)
 
 ## Usage
 
