@@ -31,7 +31,7 @@ jobs:
           extra_args: --all-files --verbose
 
   test:
-    name: ${{ matrix.os }} py${{ matrix.python-version }} ${{ matrix.qt }}
+    name: ${{ matrix.os }} py${{ matrix.python-version }}${{ matrix.qt }}
     runs-on: ${{ matrix.os }}
     env:
       UV_FROZEN: 1
@@ -41,7 +41,7 @@ jobs:
       matrix:
         os: [macos-latest, windows-latest]
         python-version: ["3.10", "3.12", "3.13"]
-        qt: ["PyQt6"]
+        qt: [""]
         include:
           - os: windows-latest
             python-version: "3.13"
