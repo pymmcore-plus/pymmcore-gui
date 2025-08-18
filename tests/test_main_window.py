@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import sys
 from typing import TYPE_CHECKING, cast
-from unittest.mock import patch
+from unittest import mock
+from unittest.mock import PropertyMock, patch
 
 import ndv
 import pytest
 import useq
+from pymmcore_plus import CMMCorePlus
 from PyQt6.QtWidgets import QApplication, QDialog
 
 from pymmcore_gui import MicroManagerGUI
@@ -29,6 +31,25 @@ def gui(qtbot: QtBot, qapp: QApplication) -> Iterator[MicroManagerGUI]:
     gui = MicroManagerGUI()
     qtbot.addWidget(gui)
     yield gui
+
+
+def test_main_window_with_existing_core(qtbot: QtBot, qapp: QApplication) -> None:
+    """Test creating the main window with an existing core does not create a new one."""
+
+    # Get an instance
+    instance = CMMCorePlus.instance()
+    # Patch CMMCorePlus.instance to raise an error if called
+    with mock.patch(
+        "pymmcore_plus.core._mmcore_plus._instance", new_callable=PropertyMock
+    ) as mock_instance:
+
+        def throw_exc() -> None:
+            raise RuntimeError("CMMCorePlus instance should not be created")
+
+        mock_instance.side_effect = throw_exc
+        # Create an instance of the GUI
+        gui = MicroManagerGUI(mmcore=instance)
+    qtbot.addWidget(gui)
 
 
 @pytest.mark.parametrize("w_action", list(WidgetAction))
