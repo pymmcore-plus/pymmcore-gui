@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 
 import ndv
 from ndv.models import RingBuffer
-from PyQt6.QtWidgets import QApplication, QVBoxLayout, QWidget
 
+from pymmcore_gui._qt.QtWidgets import QApplication, QVBoxLayout, QWidget
 from pymmcore_gui.widgets.image_preview._preview_base import ImagePreviewBase
 
 if TYPE_CHECKING:
@@ -57,6 +57,14 @@ class NDVPreview(ImagePreviewBase):
                     shape: tuple[int, ...] = (img_height, img_width, 3)
                 else:
                     shape = (img_height, img_width)
+                # coerce packed bits to byte-aligned numpy dtype
+                # (this is how the data will actually come from pymmcore)
+                if bits <= 8:
+                    bits = 8
+                elif bits <= 16:
+                    bits = 16
+                elif bits <= 32:
+                    bits = 32
                 return (f"uint{bits}", shape)
         return None
 

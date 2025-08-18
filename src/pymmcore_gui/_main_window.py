@@ -11,9 +11,12 @@ from weakref import WeakValueDictionary
 
 from pymmcore_plus import CMMCorePlus
 from pymmcore_widgets import ConfigWizard
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction, QCloseEvent, QGuiApplication, QIcon
-from PyQt6.QtWidgets import (
+from superqt import QIconifyIcon
+
+from pymmcore_gui._qt.QtAds import CDockManager, CDockWidget, SideBarLocation
+from pymmcore_gui._qt.QtCore import Qt
+from pymmcore_gui._qt.QtGui import QAction, QCloseEvent, QGuiApplication, QIcon
+from pymmcore_gui._qt.QtWidgets import (
     QApplication,
     QDialog,
     QMainWindow,
@@ -24,8 +27,6 @@ from PyQt6.QtWidgets import (
     QToolBar,
     QWidget,
 )
-from PyQt6Ads import CDockManager, CDockWidget, SideBarLocation
-from superqt import QIconifyIcon
 
 from ._ndv_viewers import NDVViewersManager
 from ._notification_manager import NotificationManager
@@ -220,7 +221,7 @@ class MicroManagerGUI(QMainWindow):
         )
         self.dock_manager = CDockManager(self)
 
-        self._central = CDockWidget("Viewers", self)
+        self._central = CDockWidget(self.dock_manager, "Viewers", self)
         self._central.setFeature(CDockWidget.DockWidgetFeature.NoTab, True)
         blank = QWidget()
         blank.setObjectName("blank")
@@ -328,7 +329,7 @@ class MicroManagerGUI(QMainWindow):
             self._action_widgets[key] = widget
 
             action = self.get_action(key)
-            dock = CDockWidget(info.text, self)
+            dock = CDockWidget(self.dock_manager, info.text, self)
             dock.setWidget(widget, info.scroll_mode)
             dock.setObjectName(f"docked_{info.key}")
             dock.setToggleViewAction(action)
@@ -530,7 +531,7 @@ class MicroManagerGUI(QMainWindow):
         q_viewer.setWindowTitle(f"MDA {sha}")
         q_viewer.setWindowFlags(Qt.WindowType.Dialog)
 
-        dw = CDockWidget(f"ndv-{sha}")
+        dw = CDockWidget(self.dock_manager, f"ndv-{sha}", self)
         # small hack ... we need to retain a pointer to the viewer
         # otherwise the viewer will be garbage collected
         dw._viewer = ndv_viewer  # type: ignore

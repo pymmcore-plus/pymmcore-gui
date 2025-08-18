@@ -2,9 +2,12 @@ from contextlib import suppress
 from pathlib import Path
 
 from pymmcore_plus._util import system_info  # TODO: make public in pymmcore_plus
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QPixmap
-from PyQt6.QtWidgets import (
+from superqt.utils import create_worker
+
+from pymmcore_gui import __version__
+from pymmcore_gui._qt.QtCore import Qt
+from pymmcore_gui._qt.QtGui import QFont, QPixmap
+from pymmcore_gui._qt.QtWidgets import (
     QApplication,
     QDialog,
     QDialogButtonBox,
@@ -14,9 +17,6 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from superqt.utils import create_worker
-
-from pymmcore_gui import __version__
 from pymmcore_gui._utils import GH_REPO_URL, gh_link
 
 RESOURCES = Path(__file__).parent.parent / "resources"

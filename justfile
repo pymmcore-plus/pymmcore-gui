@@ -15,3 +15,7 @@ lint:
 # run tests
 test:
     uv run pytest
+
+# switch to pyside6 backend
+use-pyside:
+    uv sync --group PySide6 --no-install-package PyQt6 --no-install-package PyQt6Ads

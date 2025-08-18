@@ -5,9 +5,12 @@ import traceback
 from functools import cache, cached_property
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QTextCursor
-from PyQt6.QtWidgets import (
+from superqt.utils import CodeSyntaxHighlight
+
+from pymmcore_gui import _app
+from pymmcore_gui._qt.QtCore import Qt
+from pymmcore_gui._qt.QtGui import QTextCursor
+from pymmcore_gui._qt.QtWidgets import (
     QAbstractItemView,
     QApplication,
     QCheckBox,
@@ -22,9 +25,6 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from superqt.utils import CodeSyntaxHighlight
-
-from pymmcore_gui import _app
 from pymmcore_gui._settings import Settings
 
 if TYPE_CHECKING:

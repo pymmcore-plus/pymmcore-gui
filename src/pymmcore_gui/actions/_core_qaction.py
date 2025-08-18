@@ -3,13 +3,15 @@ from __future__ import annotations
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from PyQt6.QtGui import QAction, QIcon, QPalette
-from PyQt6.QtWidgets import QApplication
 from superqt import QIconifyIcon
+
+from pymmcore_gui._qt.QtGui import QAction, QIcon, QPalette
+from pymmcore_gui._qt.QtWidgets import QApplication
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
-    from PyQt6.QtCore import QObject
+
+    from pymmcore_gui._qt.QtCore import QMetaObject, QObject
 
     from ._action_info import ActionInfo, ActionTriggeredFunc
 
@@ -28,6 +30,9 @@ class QCoreAction(QAction):
         super().__init__(parent)
         self.mmc = mmc
         self._triggered_callback: ActionTriggeredFunc | None = None
+        # pyside6 is picky about not trying to disconnect an unconnected signal,
+        # so we manually track the connection.
+        self._triggered_connection: QMetaObject.Connection | None = None
         self.setMenuRole(QAction.MenuRole.NoRole)  # don't guess menu placement
         if info is not None:
             self.apply_info(info)
@@ -84,12 +89,11 @@ class QCoreAction(QAction):
 
         self._triggered_callback = info.on_triggered
         if info.on_triggered is None:
-            try:
-                self.triggered.disconnect(self._on_triggered)
-            except (TypeError, RuntimeError):
-                pass
+            if self._triggered_connection is not None:
+                self.triggered.disconnect(self._triggered_connection)
+                self._triggered_connection = None
         else:
-            self.triggered.connect(self._on_triggered)
+            self._triggered_connection = self.triggered.connect(self._on_triggered)
 
         if info.on_created is not None:
             info.on_created(self)

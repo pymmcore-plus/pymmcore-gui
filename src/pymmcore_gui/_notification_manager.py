@@ -5,8 +5,8 @@ from dataclasses import dataclass, field
 from itertools import count
 from typing import TYPE_CHECKING, Literal, TypeAlias
 
-from PyQt6.QtCore import QEvent, QObject, QPoint, pyqtSignal
-from PyQt6.QtWidgets import QWidget
+from pymmcore_gui._qt.QtCore import QEvent, QObject, QPoint, Signal
+from pymmcore_gui._qt.QtWidgets import QWidget
 
 from .widgets._notifications import NotificationToast
 
@@ -40,7 +40,7 @@ class Notification:
 
 
 class NotificationManager(QObject):
-    notificationAdded = pyqtSignal(Notification)
+    notificationAdded = Signal(Notification)
 
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)

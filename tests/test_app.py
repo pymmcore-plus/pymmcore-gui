@@ -2,10 +2,10 @@ import sys
 from unittest.mock import patch
 
 import pytest
-from PyQt6.QtWidgets import QApplication
 from pytest import MonkeyPatch
 
 from pymmcore_gui import __main__, _app
+from pymmcore_gui._qt.QtWidgets import QApplication
 
 
 @pytest.mark.order(0)
