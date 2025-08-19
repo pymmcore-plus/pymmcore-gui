@@ -152,6 +152,13 @@ def create_config_wizard(parent: QWidget) -> pmmw.ConfigWizard:
     return ConfigWizard(config_file=config_file, core=mmcore, parent=parent)
 
 
+def create_stage_explorer_widget(parent: QWidget) -> pmmw.StageExplorer:
+    """Create the Stage Explorer widget."""
+    from pymmcore_widgets import StageExplorer
+
+    return StageExplorer(parent=parent, mmcore=_get_core(parent))
+
+
 # ######################## WidgetAction Enum #########################
 
 
@@ -264,4 +271,12 @@ show_config_wizard = WidgetActionInfo(
     create_widget=create_config_wizard,
     dock_area=None,
     checkable=False,
+)
+
+stage_explorer_widget = WidgetActionInfo(
+    key=WidgetAction.STAGE_CONTROL,
+    text="Stage Explorer",
+    icon="mdi:map-search",
+    create_widget=create_stage_explorer_widget,
+    dock_area=DockWidgetArea.LeftDockWidgetArea,
 )
