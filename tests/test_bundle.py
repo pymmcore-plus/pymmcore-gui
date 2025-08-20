@@ -1,3 +1,4 @@
+from contextlib import suppress
 import os
 import subprocess
 import time
@@ -39,7 +40,8 @@ def app_process() -> Iterator[subprocess.Popen]:
         if proc.poll() is None:
             proc.terminate()
             try:
-                pyautogui.moveTo(1200, 600, duration=0.1)
+                with suppress(Exception):
+                    pyautogui.moveTo(1200, 600, duration=0.1)
                 proc.wait(timeout=4)
             except subprocess.TimeoutExpired:
                 proc.kill()
