@@ -57,6 +57,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - uses: pymmcore-plus/setup-mm-test-adapters@main
+        with:
+          version: 74
+
       - uses: pyvista/setup-headless-display-action@v4
         with:
           qt: true

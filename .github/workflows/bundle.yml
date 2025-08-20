@@ -29,6 +29,8 @@ jobs:
           enable-cache: true
 
       - uses: pymmcore-plus/setup-mm-test-adapters@main
+        with:
+          version: 74
 
       - name: Install the project
         run: uv sync --all-extras --dev
