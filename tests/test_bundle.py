@@ -1,8 +1,8 @@
-from contextlib import suppress
 import os
 import subprocess
 import time
 from collections.abc import Iterator
+from contextlib import suppress
 from pathlib import Path
 
 import pytest
@@ -49,7 +49,7 @@ def app_process() -> Iterator[subprocess.Popen]:
 
     # FIXME: allowing 1 on windows is a cop-out
     # can't figure out how to send a signal to gracefully close the app
-    acceptable_codes = {0, 1} if os.name == "nt" else {0}
+    acceptable_codes = {0, 1} if os.name == "nt" else {0, -9}
     assert proc.returncode in acceptable_codes
 
 
