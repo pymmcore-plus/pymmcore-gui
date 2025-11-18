@@ -172,7 +172,9 @@ testpaths = ["tests"]
 filterwarnings = [
     "error",
     "ignore:Parsing dates involving a day of month::ipykernel",
-    "ignore:Failed to disconnect:RuntimeWarning"
+    "ignore:Failed to disconnect:RuntimeWarning",
+    "ignore:Error fetching icon::superqt",
+    "ignore:.*`do_history`.*::ipykernel",
 ]
 
 # https://coverage.readthedocs.io/
