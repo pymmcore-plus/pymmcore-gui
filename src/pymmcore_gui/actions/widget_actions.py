@@ -41,6 +41,7 @@ class WidgetAction(ActionKey):
     CONSOLE = "pymmcore_gui.console"
     EXCEPTION_LOG = "pymmcore_gui.exception_log"
     STAGE_CONTROL = "pymmcore_gui.stage_control_widget"
+    STAGE_EXPLORER = "pymmcore_gui.stage_explorer_widget"
     CONFIG_WIZARD = "pymmcore_gui.hardware_config_wizard"
 
 
@@ -274,7 +275,7 @@ show_config_wizard = WidgetActionInfo(
 )
 
 stage_explorer_widget = WidgetActionInfo(
-    key=WidgetAction.STAGE_CONTROL,
+    key=WidgetAction.STAGE_EXPLORER,
     text="Stage Explorer",
     icon="mdi:map-search",
     create_widget=create_stage_explorer_widget,
