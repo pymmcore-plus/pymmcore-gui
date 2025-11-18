@@ -41,6 +41,7 @@ class WidgetAction(ActionKey):
     CONSOLE = "pymmcore_gui.console"
     EXCEPTION_LOG = "pymmcore_gui.exception_log"
     STAGE_CONTROL = "pymmcore_gui.stage_control_widget"
+    STAGE_EXPLORER = "pymmcore_gui.stage_explorer_widget"
     CONFIG_WIZARD = "pymmcore_gui.hardware_config_wizard"
 
 
@@ -150,6 +151,13 @@ def create_config_wizard(parent: QWidget) -> pmmw.ConfigWizard:
     mmcore = _get_core(parent)
     config_file = mmcore.systemConfigurationFile() or ""
     return ConfigWizard(config_file=config_file, core=mmcore, parent=parent)
+
+
+def create_stage_explorer_widget(parent: QWidget) -> pmmw.StageExplorer:
+    """Create the Stage Explorer widget."""
+    from pymmcore_widgets import StageExplorer
+
+    return StageExplorer(parent=parent, mmcore=_get_core(parent))
 
 
 # ######################## WidgetAction Enum #########################
@@ -264,4 +272,12 @@ show_config_wizard = WidgetActionInfo(
     create_widget=create_config_wizard,
     dock_area=None,
     checkable=False,
+)
+
+stage_explorer_widget = WidgetActionInfo(
+    key=WidgetAction.STAGE_EXPLORER,
+    text="Stage Explorer",
+    icon="mdi:map-search",
+    create_widget=create_stage_explorer_widget,
+    dock_area=DockWidgetArea.LeftDockWidgetArea,
 )

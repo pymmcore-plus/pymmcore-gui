@@ -39,8 +39,7 @@ dependencies = [
     "ndv[vispy]>=0.4.0",
     "pydantic-settings>=2.7.1",
     "pymmcore-plus[cli]>=0.13.2",
-    "pymmcore==11.10.0.74.0",
-    "pymmcore-widgets>=0.9.0",
+    "pymmcore-widgets>=0.10.1",
     "PyQt6==6.9.1",
     "PyQt6Ads==4.4.0.post2",
     "pyyaml>=6.0.2",
@@ -173,7 +172,9 @@ testpaths = ["tests"]
 filterwarnings = [
     "error",
     "ignore:Parsing dates involving a day of month::ipykernel",
-    "ignore:Failed to disconnect:RuntimeWarning"
+    "ignore:Failed to disconnect:RuntimeWarning",
+    "ignore:Error fetching icon::superqt",
+    "ignore:.*`do_history`.*::ipykernel",
 ]
 
 # https://coverage.readthedocs.io/
