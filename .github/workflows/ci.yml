@@ -15,14 +15,14 @@ jobs:
   check-manifest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: pipx run check-manifest
 
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
       - run: uv sync
@@ -48,15 +48,18 @@ jobs:
             qt: "PySide6"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
       - uses: pymmcore-plus/setup-mm-test-adapters@main
+        with:
+          version: 74
+
       - uses: pyvista/setup-headless-display-action@v4
         with:
           qt: true
@@ -74,7 +77,7 @@ jobs:
         run: uv run coverage run -p -m pytest -v --color=yes
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: covreport-${{ matrix.os }}-py${{ matrix.python-version }}-${{ matrix.qt }}
           path: ./.coverage*
