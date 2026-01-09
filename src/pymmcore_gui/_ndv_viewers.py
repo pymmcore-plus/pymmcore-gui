@@ -6,8 +6,9 @@ from weakref import WeakSet, WeakValueDictionary
 
 import ndv
 import useq
-from pymmcore_plus.mda.handlers import TensorStoreHandler
+from pymmcore_plus.mda.handlers import OMEWriterHandler, TensorStoreHandler
 
+from pymmcore_gui._data_wrappers import NGFFWrapper  # noqa: F401
 from pymmcore_gui._qt.QtAds import CDockWidget
 from pymmcore_gui._qt.QtCore import QObject, QTimer, Signal
 from pymmcore_gui._qt.QtWidgets import QWidget
@@ -125,6 +126,8 @@ class NDVViewersManager(QObject):
             if isinstance(handler, TensorStoreHandler):
                 # TODO: temporary. maybe create the DataWrapper for the handlers
                 viewer.data = handler.store
+            elif isinstance(handler, OMEWriterHandler):
+                viewer.data = handler.path
             else:
                 warnings.warn(
                     f"don't know how to show data of type {type(handler)}",

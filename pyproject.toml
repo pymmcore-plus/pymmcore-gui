@@ -50,6 +50,7 @@ dependencies = [
     "tqdm>=4.67.1",
     "zarr>=2.18.3,<3.0",
     "sentry-sdk>=2.20.0",
+    "yaozarrs[io]>=0.2.0",
 ]
 
 # TO USE pymmcore-nano, you need to add pymmcore-nano to dependencies
@@ -87,6 +88,9 @@ dev = [
     "types-pyinstaller>=6.11.0.20241028",
     "types-pyyaml>=6.0.12.20241230",
 ]
+
+[tool.uv.sources]
+pymmcore-plus = { git = "https://github.com/fdrgsp/pymmcore-plus", rev = "ome-writers" }
 
 [tool.hatch.metadata]
 allow-direct-references = true
