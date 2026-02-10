@@ -51,6 +51,7 @@ dependencies = [
     "zarr>=2.18.3,<3.0",
     "sentry-sdk>=2.20.0",
     "yaozarrs[io]>=0.2.0",
+    "ome-writers @ git+https://github.com/tlambert03/ome-writers@ndv-preview"
 ]
 
 # TO USE pymmcore-nano, you need to add pymmcore-nano to dependencies
@@ -90,7 +91,7 @@ dev = [
 ]
 
 [tool.uv.sources]
-pymmcore-plus = { git = "https://github.com/fdrgsp/pymmcore-plus", rev = "ome-writers" }
+pymmcore-plus = { path = "/Users/fdrgsp/Documents/git/pymmcore-plus", editable = true }
 
 [tool.hatch.metadata]
 allow-direct-references = true

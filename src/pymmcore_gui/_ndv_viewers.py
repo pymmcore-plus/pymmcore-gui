@@ -1,32 +1,66 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 from weakref import WeakSet, WeakValueDictionary
 
 import ndv
 import useq
+from ome_writers._array_view import AcquisitionView
 from pymmcore_plus.mda.handlers import OMEWriterHandler, TensorStoreHandler
 
-from pymmcore_gui._data_wrappers import NGFFWrapper  # noqa: F401
 from pymmcore_gui._qt.QtAds import CDockWidget
-from pymmcore_gui._qt.QtCore import QObject, QTimer, Signal
+from pymmcore_gui._qt.QtCore import QObject, Signal
 from pymmcore_gui._qt.QtWidgets import QWidget
 from pymmcore_gui.widgets.image_preview._ndv_preview import NDVPreview
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Hashable, Iterator, Mapping, Sequence
 
     import numpy as np
-    from ndv.models._array_display_model import (
-        IndexMap,  # pyright: ignore[reportPrivateImportUsage]
-    )
+    from ome_writers._coord_tracker import CoordUpdate
     from pymmcore_plus import CMMCorePlus
     from pymmcore_plus.mda import SupportsFrameReady
     from pymmcore_plus.metadata import FrameMetaV1, SummaryMetaV1
     from useq import MDASequence
 
     from pymmcore_gui.widgets.image_preview._preview_base import ImagePreviewBase
+
+
+class CoordsAwareDataWrapper(ndv.DataWrapper):
+    """DataWrapper that tracks acquisition progress via coordinate events.
+
+    NDV updates the viewers sliders based on the coordinate ranges returned by `coords`,
+    and you can trigger slider range updates by emitting `dims_changed`.
+    """
+
+    def __init__(self, view: AcquisitionView) -> None:
+        super().__init__(view)
+        self._view = view
+        self._current_coords: Mapping[Hashable, Sequence] = {
+            i: range(s) for i, s in zip(self.dims, self._data.shape, strict=False)
+        }
+
+    def on_coords_expanded(self, update: CoordUpdate) -> None:
+        """Called when high water marks change — expand slider ranges."""
+        self._current_coords = update.max_coords
+        self.dims_changed.emit()
+
+    @property
+    def dims(self) -> tuple[Hashable, ...]:
+        """Return dimension names."""
+        # Get dimension names from the view
+        return self._view.dims
+
+    @property
+    def coords(self) -> Mapping[Hashable, Sequence]:
+        """Return current visible coordinate ranges."""
+        return self._current_coords
+
+    @classmethod
+    def supports(cls, obj: Any) -> bool:  # type: ignore[override]
+        """Check if this wrapper supports the given object."""
+        return isinstance(obj, AcquisitionView)
 
 
 # NOTE: we make this a QObject mostly so that the lifetime of this object is tied to
@@ -61,7 +95,7 @@ class NDVViewersManager(QObject):
         # gathered using mda.get_output_handlers(), vs handlers that were created by us.
         # because we need to call frameReady/sequenceFinished manually on the latter.
         self._handler: SupportsFrameReady | None = None
-        self._own_handler: TensorStoreHandler | None = None
+        self._own_handler: OMEWriterHandler | None = None
 
         # CONNECTIONS ---------------------------------------------------------
 
@@ -101,9 +135,9 @@ class NDVViewersManager(QObject):
             # someone else has created a handler for this sequence
             self._handler = handlers[0]
         else:
-            # if it does not exist, create a new TensorStoreHandler
-            self._own_handler = TensorStoreHandler(driver="zarr", kvstore="memory://")
-            self._own_handler.reset(sequence)
+            # if it does not exist, create an internal OMEWriterHandler
+            self._own_handler = OMEWriterHandler.in_tmpdir()
+            self._own_handler.sequenceStarted(sequence, meta)
 
         # since the handler is empty at this point, create a ndv viewer with no data
         self._active_mda_viewer = self._create_ndv_viewer(sequence)
@@ -127,29 +161,33 @@ class NDVViewersManager(QObject):
                 # TODO: temporary. maybe create the DataWrapper for the handlers
                 viewer.data = handler.store
             elif isinstance(handler, OMEWriterHandler):
-                viewer.data = handler.path
+                self._setup_ome_writer_viewer(viewer, handler)
             else:
                 warnings.warn(
                     f"don't know how to show data of type {type(handler)}",
                     stacklevel=2,
                 )
-        # otherwise update the sliders to the most recently acquired frame
-        else:
-            # Add a small delay to make sure the data are available in the handler
-            # This is a bit of a hack to get around the data handlers can write data
-            # asynchronously, so the data may not be available immediately to the viewer
-            # after the handler's frameReady method is called.
-            current_index = viewer.display_model.current_index
 
-            def _update(_idx: IndexMap = current_index) -> None:
-                try:
-                    _idx.update(event.index.items())
-                except Exception:  # pragma: no cover
-                    # this happens if the viewer has been closed in the meantime
-                    # usually it's a RuntimeError, but could be an EmitLoopError
-                    pass
+    def _setup_ome_writer_viewer(
+        self, viewer: ndv.ArrayViewer, handler: OMEWriterHandler
+    ) -> None:
+        """Set up an ndv viewer with AcquisitionView and coordinate tracking."""
+        from ome_writers._array_view import AcquisitionView
 
-            QTimer.singleShot(10, _update)
+        stream = handler.stream
+        if stream is None:
+            return  # pragma: no cover
+
+        view = AcquisitionView.from_stream(stream)
+        wrapper = CoordsAwareDataWrapper(view)
+        viewer.data = wrapper
+        stream.on("coords_expanded", wrapper.on_coords_expanded)
+        stream.on(
+            "coords_changed",
+            lambda update: viewer.display_model.current_index.update(
+                update.current_indices
+            ),
+        )
 
     def _on_sequence_finished(self, sequence: useq.MDASequence) -> None:
         """Called when a sequence has finished."""
