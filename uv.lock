@@ -9,9 +9,6 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 
-[manifest]
-overrides = [{ name = "ome-writers", extras = ["tensorstore", "tifffile"], git = "https://github.com/pymmcore-plus/ome-writers" }]
-
 [[package]]
 name = "aiobotocore"
 version = "3.1.2"
@@ -1900,8 +1897,8 @@ wheels = [
 
 [[package]]
 name = "ome-writers"
-version = "0.1.1.dev11+g83ee949eb"
-source = { git = "https://github.com/pymmcore-plus/ome-writers#83ee949ebaf225e563b4e880a04e87cc339483ba" }
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -1909,6 +1906,10 @@ dependencies = [
     { name = "pydantic-extra-types" },
     { name = "typing-extensions" },
     { name = "yaozarrs", extra = ["io"] },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d5/5d/e96a10876554828c3a28fbcea94555e963eec470e58c289eea9baa744873/ome_writers-0.1.0.tar.gz", hash = "sha256:5d0950cf3fb874757085f9e785d1a570e0abaf07976964079150caa747f2d66f", size = 126796, upload-time = "2026-02-04T13:27:40.521Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ab/e0/2a25621da0a4918e3a9789bfa68eb2f750c4b37930037238af8d32bfb666/ome_writers-0.1.0-py3-none-any.whl", hash = "sha256:ba988cd700fd417781c9fac013d530e2f34f89a161228e16121fde9d6cd94f37", size = 68595, upload-time = "2026-02-04T13:27:39.089Z" },
 ]
 
 [package.optional-dependencies]
@@ -2710,7 +2711,7 @@ requires-dist = [
     { name = "ndv", extras = ["vispy"], specifier = ">=0.4.0" },
     { name = "pydantic-settings", specifier = ">=2.7.1" },
     { name = "pymmcore-plus", extras = ["cli"], editable = "../pymmcore-plus" },
-    { name = "pymmcore-widgets", specifier = ">=0.10.1" },
+    { name = "pymmcore-widgets", git = "https://github.com/fdrgsp/pymmcore-widgets?rev=add-overlap-to-explorer" },
     { name = "pyqt6", specifier = "==6.9.1" },
     { name = "pyqt6ads", specifier = "==4.4.0.post2" },
     { name = "pyyaml", specifier = ">=6.0.2" },
@@ -2923,8 +2924,8 @@ test-qt = [
 
 [[package]]
 name = "pymmcore-widgets"
-version = "0.10.1"
-source = { registry = "https://pypi.org/simple" }
+version = "0.1.dev403+gaee954a09"
+source = { git = "https://github.com/fdrgsp/pymmcore-widgets?rev=add-overlap-to-explorer#aee954a099dc49601ec7ff99e2ddbfdd72a9c7ea" }
 dependencies = [
     { name = "pymmcore-plus", extra = ["cli"] },
     { name = "pyopengl", marker = "sys_platform == 'darwin'" },
@@ -2933,10 +2934,6 @@ dependencies = [
     { name = "superqt", extra = ["cmap", "iconify", "quantity"] },
     { name = "useq-schema" },
     { name = "vispy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/50/16/6b91263088dc97e2575d02806628b981ff66bcf92e39af564becdbbfba45/pymmcore_widgets-0.10.1.tar.gz", hash = "sha256:884d7e41382384e27fcbd69871f77d8416b526e03f4643166f0a24a45b27cb27", size = 223432, upload-time = "2025-07-30T17:39:26.835Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/6f/ce/628caeababe31687f97e8d2c45c729a2705fc1c9fe43bfd83257f1b651bf/pymmcore_widgets-0.10.1-py3-none-any.whl", hash = "sha256:0bd8522473002be5c5342e4b558abc8b78b6ab59abb7d8d1e98eb40bf8a444bf", size = 249707, upload-time = "2025-07-30T17:39:25.247Z" },
 ]
 
 [[package]]

@@ -53,14 +53,16 @@ dependencies = [
     "yaozarrs[io]>=0.2.0",
 ]
 
-[tool.uv]
+# [tool.uv]
 override-dependencies = [
-    "ome-writers[tensorstore,tifffile] @ git+https://github.com/pymmcore-plus/ome-writers",  # TEMPORARY
+#     "ome-writers[tensorstore,tifffile] @ git+https://github.com/pymmcore-plus/ome-writers",  # TEMPORARY
+    "omre-writers[tensorstore,tifffile] @ git+https://github.com/fdrgsp/ome-writers@fdrgsp:fix-absolute-grid",  # TEMPORARY
 ]
 
 [tool.uv.sources]
 # REQUIRE: "git+https://github.com/pymmcore-plus/fdrgsp@refactor-runner-handlers"
 pymmcore-plus = { path = "/Users/fdrgsp/Documents/git/pymmcore-plus", editable = true }  # TEMPORARY
+pymmcore-widgets = { git = "https://github.com/fdrgsp/pymmcore-widgets", rev = "add-overlap-to-explorer"}  # TEMPORARY
 
 # TO USE pymmcore-nano, you need to add pymmcore-nano to dependencies
 # and uncomment the override-dependencies line below
