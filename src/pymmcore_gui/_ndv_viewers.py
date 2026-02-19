@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import warnings
 from typing import TYPE_CHECKING, Any, cast
 from weakref import WeakSet, WeakValueDictionary
@@ -7,7 +8,7 @@ from weakref import WeakSet, WeakValueDictionary
 import ndv
 import useq
 from ome_writers._array_view import AcquisitionView
-from pymmcore_plus.mda.handlers import OMEWriterHandler, TensorStoreHandler
+from pymmcore_plus.mda.handlers._runner_handler import OMERunnerHandler
 
 from pymmcore_gui._qt.QtAds import CDockWidget
 from pymmcore_gui._qt.QtCore import QObject, Signal
@@ -20,11 +21,22 @@ if TYPE_CHECKING:
     import numpy as np
     from ome_writers._coord_tracker import CoordUpdate
     from pymmcore_plus import CMMCorePlus
-    from pymmcore_plus.mda import SupportsFrameReady
     from pymmcore_plus.metadata import FrameMetaV1, SummaryMetaV1
     from useq import MDASequence
 
     from pymmcore_gui.widgets.image_preview._preview_base import ImagePreviewBase
+
+
+class _StreamEventBridge(QObject):
+    """Bridges ome-writers stream events to the Qt main thread.
+
+    Stream events (coords_expanded, coords_changed) fire on the writer thread.
+    This QObject re-emits them as Qt signals so that connected slots run on the
+    main thread via Qt's automatic cross-thread signal delivery.
+    """
+
+    coordsExpanded = Signal(object)
+    coordsChanged = Signal(object)
 
 
 class CoordsAwareDataWrapper(ndv.DataWrapper):
@@ -41,9 +53,17 @@ class CoordsAwareDataWrapper(ndv.DataWrapper):
             i: range(s) for i, s in zip(self.dims, self._data.shape, strict=False)
         }
 
+    def update_coords(self, update: CoordUpdate) -> None:
+        """Called when new dimensions become visible (high water marks)."""
+        # Store the latest coordinate ranges
+        self._current_coords = update.max_coords  #  type: ignore[assignment]
+        # Emit dims_changed to tell ndv to update its slider ranges
+        self.dims_changed.emit()
+        print("Updating ndv slider ranges to:\n", self._current_coords)
+
     def on_coords_expanded(self, update: CoordUpdate) -> None:
         """Called when high water marks change — expand slider ranges."""
-        self._current_coords = update.max_coords
+        self._current_coords = update.max_coords  # type: ignore[assignment]
         self.dims_changed.emit()
 
     @property
@@ -91,11 +111,7 @@ class NDVViewersManager(QObject):
         # currently active viewer
         self._active_mda_viewer: ndv.ArrayViewer | None = None
 
-        # We differentiate between handlers that were created by someone else, and
-        # gathered using mda.get_output_handlers(), vs handlers that were created by us.
-        # because we need to call frameReady/sequenceFinished manually on the latter.
-        self._handler: SupportsFrameReady | None = None
-        self._own_handler: OMEWriterHandler | None = None
+        self._handler: OMERunnerHandler | None = None
 
         # CONNECTIONS ---------------------------------------------------------
 
@@ -113,94 +129,95 @@ class NDVViewersManager(QObject):
         mda_ev.frameReady.connect(self._on_frame_ready)
         mda_ev.sequenceFinished.connect(self._on_sequence_finished)
 
+        # Monkeypatch run_mda to always inject a default writer when none is
+        # provided.  This ensures the MDA runner manages the handler lifecycle
+        # (prepare / _writeframe / cleanup) so the viewer manager only needs to
+        # create the viewer on the main thread.
+        self._patch_run_mda()
+
         parent.destroyed.connect(self._cleanup)
+
+    def _patch_run_mda(self) -> None:
+        """Wrap CMMCorePlus.run_mda to inject a default OME writer."""
+        original = self._mmc.run_mda
+
+        @functools.wraps(original)
+        def _run_mda_with_default_writer(
+            events: Any, *, output: Any = None, **kwargs: Any
+        ) -> Any:
+            if output is None:
+                output = OMERunnerHandler.in_tempdir()
+            return original(events, output=output, **kwargs)
+
+        self._mmc.run_mda = _run_mda_with_default_writer  #  type: ignore
 
     def _cleanup(self, obj: QObject | None = None) -> None:
         self._active_mda_viewer = None
         self._handler = None
-        self._own_handler = None
 
     def _on_sequence_started(
         self, sequence: useq.MDASequence, meta: SummaryMetaV1
     ) -> None:
         """Called when a new MDA sequence has been started.
 
-        We grab the first handler in the list of output handlers, or create a new
-        TensorStoreHandler if none exist. Then we create a new ndv viewer and show it.
+        We look for an OMERunnerHandler in the runner's writer handlers (which
+        the runner has already called prepare() on), or fall back to the output
+        handlers for legacy TensorStoreHandler support.
         """
         self._is_mda_running = True
+        self._handler = None
+        self._active_mda_viewer = None
 
-        self._own_handler = self._handler = None
+        # Check writer handlers first (managed by the runner via the writer= arg)
         if handlers := self._mmc.mda.get_output_handlers():
-            # someone else has created a handler for this sequence
-            self._handler = handlers[0]
-        else:
-            # if it does not exist, create an internal OMEWriterHandler
-            self._own_handler = OMEWriterHandler.in_tmpdir()
-            self._own_handler.sequenceStarted(sequence, meta)
-
-        # since the handler is empty at this point, create a ndv viewer with no data
-        self._active_mda_viewer = self._create_ndv_viewer(sequence)
+            _handler = handlers[0]
+            if not isinstance(_handler, OMERunnerHandler):
+                warnings.warn(
+                    f"Expected a OMERunnerHandler in writer handlers, got "
+                    f"{type(_handler)}.  Viewer will not be updated.",
+                    stacklevel=2,
+                )
+                return
+            self._handler = _handler
+            self._active_mda_viewer = self._create_ndv_viewer(sequence)
 
     def _on_frame_ready(
         self, frame: np.ndarray, event: useq.MDAEvent, meta: FrameMetaV1
-    ) -> None:
-        """Create a viewer if it does not exist, otherwise update the current index."""
-        # at this point the viewer should exist
-        if self._own_handler is not None:
-            self._own_handler.frameReady(frame, event, meta)
-
-        if (viewer := self._active_mda_viewer) is None:
-            return  # pragma: no cover
-
-        # if the viewer does not yet have data, it's likely the very first frame
-        # so update the viewer's data source to the underlying handlers store
-        if viewer.data_wrapper is None:
-            handler = self._handler or self._own_handler
-            if isinstance(handler, TensorStoreHandler):
-                # TODO: temporary. maybe create the DataWrapper for the handlers
-                viewer.data = handler.store
-            elif isinstance(handler, OMEWriterHandler):
-                self._setup_ome_writer_viewer(viewer, handler)
-            else:
-                warnings.warn(
-                    f"don't know how to show data of type {type(handler)}",
-                    stacklevel=2,
-                )
-
-    def _setup_ome_writer_viewer(
-        self, viewer: ndv.ArrayViewer, handler: OMEWriterHandler
-    ) -> None:
-        """Set up an ndv viewer with AcquisitionView and coordinate tracking."""
-        from ome_writers._array_view import AcquisitionView
-
-        stream = handler.stream
-        if stream is None:
-            return  # pragma: no cover
-
-        view = AcquisitionView.from_stream(stream)
-        wrapper = CoordsAwareDataWrapper(view)
-        viewer.data = wrapper
-        stream.on("coords_expanded", wrapper.on_coords_expanded)
-        stream.on(
-            "coords_changed",
-            lambda update: viewer.display_model.current_index.update(
-                update.current_indices
-            ),
-        )
+    ) -> None: ...
 
     def _on_sequence_finished(self, sequence: useq.MDASequence) -> None:
         """Called when a sequence has finished."""
-        if self._own_handler is not None:
-            self._own_handler.sequenceFinished(sequence)
-        # cleanup pointers somehow?
+        # runner handles cleanup for writer handlers
         self._is_mda_running = False
 
-    def _create_ndv_viewer(self, sequence: MDASequence) -> ndv.ArrayViewer:
-        """Create a new ndv viewer with no data."""
-        ndv_viewer = ndv.ArrayViewer()
+    def _create_ndv_viewer(self, sequence: MDASequence) -> ndv.ArrayViewer | None:
+        """Create a new ndv viewer backed by an OMERunnerHandler's stream."""
+        if self._handler is None or self._handler.stream is None:
+            return None
+        stream = self._handler.stream
+        view = AcquisitionView.from_stream(stream)
+        wrapper = CoordsAwareDataWrapper(view)
+
+        channel_kwargs: dict[str, Any] = {}
+        if len(sequence.channels) > 1:
+            channel_kwargs = {"channel_axis": "c", "channel_mode": "composite"}
+        ndv_viewer = ndv.ArrayViewer(wrapper, **channel_kwargs)
+
+        # Stream events fire on the writer thread.  Use a Qt signal bridge so
+        # viewer updates happen on the main thread.
+        bridge = _StreamEventBridge(ndv_viewer.widget())
+        bridge.coordsExpanded.connect(wrapper.on_coords_expanded)
+        bridge.coordsChanged.connect(
+            lambda update: ndv_viewer.display_model.current_index.update(
+                update.current_indices
+            ),
+        )
+        stream.on("coords_expanded", bridge.coordsExpanded.emit)
+        stream.on("coords_changed", bridge.coordsChanged.emit)
+
         self._seq_viewers[str(sequence.uid)] = ndv_viewer
         self.mdaViewerCreated.emit(ndv_viewer, sequence)
+
         return ndv_viewer
 
     def _create_or_show_img_preview(self) -> ImagePreviewBase | None:

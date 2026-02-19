@@ -48,11 +48,19 @@ dependencies = [
     "superqt[cmap,iconify]>=0.7.1",
     "tifffile>=2024.12.12",
     "tqdm>=4.67.1",
-    "zarr>=2.18.3,<3.0",
+    "zarr >=3.1.5; python_version >= '3.11'",
     "sentry-sdk>=2.20.0",
     "yaozarrs[io]>=0.2.0",
-    "ome-writers @ git+https://github.com/tlambert03/ome-writers@ndv-preview"
 ]
+
+[tool.uv]
+override-dependencies = [
+    "ome-writers[tensorstore,tifffile] @ git+https://github.com/pymmcore-plus/ome-writers",  # TEMPORARY
+]
+
+[tool.uv.sources]
+# REQUIRE: "git+https://github.com/pymmcore-plus/fdrgsp@refactor-runner-handlers"
+pymmcore-plus = { path = "/Users/fdrgsp/Documents/git/pymmcore-plus", editable = true }  # TEMPORARY
 
 # TO USE pymmcore-nano, you need to add pymmcore-nano to dependencies
 # and uncomment the override-dependencies line below
@@ -89,9 +97,6 @@ dev = [
     "types-pyinstaller>=6.11.0.20241028",
     "types-pyyaml>=6.0.12.20241230",
 ]
-
-[tool.uv.sources]
-pymmcore-plus = { path = "/Users/fdrgsp/Documents/git/pymmcore-plus", editable = true }
 
 [tool.hatch.metadata]
 allow-direct-references = true

@@ -100,10 +100,9 @@ def create_install_widgets(parent: QWidget) -> QDialog:
 
 def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
     """Create the MDA widget."""
-    # from pymmcore_gui.widgets import _MDAWidget
-    from pymmcore_widgets import MDAWidget
+    from pymmcore_gui.widgets._mda_widget import _MDAWidget
 
-    return MDAWidget(parent=parent, mmcore=_get_core(parent))
+    return _MDAWidget(parent=parent, mmcore=_get_core(parent))
 
 
 def create_camera_roi(parent: QWidget) -> pmmw.CameraRoiWidget:
