@@ -19,7 +19,7 @@ name = "pymmcore-gui"
 dynamic = ["version"]
 description = "A Micro-Manager GUI based on pymmcore-widgets and pymmcore-plus."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.14"
 license = { text = "BSD-3-Clause" }
 authors = [
     { name = "Talley Lambert", email = "talley.lambert@gmail.com" },
@@ -53,16 +53,14 @@ dependencies = [
     "yaozarrs[io]>=0.2.0",
 ]
 
-# [tool.uv]
+[tool.uv]
 override-dependencies = [
-#     "ome-writers[tensorstore,tifffile] @ git+https://github.com/pymmcore-plus/ome-writers",  # TEMPORARY
-    "omre-writers[tensorstore,tifffile] @ git+https://github.com/fdrgsp/ome-writers@fdrgsp:fix-absolute-grid",  # TEMPORARY
+    "ome-writers[tensorstore,tifffile] @ git+https://github.com/fdrgsp/ome-writers@christina",
 ]
 
 [tool.uv.sources]
-# REQUIRE: "git+https://github.com/pymmcore-plus/fdrgsp@refactor-runner-handlers"
-pymmcore-plus = { path = "/Users/fdrgsp/Documents/git/pymmcore-plus", editable = true }  # TEMPORARY
-pymmcore-widgets = { git = "https://github.com/fdrgsp/pymmcore-widgets", rev = "add-overlap-to-explorer"}  # TEMPORARY
+pymmcore-widgets = { git = "https://github.com/fdrgsp/pymmcore-widgets", rev = "christina"}
+pymmcore-plus = { git = "https://github.com/fdrgsp/pymmcore-plus", rev = "christina"}
 
 # TO USE pymmcore-nano, you need to add pymmcore-nano to dependencies
 # and uncomment the override-dependencies line below
