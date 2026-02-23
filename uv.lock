@@ -9,7 +9,10 @@ resolution-markers = [
 ]
 
 [manifest]
-overrides = [{ name = "ome-writers", extras = ["tensorstore", "tifffile"], git = "https://github.com/fdrgsp/ome-writers?rev=christina" }]
+overrides = [
+    { name = "ome-writers", extras = ["tensorstore", "tifffile"], git = "https://github.com/fdrgsp/ome-writers?rev=christina" },
+    { name = "useq-schema", git = "https://github.com/fdrgsp/useq-schema?rev=christina" },
+]
 
 [[package]]
 name = "aiobotocore"
@@ -3501,18 +3504,14 @@ wheels = [
 
 [[package]]
 name = "useq-schema"
-version = "0.8.2"
-source = { registry = "https://pypi.org/simple" }
+version = "0.0.1rc2.dev226+gec1cbc9e7"
+source = { git = "https://github.com/fdrgsp/useq-schema?rev=christina#ec1cbc9e78976be32b87cba9216feb12df328a8e" }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pydantic" },
     { name = "shapely" },
     { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/d6/6e458ca25e07b726956e1edd7fb57f0bd762af733cc184d3c580d463a62a/useq_schema-0.8.2.tar.gz", hash = "sha256:76daf878a0c4750ce900b419c3c6a0866e05a88e7bb39e495655453a6d396c97", size = 69035, upload-time = "2025-12-01T21:06:40.623Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/87/41/84baf0a3157876df43f8aebf6526f88df7003b1fd168956498f3f12d885a/useq_schema-0.8.2-py3-none-any.whl", hash = "sha256:239836c8a55d5cdfcf3be74f753977180a01c738edb98ef4f38d5eb543df83c6", size = 52915, upload-time = "2025-12-01T21:06:39.049Z" },
 ]
 
 [[package]]
