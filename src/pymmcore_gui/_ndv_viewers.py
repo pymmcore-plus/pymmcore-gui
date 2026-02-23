@@ -203,6 +203,11 @@ class NDVViewersManager(QObject):
             channel_kwargs = {"channel_axis": "c", "channel_mode": "composite"}
         ndv_viewer = ndv.ArrayViewer(wrapper, **channel_kwargs)
 
+        # Hide the ROI button. viewer_options={"show_roi_button": False} doesn't
+        # work because the Qt view only reacts to model *changes*, not initial state.
+        if roi_btn := getattr(ndv_viewer.widget(), "add_roi_btn", None):
+            roi_btn.setVisible(False)
+
         # Stream events fire on the writer thread.  Use a Qt signal bridge so
         # viewer updates happen on the main thread.
         bridge = _StreamEventBridge(ndv_viewer.widget())
