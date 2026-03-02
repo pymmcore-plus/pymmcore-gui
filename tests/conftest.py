@@ -42,11 +42,13 @@ def qapp_cls() -> type[QApplication]:
 # to create a new CMMCorePlus() for every test
 @pytest.fixture(autouse=True)
 def mmcore() -> Iterator[CMMCorePlus]:
+    # Clear the singleton so the new instance auto-registers via __init__
+    _mmcore_plus._instance = None
     mmc = CMMCorePlus()
     mmc.loadSystemConfiguration(TEST_CONFIG)
-    with patch.object(_mmcore_plus, "_instance", mmc):
-        yield mmc
+    yield mmc
     mmc.waitForSystem()
+    _mmcore_plus._instance = None
 
 
 # fresh default settings for every test
