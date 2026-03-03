@@ -58,7 +58,7 @@ jobs:
 
       - uses: pymmcore-plus/setup-mm-test-adapters@main
         with:
-          version: 74
+          version: 75
 
       - uses: pyvista/setup-headless-display-action@v4
         with:
