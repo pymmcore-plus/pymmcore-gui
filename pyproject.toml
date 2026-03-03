@@ -60,6 +60,9 @@ dependencies = [
 # [tool.uv]
 # override-dependencies = ["pymmcore ;  sys_platform == 'never'"]
 
+[tool.uv]
+constraint-dependencies = ["chardet<6"]
+
 [dependency-groups]
 # should only be used after manually uninstalling PyQt6 and PyQt6Ads
 # uv sync --group pyside --no-install-package PyQt6 --no-install-package PyQt6Ads

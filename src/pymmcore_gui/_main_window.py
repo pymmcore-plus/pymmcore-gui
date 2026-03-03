@@ -16,6 +16,7 @@ from superqt import QIconifyIcon
 from pymmcore_gui._qt.QtAds import CDockManager, CDockWidget, SideBarLocation
 from pymmcore_gui._qt.QtCore import Qt
 from pymmcore_gui._qt.QtGui import QAction, QCloseEvent, QGuiApplication, QIcon
+from pymmcore_gui._qt.QtOpenGLWidgets import QOpenGLWidget
 from pymmcore_gui._qt.QtWidgets import (
     QApplication,
     QDialog,
@@ -232,7 +233,14 @@ class MicroManagerGUI(QMainWindow):
         self._central.setWidget(blank)
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
-        # QTimer.singleShot(0, self._restore_state)
+        # Adding a QOpenGLWidget (e.g. ndv canvas) to a window that uses raster
+        # rendering forces Qt to destroy and recreate the native window with an
+        # OpenGL-compatible surface, causing a visible flash. Adding a zero-size
+        # QOpenGLWidget before the first show() ensures the window is born with
+        # the right surface type, avoiding the flash.
+        _gl = QOpenGLWidget(self)
+        _gl.setFixedSize(0, 0)
+        _gl.close()
 
     # --------------------- Properties ----------------------
 

@@ -56,10 +56,6 @@ jobs:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
-      - uses: pymmcore-plus/setup-mm-test-adapters@main
-        with:
-          version: 74
-
       - uses: pyvista/setup-headless-display-action@v4
         with:
           qt: true
@@ -72,6 +68,8 @@ jobs:
           else
             uv sync
           fi
+
+      - uses: pymmcore-plus/setup-mm-test-adapters@main
 
       - name: Test
         run: uv run coverage run -p -m pytest -v --color=yes
