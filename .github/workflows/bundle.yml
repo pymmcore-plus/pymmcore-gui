@@ -28,14 +28,12 @@ jobs:
         with:
           enable-cache: true
 
-      - uses: pymmcore-plus/setup-mm-test-adapters@main
-        with:
-          version: 75
-
       - name: Install the project
         run: uv sync --all-extras --dev
         env:
           UV_LOCKED: ${{ github.ref_name == 'main' && 1 || 0 }}
+
+      - uses: pymmcore-plus/setup-mm-test-adapters@main
 
       - name: Bundle
         shell: bash

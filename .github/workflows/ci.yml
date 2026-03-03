@@ -69,7 +69,7 @@ jobs:
             uv sync
           fi
 
-      - uses: tlambert03/setup-mm-test-adapters@support-auto-detect
+      - uses: pymmcore-plus/setup-mm-test-adapters@main
 
       - name: Test
         run: uv run coverage run -p -m pytest -v --color=yes
