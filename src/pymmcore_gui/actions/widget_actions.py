@@ -15,6 +15,8 @@ from pymmcore_gui._qt.QtWidgets import QDialog, QVBoxLayout, QWidget
 from ._action_info import ActionKey, WidgetActionInfo, _ensure_isinstance
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     import pymmcore_widgets as pmmw
 
     from pymmcore_gui._main_window import MicroManagerGUI
@@ -103,7 +105,14 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
     # from pymmcore_gui.widgets import _MDAWidget
     from pymmcore_widgets import MDAWidget
 
-    return MDAWidget(parent=parent, mmcore=_get_core(parent))
+    class _MDAWidget(MDAWidget):
+        def prepare_mda(self) -> bool | str | Path | None:
+            output = super().prepare_mda()
+            if output is None:
+                output = "memory"
+            return output
+
+    return _MDAWidget(parent=parent, mmcore=_get_core(parent))
 
 
 def create_camera_roi(parent: QWidget) -> pmmw.CameraRoiWidget:
