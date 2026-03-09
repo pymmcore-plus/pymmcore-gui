@@ -10,10 +10,7 @@ from pymmcore_gui.widgets.image_preview._preview_base import ImagePreviewBase
 
 if TYPE_CHECKING:
     import numpy as np
-    import rendercanvas.qt
     from pymmcore_plus import CMMCorePlus
-
-    class QRenderWidget(rendercanvas.qt.QRenderWidget, QWidget): ...  # pyright: ignore [reportIncompatibleMethodOverride]
 
 
 BUFFER_SIZE = 100
@@ -30,6 +27,8 @@ class NDVPreview(ImagePreviewBase):
         super().__init__(parent, mmcore, use_with_mda=use_with_mda)
         self._viewer = ndv.ArrayViewer()
         self._buffer: RingBuffer | None = None
+        self._core_dtype: tuple[str, tuple[int, ...]] | None = None
+        self._is_rgb: bool = False
         self.process_events_on_update = True
         qwdg = self._viewer.widget()
         qwdg.setParent(self)
@@ -78,7 +77,6 @@ class NDVPreview(ImagePreviewBase):
     def _init_buffer(self) -> None:
         """Create the ring buffer (without assigning to viewer yet)."""
         if (core_dtype := self._get_core_dtype_shape()) is None:
-            self._rgb = False
             return  # pragma: no cover
         self._core_dtype = core_dtype
         self._is_rgb = core_dtype[1][-1] == 3
