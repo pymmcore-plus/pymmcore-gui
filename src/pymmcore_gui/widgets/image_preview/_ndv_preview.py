@@ -16,6 +16,9 @@ if TYPE_CHECKING:
     class QRenderWidget(rendercanvas.qt.QRenderWidget, QWidget): ...  # pyright: ignore [reportIncompatibleMethodOverride]
 
 
+BUFFER_SIZE = 100
+
+
 class NDVPreview(ImagePreviewBase):
     def __init__(
         self,
@@ -44,6 +47,7 @@ class NDVPreview(ImagePreviewBase):
             if needs_setup:
                 self._apply_viewer_settings()
             self._viewer.display_model.current_index.update({0: len(self._buffer) - 1})
+            self._viewer.data_wrapper.data_changed.emit()
             if self.process_events_on_update:
                 QApplication.processEvents()
 
@@ -74,15 +78,17 @@ class NDVPreview(ImagePreviewBase):
     def _init_buffer(self) -> None:
         """Create the ring buffer (without assigning to viewer yet)."""
         if (core_dtype := self._get_core_dtype_shape()) is None:
+            self._rgb = False
             return  # pragma: no cover
         self._core_dtype = core_dtype
-        self._buffer = RingBuffer(max_capacity=100, dtype=core_dtype)
+        self._is_rgb = core_dtype[1][-1] == 3
+        self._buffer = RingBuffer(max_capacity=BUFFER_SIZE, dtype=core_dtype)
 
     def _apply_viewer_settings(self) -> None:
         """Assign the buffer to the viewer and configure display settings."""
         self._viewer.data = self._buffer
         self._viewer.display_model.visible_axes = (1, 2)
-        if self._core_dtype and self._core_dtype[1][-1] == 3:  # RGB
+        if self._is_rgb:  # RGB
             self._viewer.display_model.channel_axis = 3
             self._viewer.display_model.channel_mode = ndv.models.ChannelMode.RGBA
         else:
