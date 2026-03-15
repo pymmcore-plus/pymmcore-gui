@@ -344,6 +344,10 @@ class MicroManagerGUI(QMainWindow):
             dock.setMinimumSize(widget.minimumSize())
             dock.setIcon(action.icon())
             dock.resize(widget.sizeHint())
+            if not info.floatable:
+                dock.setFeature(
+                    CDockWidget.DockWidgetFeature.DockWidgetFloatable, False
+                )
             self._dock_widgets[key] = dock
             if area is None:
                 self.dock_manager.addDockWidgetFloating(dock)

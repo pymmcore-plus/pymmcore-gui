@@ -140,3 +140,4 @@ class WidgetActionInfo(ActionInfo):
         DockWidgetArea.RightDockWidgetArea
     )
     scroll_mode: CDockWidget.eInsertMode = CDockWidget.eInsertMode.AutoScrollArea
+    floatable: bool = True
