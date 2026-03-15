@@ -18,8 +18,6 @@ from pymmcore_gui.widgets._stage_explorer import _StageExplorer
 from ._action_info import ActionKey, WidgetActionInfo, _ensure_isinstance
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from pymmcore_gui._main_window import MicroManagerGUI
     from pymmcore_gui._qt.QtCore import QObject
     from pymmcore_gui.widgets._exception_log import ExceptionLog
@@ -103,14 +101,7 @@ def create_install_widgets(parent: QWidget) -> QDialog:
 
 def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
     """Create the MDA widget."""
-    from pymmcore_widgets import MDAWidget
-
-    class _MDAWidget(MDAWidget):
-        def prepare_mda(self) -> bool | str | Path | None:
-            output = super().prepare_mda()
-            if output is None:
-                output = "memory"
-            return output
+    from pymmcore_gui.widgets._mda_widget import _MDAWidget
 
     mda_widget = _MDAWidget(parent=parent, mmcore=_get_core(parent))
 

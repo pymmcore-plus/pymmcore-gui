@@ -38,7 +38,7 @@ classifiers = [
 dependencies = [
     "ndv[vispy]>=0.4.0",
     "pydantic-settings>=2.7.1",
-    "pymmcore-plus[cli]>=0.13.2",
+    "pymmcore-plus[cli]>=v0.18.0rc1",
     "pymmcore-widgets>=0.10.1",
     "PyQt6==6.9.1",
     "PyQt6Ads==4.4.0.post2",
