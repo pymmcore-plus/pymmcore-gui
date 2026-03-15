@@ -53,6 +53,7 @@ dependencies = [
 
 [tool.uv.sources]
 ome-writers = { git = "https://github.com/pymmcore-plus/ome-writers", rev = "main"}
+pymmcore-widgets = { git = "https://github.com/pymmcore-plus/pymmcore-widgets", rev = "main"}
 
 # TO USE pymmcore-nano, you need to add pymmcore-nano to dependencies
 # and uncomment the override-dependencies line below
