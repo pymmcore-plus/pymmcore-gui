@@ -36,7 +36,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "ndv[vispy]>=0.4.0",
+    "ndv[vispy]>=0.5.0rc4",
     "ome-writers[tensorstore,tifffile]>=0.3.0",
     "pydantic-settings>=2.7.1",
     "pymmcore-plus[cli]>=0.18.0rc1",
