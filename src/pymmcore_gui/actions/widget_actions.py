@@ -2,20 +2,23 @@
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Annotated, TypeVar, cast
 
+import pymmcore_widgets as pmmw
 from pymmcore_plus import CMMCorePlus
 
 from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea, SideBarLocation
 from pymmcore_gui._qt.QtCore import Qt
 from pymmcore_gui._qt.QtGui import QAction
 from pymmcore_gui._qt.QtWidgets import QDialog, QVBoxLayout, QWidget
+from pymmcore_gui.widgets._stage_explorer import _StageExplorer
 
 from ._action_info import ActionKey, WidgetActionInfo, _ensure_isinstance
 
 if TYPE_CHECKING:
-    import pymmcore_widgets as pmmw
+    from pathlib import Path
 
     from pymmcore_gui._main_window import MicroManagerGUI
     from pymmcore_gui._qt.QtCore import QObject
@@ -41,8 +44,8 @@ class WidgetAction(ActionKey):
     CONSOLE = "pymmcore_gui.console"
     EXCEPTION_LOG = "pymmcore_gui.exception_log"
     STAGE_CONTROL = "pymmcore_gui.stage_control_widget"
-    STAGE_EXPLORER = "pymmcore_gui.stage_explorer_widget"
     CONFIG_WIZARD = "pymmcore_gui.hardware_config_wizard"
+    STAGE_EXPLORER = "pymmcore_gui.stage_explorer_widget"
 
 
 # ######################## Functions that create widgets #########################
@@ -100,10 +103,27 @@ def create_install_widgets(parent: QWidget) -> QDialog:
 
 def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
     """Create the MDA widget."""
-    # from pymmcore_gui.widgets import _MDAWidget
     from pymmcore_widgets import MDAWidget
 
-    return MDAWidget(parent=parent, mmcore=_get_core(parent))
+    class _MDAWidget(MDAWidget):
+        def prepare_mda(self) -> bool | str | Path | None:
+            output = super().prepare_mda()
+            if output is None:
+                output = "memory"
+            return output
+
+    mda_widget = _MDAWidget(parent=parent, mmcore=_get_core(parent))
+
+    main_window = _get_mm_main_window(parent)
+    if main_window:
+        with contextlib.suppress(KeyError):
+            stage_exp = main_window.get_widget(
+                WidgetAction.STAGE_EXPLORER, create=False
+            )
+            if stage_exp and isinstance(stage_exp, _StageExplorer):
+                _setup_stage_mda_connections(stage_exp, mda_widget)
+
+    return mda_widget
 
 
 def create_camera_roi(parent: QWidget) -> pmmw.CameraRoiWidget:
@@ -153,11 +173,18 @@ def create_config_wizard(parent: QWidget) -> pmmw.ConfigWizard:
     return ConfigWizard(config_file=config_file, core=mmcore, parent=parent)
 
 
-def create_stage_explorer_widget(parent: QWidget) -> pmmw.StageExplorer:
+def create_stage_explorer_widget(parent: QWidget) -> _StageExplorer:
     """Create the Stage Explorer widget."""
-    from pymmcore_widgets import StageExplorer
+    stage_explorer = _StageExplorer(parent=parent, mmcore=_get_core(parent))
 
-    return StageExplorer(parent=parent, mmcore=_get_core(parent))
+    main_window = _get_mm_main_window(parent)
+    if main_window:
+        with contextlib.suppress(KeyError):
+            mda_wdg = main_window.get_widget(WidgetAction.MDA_WIDGET, create=False)
+            if mda_wdg and isinstance(mda_wdg, pmmw.MDAWidget):
+                _setup_stage_mda_connections(stage_explorer, mda_wdg)
+
+    return stage_explorer
 
 
 # ######################## WidgetAction Enum #########################
@@ -282,3 +309,21 @@ stage_explorer_widget = WidgetActionInfo(
     dock_area=DockWidgetArea.LeftDockWidgetArea,
     floatable=False,
 )
+
+
+def _setup_stage_mda_connections(
+    stage_explorer: _StageExplorer | None = None,
+    mda_widget: pmmw.MDAWidget | None = None,
+) -> None:
+    """Helper function to connect the StageExplorer ROIs to the MDAWidget positions."""
+    if stage_explorer is None or mda_widget is None:
+        return
+
+    def _on_send_to_mda(positions: list, clear: bool) -> None:
+        if clear:
+            mda_widget.stage_positions.setValue(positions)
+        else:
+            current = list(mda_widget.stage_positions.value() or [])
+            mda_widget.stage_positions.setValue(current + positions)
+
+    stage_explorer.sendToMDARequested.connect(_on_send_to_mda)
