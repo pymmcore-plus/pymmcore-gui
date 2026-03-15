@@ -37,6 +37,7 @@ classifiers = [
 ]
 dependencies = [
     "ndv[vispy]>=0.4.0",
+    "ome-writers[tensorstore,tifffile]>=0.3.0",
     "pydantic-settings>=2.7.1",
     "pymmcore-plus[cli]>=v0.18.0rc1",
     "pymmcore-widgets>=0.10.1",
@@ -51,6 +52,9 @@ dependencies = [
     "zarr>=2.18.3,<3.0",
     "sentry-sdk>=2.20.0",
 ]
+
+[tool.uv.sources]
+ome-writers = { git = "https://github.com/pymmcore-plus/ome-writers", rev = "main"}
 
 # TO USE pymmcore-nano, you need to add pymmcore-nano to dependencies
 # and uncomment the override-dependencies line below
