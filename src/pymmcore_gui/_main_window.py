@@ -523,7 +523,7 @@ class MicroManagerGUI(QMainWindow):
         # if the widget is a dock widget, we want to toggle the dock widget
         # rather than the inner widget
         if action.key in self._dock_widgets:
-            widget = cast("QWidget", self.get_dock_widget(action.key))
+            widget = self.get_dock_widget(action.key)
         else:
             # this will create the widget if it doesn't exist yet,
             # e.g. for a click event on a Toolbutton that doesn't yet have a widget
