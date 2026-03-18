@@ -107,13 +107,12 @@ class NotificationManager(QObject):
     def notifications(self) -> tuple[Notification, ...]:
         return tuple(self._notifications)
 
-    def eventFilter(self, watched: QObject | None, event: QEvent | None) -> bool:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         """Handles parent resize/move events to reposition notifications."""
-        if (
-            event
-            and watched == self.parent()
-            and event.type() in {QEvent.Type.Resize, QEvent.Type.Move}
-        ):
+        if watched == self.parent() and event.type() in {
+            QEvent.Type.Resize,
+            QEvent.Type.Move,
+        }:
             self.reposition_notifications()
         return super().eventFilter(watched, event)
 

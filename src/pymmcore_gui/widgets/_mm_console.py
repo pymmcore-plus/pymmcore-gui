@@ -56,7 +56,8 @@ class MMConsole(QtConsole):
 
         # this makes calling `setFocus()` on a QtConsole give keyboard focus to
         # the underlying `QTextEdit` widget
-        cast("QWidget", self).setFocusProxy(self._control)
+        if self._control is not None:
+            cast("QWidget", self).setFocusProxy(self._control)
 
         # Create an in-process kernel
         self.kernel_manager = QtInProcessKernelManager()
@@ -140,7 +141,7 @@ class MMConsole(QtConsole):
     # the `parent` method is broken by setting it to traitlets.Instance
     # this may have unintended consequences, but having `parent` not return a QObject
     # is a bigger problem
-    def parent(self) -> QObject | None:
+    def parent(self) -> QObject:
         return QWidget.parent(self)
 
     parent._find_my_config = lambda cfg: _FakeCfg()  # type: ignore
