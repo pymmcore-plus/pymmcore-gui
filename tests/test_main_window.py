@@ -59,7 +59,7 @@ def test_main_window_core_actions(gui: MicroManagerGUI, c_action: CoreAction) ->
 
 # this warning only occurs on PySide6 for some reason
 @pytest.mark.filterwarnings("ignore:No device with label")
-def test_shutter_toolbar(gui: MicroManagerGUI) -> None:
+def test_shutter_toolbar(gui: MicroManagerGUI, qtbot: QtBot) -> None:
     sh_toolbar = ShuttersToolbar(gui._mmc, gui)
 
     # in our test cfg we have 3 shutters
@@ -68,7 +68,8 @@ def test_shutter_toolbar(gui: MicroManagerGUI) -> None:
     assert len(sh_toolbar.actions()) == 3
 
     # loading default cfg
-    gui._mmc.loadSystemConfiguration()
+    with qtbot.waitSignal(gui._mmc.events.systemConfigurationLoaded):
+        gui._mmc.loadSystemConfiguration()
     # in our test cfg we have 2 shutters
     assert layout.count() == 2
     assert len(sh_toolbar.actions()) == 2

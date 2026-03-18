@@ -63,6 +63,9 @@ dependencies = [
 [tool.uv]
 constraint-dependencies = ["chardet<6"]
 
+[tool.uv.sources]
+pyside6-stubs = { git = "https://github.com/tlambert03/PySide6-stubs", rev = "v6.9.1" }
+
 [dependency-groups]
 # should only be used after manually uninstalling PyQt6 and PyQt6Ads
 # uv sync --group pyside --no-install-package PyQt6 --no-install-package PyQt6Ads
@@ -79,9 +82,10 @@ dev = [
     "diff-cover>=9.2.4",
     "ipython>=8.30.0",
     "mypy>=1.13.0",
-    "pre-commit-uv>=4.0",
+    "prek>=0.3.5",
     "pyinstaller>=6.11.1",
     "pyright>=1.1.392.post0",
+    "pyside6-stubs",
     "rich>=13.9.4",
     "ruff>=0.8.3",
     "rust-just>=1.38.0",
@@ -159,12 +163,17 @@ plugins = ["pydantic.mypy"]
 module = ["qtconsole.*", "pydevd.*", "pygfx.*", "rendercanvas.*", "pytestqt.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["PyQt6.*"]
+follow_imports = "skip"
+
 
 [tool.pyright]
 include = ["src", "tests"]
 pythonVersion = "3.10"
 enableExperimentalFeatures = true
 reportMissingImports = false
+reportMissingModuleSource = false
 verboseOutput = true
 venv = ".venv"
 
