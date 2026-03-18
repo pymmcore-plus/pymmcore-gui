@@ -5,11 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypeAlias
 
 if TYPE_CHECKING:
-    from PyQt6 import QtCore
-    from PyQt6.QtCore import *
-    # from PySide6.QtCore import *
-
-    Signal: TypeAlias = QtCore.pyqtSignal
+    from PySide6.QtCore import *
 else:
     try:
         from PyQt6.QtCore import *

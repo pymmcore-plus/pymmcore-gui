@@ -79,7 +79,7 @@ class ImagePreviewBase(QWidget):
             self.killTimer(self._timer_id)
             self._timer_id = self.startTimer(int(value), Qt.TimerType.PreciseTimer)
 
-    def timerEvent(self, a0: QTimerEvent | None) -> None:
+    def timerEvent(self, a0: QTimerEvent) -> None:
         if (core := self._mmc) and core.getRemainingImageCount() > 0:
             try:
                 img = core.fixImage(core.getLastImage())

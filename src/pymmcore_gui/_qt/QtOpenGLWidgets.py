@@ -5,8 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from PyQt6.QtOpenGLWidgets import *
-    # from PySide6.QtOpenGLWidgets import *
+    from PySide6.QtOpenGLWidgets import *
 else:
     try:
         from PyQt6.QtOpenGLWidgets import *
