@@ -8,6 +8,9 @@
 - `ConfigWizard` connection-parameter window is too small and not resizable. ✅ fixed in widgets
 - When the stage pos pool is on in `StageExplorer`, the image preview is very laggy. ✅ fixed in widgets
 - `StageExplorer` crashes the GUI when popped out from the main window. ✅
+- Subclass and modify `PixelConfigurationWidget`; its window remains open after closing
+  the widget. ✅
+
 
 
 - `LMM5` reload fails in pymmcore-gui but works in Java Micro-Manager; likely a Hub
@@ -21,10 +24,6 @@
 
 
 - `ShuttersToolbar` should refresh after creating a new cfg via `ConfigWizard`.
-
-
-- Subclass and modify `PixelConfigurationWidget`; its window remains open after closing
-  the widget.
 
 
 - `StagesControlWidget` is very large on Windows; adjust sizing.
