@@ -51,10 +51,6 @@ dependencies = [
     "tqdm>=4.67.1",
 ]
 
-[tool.uv.sources]
-ome-writers = { git = "https://github.com/pymmcore-plus/ome-writers", rev = "main"}
-pymmcore-widgets = { git = "https://github.com/fdrgsp/pymmcore-widgets", rev = "main"}
-
 # TO USE pymmcore-nano, you need to add pymmcore-nano to dependencies
 # and uncomment the override-dependencies line below
 # currently, pymmcore-nano has some issues related to threading that need to be solved
@@ -68,6 +64,8 @@ constraint-dependencies = ["chardet<6"]
 
 [tool.uv.sources]
 pyside6-stubs = { git = "https://github.com/tlambert03/PySide6-stubs", rev = "v6.9.1" }
+ome-writers = { git = "https://github.com/pymmcore-plus/ome-writers", rev = "main"}
+pymmcore-widgets = { git = "https://github.com/fdrgsp/pymmcore-widgets", rev = "main"}
 
 [dependency-groups]
 # should only be used after manually uninstalling PyQt6 and PyQt6Ads
