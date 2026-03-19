@@ -238,12 +238,12 @@ Privacy Policy</a></small></em>"""
         layout.addWidget(button_box)
         self.setLayout(layout)
 
-    def closeEvent(self, a0: QCloseEvent | None) -> None:
+    def closeEvent(self, a0: QCloseEvent) -> None:
         self._result = -1
         super().closeEvent(a0)
 
-    def keyPressEvent(self, a0: QKeyEvent | None) -> None:
-        if a0 and a0.key() == Qt.Key.Key_Escape:
+    def keyPressEvent(self, a0: QKeyEvent) -> None:
+        if a0.key() == Qt.Key.Key_Escape:
             self._result = -1
         super().keyPressEvent(a0)
 
