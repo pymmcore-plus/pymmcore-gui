@@ -220,6 +220,12 @@ class MicroManagerGUI(QMainWindow):
             CDockManager.eAutoHideFlag.AutoHideFeatureEnabled, True
         )
         self.dock_manager = CDockManager(self)
+        # Fix: QtAds default stylesheet uses palette(dark) for inactive tab text,
+        # which is invisible on Windows dark themes.
+        self.dock_manager.setStyleSheet(
+            self.dock_manager.styleSheet()
+            + "\nads--CDockWidgetTab QLabel { color: palette(placeholder-text); }"
+        )
 
         self._central = CDockWidget(self.dock_manager, "Viewers", self)
         self._central.setFeature(CDockWidget.DockWidgetFeature.NoTab, True)
