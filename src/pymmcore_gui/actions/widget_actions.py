@@ -133,9 +133,9 @@ def create_config_groups(parent: QWidget) -> pmmw.GroupPresetTableWidget:
 
 def create_pixel_config(parent: QWidget) -> pmmw.PixelConfigurationWidget:
     """Create the Pixel Configuration widget."""
-    from pymmcore_widgets import PixelConfigurationWidget
+    from pymmcore_gui.widgets._pixel_config import _PixelConfigurationWidget
 
-    return PixelConfigurationWidget(parent=parent, mmcore=_get_core(parent))
+    return _PixelConfigurationWidget(parent=parent, mmcore=_get_core(parent))
 
 
 def create_exception_log(parent: QWidget) -> ExceptionLog:
