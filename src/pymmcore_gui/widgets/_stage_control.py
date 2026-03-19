@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from itertools import chain
+from typing import TYPE_CHECKING
 
 from pymmcore_plus import CMMCorePlus, DeviceType
 from pymmcore_widgets import StageWidget
@@ -13,7 +14,29 @@ from pymmcore_gui._qt.QtWidgets import (
     QWidget,
 )
 
+if TYPE_CHECKING:
+    from qtpy.QtGui import QWheelEvent
+
 STAGE_DEVICES = {DeviceType.Stage, DeviceType.XYStage}
+
+
+class _StageWidget(StageWidget):
+    """Stage control widget with wheel event for z-axis control."""
+
+    def wheelEvent(self, event: QWheelEvent | None) -> None:
+        if event is None:
+            return
+        delta = event.angleDelta().y()
+        increment = self._step.value()
+        # Use StageWidget's move helpers: build a relative move value and
+        # delegate to the existing _do_move implementation.
+        if delta > 0:
+            val = (0.0, increment) if getattr(self, "_is_2axis", False) else increment
+            self._do_move(val, relative=True)
+        elif delta < 0:
+            val = (0.0, -increment) if getattr(self, "_is_2axis", False) else -increment
+            self._do_move(val, relative=True)
+        super().wheelEvent(event)
 
 
 class _Group(QGroupBox):
@@ -48,12 +71,12 @@ class StagesControlWidget(QWidget):
         self._clear()
 
         stages = chain(
-            self._mmc.getLoadedDevicesOfType(DeviceType.XYStage),  # pyright: ignore [reportArgumentType]
-            self._mmc.getLoadedDevicesOfType(DeviceType.Stage),  # pyright: ignore [reportArgumentType]
+            self._mmc.getLoadedDevicesOfType(DeviceType.XYStage),
+            self._mmc.getLoadedDevicesOfType(DeviceType.Stage),
         )
         for idx, stage_dev in enumerate(stages):
             bx = _Group(stage_dev, self)
-            stage = StageWidget(device=stage_dev, parent=bx, mmcore=self._mmc)
+            stage = _StageWidget(device=stage_dev, parent=bx, mmcore=self._mmc)
             if (lay := bx.layout()) is not None:
                 lay.addWidget(stage)
             self._layout.addWidget(bx, idx // 2, idx % 2)

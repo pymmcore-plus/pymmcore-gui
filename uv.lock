@@ -2730,7 +2730,7 @@ requires-dist = [
     { name = "ome-writers", extras = ["tensorstore", "tifffile"], git = "https://github.com/pymmcore-plus/ome-writers?rev=main" },
     { name = "pydantic-settings", specifier = ">=2.7.1" },
     { name = "pymmcore-plus", extras = ["cli"], specifier = ">=0.18.0rc1" },
-    { name = "pymmcore-widgets", git = "https://github.com/fdrgsp/pymmcore-widgets?rev=add-overlap-to-explorer" },
+    { name = "pymmcore-widgets", git = "https://github.com/fdrgsp/pymmcore-widgets?rev=main" },
     { name = "pyqt6", specifier = "==6.9.1" },
     { name = "pyqt6ads", specifier = "==4.4.0.post2" },
     { name = "pyyaml", specifier = ">=6.0.2" },
@@ -2805,8 +2805,8 @@ cli = [
 
 [[package]]
 name = "pymmcore-widgets"
-version = "0.1.dev438+g2d06774c4"
-source = { git = "https://github.com/fdrgsp/pymmcore-widgets?rev=add-overlap-to-explorer#2d06774c4caed56c3ba5efd781e451e12baeb7af" }
+version = "0.1.dev491+ga1ff6d4ac"
+source = { git = "https://github.com/fdrgsp/pymmcore-widgets?rev=main#a1ff6d4ac4f8de0e0b1d1af77fa68f856eec616e" }
 dependencies = [
     { name = "pymmcore-plus", extra = ["cli"] },
     { name = "pyopengl", marker = "sys_platform == 'darwin'" },
