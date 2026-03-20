@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Annotated, TypeVar, cast
 
+import pymmcore_widgets as pmmw
 from pymmcore_plus import CMMCorePlus
 
 from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea, SideBarLocation
@@ -15,8 +16,6 @@ from pymmcore_gui._qt.QtWidgets import QDialog, QVBoxLayout, QWidget
 from ._action_info import ActionKey, WidgetActionInfo, _ensure_isinstance
 
 if TYPE_CHECKING:
-    import pymmcore_widgets as pmmw
-
     from pymmcore_gui._main_window import MicroManagerGUI
     from pymmcore_gui._qt.QtCore import QObject
     from pymmcore_gui.widgets._exception_log import ExceptionLog
@@ -122,9 +121,21 @@ def create_config_groups(parent: QWidget) -> pmmw.GroupPresetTableWidget:
 
 def create_pixel_config(parent: QWidget) -> pmmw.PixelConfigurationWidget:
     """Create the Pixel Configuration widget."""
-    from pymmcore_gui.widgets._pixel_config import _PixelConfigurationWidget
+    from pymmcore_gui._qt.QtAds import CDockWidget
 
-    return _PixelConfigurationWidget(parent=parent, mmcore=_get_core(parent))
+    class PixelConfigurationWidget(pmmw.PixelConfigurationWidget):
+        def close(self) -> bool:
+            # Hide the parent CDockWidget container instead of closing this widget,
+            # so the widget is preserved and can be reopened.
+            parent = self.parent()
+            while parent is not None:
+                if isinstance(parent, CDockWidget):
+                    parent.toggleView(False)
+                    return True
+                parent = parent.parent()
+            return super().close()
+
+    return PixelConfigurationWidget(parent=parent, mmcore=_get_core(parent))
 
 
 def create_exception_log(parent: QWidget) -> ExceptionLog:
