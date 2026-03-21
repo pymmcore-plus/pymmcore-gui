@@ -126,7 +126,10 @@ def create_pixel_config(parent: QWidget) -> pmmw.PixelConfigurationWidget:
     class PixelConfigurationWidget(pmmw.PixelConfigurationWidget):
         def close(self) -> bool:
             # Hide the parent CDockWidget container instead of closing this widget,
-            # so the widget is preserved and can be reopened.
+            # so the widget is preserved and can be reopened. Qt-ADS may nest this
+            # widget inside intermediate containers (e.g. a scroll area or wrapper
+            # widget) before the CDockWidget ancestor, so we need to walk up the parent
+            # chain to find it
             parent = self.parent()
             while parent is not None:
                 if isinstance(parent, CDockWidget):
