@@ -85,9 +85,12 @@ class ShuttersToolbar(QToolBar):
         )
 
         for idx, shutter in enumerate(shutters_devs):
-            s = ShuttersWidget(shutter, autoshutter=idx == len(shutters_devs) - 1)
-            s.button_text_open = shutter
-            s.button_text_closed = shutter
+            s = ShuttersWidget(
+                shutter,
+                button_text_open=shutter,
+                button_text_closed=shutter,
+                autoshutter=idx == len(shutters_devs) - 1
+            )
             self.addWidget(s)
 
     def _clear_shutter_toolbar(self) -> None:
