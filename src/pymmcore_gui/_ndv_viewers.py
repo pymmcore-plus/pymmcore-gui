@@ -101,13 +101,20 @@ class NDVViewersManager(QObject):
         current_index = viewer.display_model.current_index
         wrapper = viewer.data_wrapper
 
+        # ome-writers flattens both "p" (position) and "g" (grid) into a single
+        # "p" dimension, but useq events may use Axis.GRID ("g") as the key.
+        # Remap so the viewer can find the correct axis.
+        index = {
+            ("p" if str(k) == "g" else k): v for k, v in event.index.items()
+        }
+
         def _update(_idx: IndexMap = current_index) -> None:
             try:
                 # Update dims/sliders in the main thread (see note in
                 # _on_sequence_started about why we don't use coords_changed).
                 if wrapper is not None:
                     wrapper.dims_changed.emit()
-                _idx.update(event.index.items())
+                _idx.update(index.items())
             except Exception:  # pragma: no cover
                 # this happens if the viewer has been closed in the meantime
                 # usually it's a RuntimeError, but could be an EmitLoopError
