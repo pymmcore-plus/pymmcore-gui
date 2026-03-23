@@ -3,6 +3,7 @@ import subprocess
 import sys
 from contextlib import suppress
 from pathlib import Path
+from typing import Literal
 
 import typer
 
@@ -55,6 +56,11 @@ def _main(
         resolve_path=True,
         help="Path to MM hardware config file.",
     ),
+    theme: Literal["dark", "light"] = typer.Option(
+        "dark",
+        "--theme",
+        help="Use dark theme.",
+    ),
 ) -> None:
     """mmgui: pymmcore-gui command line (v{version}).
 
@@ -101,12 +107,28 @@ def run(
         "--no-telemetry",
         help="Disable telemetry.",
     ),
+    theme: Literal["dark", "light"] = typer.Option(
+        "dark",
+        "--theme",
+        help="Use dark theme.",
+    ),
+    qstyle: Literal["qlementine", "fusion", "native"] = typer.Option(
+        "qlementine",
+        "--qstyle",
+        help="The QStyle to use for the application.  Default is 'qlementine'.",
+    ),
 ) -> None:
     """Run the Micro-Manager GUI (this is the default command)."""
     from pymmcore_gui import create_mmgui
 
     mm_config = "MMConfig_demo.cfg" if demo_config else config
-    create_mmgui(mm_config=mm_config, exec_app=True, install_sentry=not no_telemetry)
+    create_mmgui(
+        mm_config=mm_config,
+        exec_app=True,
+        install_sentry=not no_telemetry,
+        theme=theme,
+        qstyle=qstyle,
+    )
     sys.exit(0)
 
 

@@ -28,11 +28,13 @@ class _StageExplorer(StageExplorer):
             "Send to MDA",
         )
         # move the action right after scan_action
+        actions = self._toolbar.actions()
+        idx = actions.index(
+            self._toolbar.scan_action  # pyright: ignore[reportArgumentType]
+        )
         self._toolbar.insertAction(
-            self._toolbar.actions()[
-                self._toolbar.actions().index(self._toolbar.scan_action) + 1
-            ],
-            self._send_to_mda_action,
+            actions[idx + 1],
+            self._send_to_mda_action,  # pyright: ignore[reportArgumentType]
         )
         self._send_to_mda_action.triggered.connect(self._on_send_to_mda)
 
