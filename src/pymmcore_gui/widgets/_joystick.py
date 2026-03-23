@@ -207,7 +207,7 @@ class StageJoystick(QWidget):
 
     def _on_deflection(self, dx: float, dy: float) -> None:
         # Micromanager coordinate system is +X -> stage moves left
-        # and +Y -> stage moves down (opposite of X situation).
+        # and +Y -> stage moves up (opposite of X situation).
         # we want the vector of deflection to go in the same direction as stage movement
         # so invert Y here.
         # https://micro-manager.org/Coordinates_and_Directionality
