@@ -206,10 +206,12 @@ class StageJoystick(QWidget):
         layout.addWidget(self._joystick)
 
     def _on_deflection(self, dx: float, dy: float) -> None:
-        # NB: invert the joystick deflection so pushing up gives negative dy,
-        # and pushing right gives positive dx
+        # Negate X so drag-right moves stage left (content shifts right).
+        # Keep Y as-is: _normalized() already flips screen-Y, so drag-up
+        # increases stage Y which shifts content up on screen.
+        # https://micro-manager.org/Coordinates_and_Directionality
         self._dx = -dx
-        self._dy = -dy
+        self._dy = dy
         if not self._tick_timer.isActive() and (dx or dy):
             self._tick_timer.start()
 
