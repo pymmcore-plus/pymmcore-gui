@@ -104,9 +104,7 @@ class NDVViewersManager(QObject):
         # ome-writers flattens both "p" (position) and "g" (grid) into a single
         # "p" dimension, but useq events may use Axis.GRID ("g") as the key.
         # Remap so the viewer can find the correct axis.
-        index = {
-            ("p" if str(k) == "g" else k): v for k, v in event.index.items()
-        }
+        index = {("p" if str(k) == "g" else k): v for k, v in event.index.items()}
 
         def _update(_idx: IndexMap = current_index) -> None:
             try:
