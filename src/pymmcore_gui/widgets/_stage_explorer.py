@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import useq
 from pymmcore_widgets import StageExplorer
 from pymmcore_widgets.control._rois.roi_manager import GRAY
 from superqt import QIconifyIcon
@@ -37,6 +38,19 @@ class _StageExplorer(StageExplorer):
             self._send_to_mda_action,  # pyright: ignore[reportArgumentType]
         )
         self._send_to_mda_action.triggered.connect(self._on_send_to_mda)
+
+    def _on_scan_action(self) -> None:
+        """Override to pass output='memory' so the ndv viewer gets data."""
+        if not (active_rois := self.roi_manager.selected_rois()):
+            return
+        active_roi = active_rois[0]
+
+        overlap, mode = self._toolbar.scan_menu.value()
+        if plan := active_roi.create_grid_plan(*self._fov_w_h(), overlap, mode):
+            seq = useq.MDASequence(grid_plan=plan)
+            if not self._mmc.mda.is_running():
+                self._our_mda_running = True
+                self._mmc.run_mda(seq, output="memory")
 
     def _on_send_to_mda(self) -> None:
         z_pos = self._mmc.getZPosition()
