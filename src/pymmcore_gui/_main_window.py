@@ -31,7 +31,7 @@ from pymmcore_gui._qt.QtWidgets import (
 from ._ndv_viewers import NDVViewersManager
 from ._notification_manager import NotificationManager
 from ._settings import Settings
-from .actions import CoreAction, QCoreAction, WidgetAction, WidgetActionInfo
+from .actions import CoreAction, HelpAction, QCoreAction, WidgetAction, WidgetActionInfo
 from .actions._action_info import ActionInfo
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
@@ -138,7 +138,6 @@ class MicroManagerGUI(QMainWindow):
     # Menus are a mapping of strings to either a list of ActionKeys or a callable
     # that takes a CMMCorePlus instance and QMainWindow and returns a QMenu.
     MENUS: Mapping[str, MenuDictValue] = {
-        Menu.PYMM_GUI: [WidgetAction.ABOUT],
         Menu.WINDOW: _create_window_menu,
         Menu.DEVICE: [
             WidgetAction.PROP_BROWSER,
@@ -150,7 +149,13 @@ class MicroManagerGUI(QMainWindow):
             None,
             WidgetAction.INSTALL_DEVICES,
         ],
-        Menu.HELP: [],
+        Menu.HELP: [
+            HelpAction.DOCUMENTATION,
+            HelpAction.FORUM,
+            HelpAction.REPORT_ISSUE,
+            None,
+            WidgetAction.ABOUT,
+        ],
     }
 
     def __init__(self, *, mmcore: CMMCorePlus | None = None) -> None:
