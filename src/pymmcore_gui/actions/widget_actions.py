@@ -133,9 +133,24 @@ def create_config_groups(parent: QWidget) -> pmmw.GroupPresetTableWidget:
 
 def create_pixel_config(parent: QWidget) -> pmmw.PixelConfigurationWidget:
     """Create the Pixel Configuration widget."""
-    from pymmcore_gui.widgets._pixel_config import _PixelConfigurationWidget
+    from pymmcore_gui._qt.QtAds import CDockWidget
 
-    return _PixelConfigurationWidget(parent=parent, mmcore=_get_core(parent))
+    class PixelConfigurationWidget(pmmw.PixelConfigurationWidget):
+        def close(self) -> bool:
+            # Hide the parent CDockWidget container instead of closing this widget,
+            # so the widget is preserved and can be reopened. Qt-ADS may nest this
+            # widget inside intermediate containers (e.g. a scroll area or wrapper
+            # widget) before the CDockWidget ancestor, so we need to walk up the parent
+            # chain to find it
+            parent = self.parent()
+            while parent is not None:
+                if isinstance(parent, CDockWidget):
+                    parent.toggleView(False)
+                    return True
+                parent = parent.parent()
+            return super().close()
+
+    return PixelConfigurationWidget(parent=parent, mmcore=_get_core(parent))
 
 
 def create_exception_log(parent: QWidget) -> ExceptionLog:
