@@ -23,6 +23,8 @@ class OCToolBar(QToolBar):
         mmc.events.channelGroupChanged.connect(self._refresh)
         mmc.events.configSet.connect(self._on_config_set)
         mmc.events.propertyChanged.connect(self._on_property_changed)
+        mmc.events.configDefined.connect(self._refresh)
+        mmc.events.configDeleted.connect(self._refresh)
         self._refresh()
 
     def _on_config_set(self, group: str, config: str) -> None:
