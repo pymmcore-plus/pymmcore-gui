@@ -112,6 +112,11 @@ def run(
         "--theme",
         help="Use dark theme.",
     ),
+    qstyle: Literal["qlementine", "fusion", "native"] = typer.Option(
+        "qlementine",
+        "--qstyle",
+        help="The QStyle to use for the application.  Default is 'qlementine'.",
+    ),
 ) -> None:
     """Run the Micro-Manager GUI (this is the default command)."""
     from pymmcore_gui import create_mmgui
@@ -121,7 +126,8 @@ def run(
         mm_config=mm_config,
         exec_app=True,
         install_sentry=not no_telemetry,
-        dark_theme=theme == "dark",
+        theme=theme,
+        qstyle=qstyle,
     )
     sys.exit(0)
 
