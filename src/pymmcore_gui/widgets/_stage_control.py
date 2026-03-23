@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pymmcore_plus import CMMCorePlus, DeviceType
 from pymmcore_widgets import StageWidget
 
-from pymmcore_gui._qt.Qlementine import SegmentedControl
+from pymmcore_gui._qt.Qlementine import SegmentedControl  # type: ignore[attr-defined]
 from pymmcore_gui._qt.QtWidgets import (
     QHBoxLayout,
     QSizePolicy,
@@ -108,6 +108,6 @@ class _XYWrapper(QWidget):
         self._stack.addWidget(dpad)
         layout.addWidget(self._stack)
 
-        self._mode_tabs.currentIndexChanged.connect(
+        self._mode_tabs.currentIndexChanged.connect(  # pyright: ignore[reportAttributeAccessIssue]
             lambda: self._stack.setCurrentIndex(self._mode_tabs.currentIndex())
         )

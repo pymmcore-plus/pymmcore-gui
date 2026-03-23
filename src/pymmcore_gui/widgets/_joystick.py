@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, ClassVar
 
 from pymmcore_widgets.control._q_stage_controller import QStageMoveAccumulator
 
-from pymmcore_gui._qt.Qlementine import SegmentedControl
+from pymmcore_gui._qt.Qlementine import SegmentedControl  # type: ignore[attr-defined]
 from pymmcore_gui._qt.QtCore import QPointF, QSize, Qt, QTimer, Signal
 from pymmcore_gui._qt.QtGui import QBrush, QPainter, QPen, QRadialGradient
 from pymmcore_gui._qt.QtWidgets import (
@@ -71,7 +71,7 @@ class JoystickWidget(QWidget):
         if r <= 0:
             return (0.0, 0.0)
         dx = self._knob_pos.x() / r
-        dy = self._knob_pos.y() / r
+        dy = -self._knob_pos.y() / r
         mag = math.hypot(dx, dy)
         if mag < self._dead_zone:
             return (0.0, 0.0)
@@ -82,7 +82,7 @@ class JoystickWidget(QWidget):
     # ---- mouse handling ----
 
     def mousePressEvent(self, ev: QMouseEvent) -> None:
-        if ev.button() == Qt.MouseButton.LeftButton:
+        if ev.button() == Qt.MouseButton.LeftButton:  # type: ignore[comparison-overlap]
             self._dragging = True
             self._update_knob(ev.position())
         super().mousePressEvent(ev)
@@ -93,7 +93,7 @@ class JoystickWidget(QWidget):
         super().mouseMoveEvent(ev)
 
     def mouseReleaseEvent(self, ev: QMouseEvent) -> None:
-        if ev.button() == Qt.MouseButton.LeftButton:
+        if ev.button() == Qt.MouseButton.LeftButton:  # type: ignore[comparison-overlap]
             self._dragging = False
             self._knob_pos = QPointF(0, 0)
             self.update()
@@ -225,15 +225,15 @@ STEP_SIZES = [0.1, 1, 10, 100, 1000]
 STEP_LABELS = ["0.1", "1", "10", "100", "1k"]
 
 _DPAD_BUTTONS: dict[int, tuple[str, int, int]] = {
-    0: ("\u2196", -1, -1),
-    1: ("\u25b2", 0, -1),
-    2: ("\u2197", 1, -1),
+    0: ("\u2196", -1, 1),
+    1: ("\u25b2", 0, 1),
+    2: ("\u2197", 1, 1),
     3: ("\u25c0", -1, 0),
     4: ("\u25ce", 0, 0),  # home
     5: ("\u25b6", 1, 0),
-    6: ("\u2199", -1, 1),
-    7: ("\u25bc", 0, 1),
-    8: ("\u2198", 1, 1),
+    6: ("\u2199", -1, -1),
+    7: ("\u25bc", 0, -1),
+    8: ("\u2198", 1, -1),
 }
 
 
@@ -299,7 +299,7 @@ class DPadWidget(QWidget):
 
     @property
     def step_size(self) -> float:
-        return STEP_SIZES[self._step_ctrl.currentIndex()]
+        return float(STEP_SIZES[self._step_ctrl.currentIndex()])
 
     def _on_dpad(self, idx: int) -> None:
         _, dx, dy = _DPAD_BUTTONS[idx]
