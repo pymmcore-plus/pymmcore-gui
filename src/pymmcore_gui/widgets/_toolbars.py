@@ -91,7 +91,7 @@ class ShuttersToolbar(QToolBar):
                 shutter,
                 button_text_open=shutter,
                 button_text_closed=shutter,
-                autoshutter=idx == len(shutters_devs) - 1
+                autoshutter=idx == len(shutters_devs) - 1,
             )
             self.addWidget(s)
 

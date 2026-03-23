@@ -33,7 +33,7 @@ from ._notification_manager import NotificationManager
 from ._settings import Settings
 from .actions import CoreAction, QCoreAction, WidgetAction, WidgetActionInfo
 from .actions._action_info import ActionInfo
-from .widgets._toolbars import OCToolBar, ShuttersToolbar
+from .widgets._toolbars import OCToolBar
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -126,7 +126,7 @@ class MicroManagerGUI(QMainWindow):
             CoreAction.TOGGLE_LIVE,
         ],
         Toolbar.OPTICAL_CONFIGS: OCToolBar,
-        Toolbar.SHUTTERS: ShuttersToolbar,
+        # Toolbar.SHUTTERS: ShuttersToolbar,
         Toolbar.WIDGETS: [
             WidgetAction.CONSOLE,
             WidgetAction.PROP_BROWSER,
@@ -220,12 +220,8 @@ class MicroManagerGUI(QMainWindow):
             CDockManager.eAutoHideFlag.AutoHideFeatureEnabled, True
         )
         self.dock_manager = CDockManager(self)
-        # Fix: QtAds default stylesheet uses palette(dark) for inactive tab text,
-        # which is invisible on Windows dark themes.
-        self.dock_manager.setStyleSheet(
-            self.dock_manager.styleSheet()
-            + "\nads--CDockWidgetTab QLabel { color: palette(placeholder-text); }"
-        )
+        # Must disable style sheets in CDockManager for Qlementine style...
+        self.dock_manager.setStyleSheet("")
 
         self._central = CDockWidget(self.dock_manager, "Viewers", self)
         self._central.setFeature(CDockWidget.DockWidgetFeature.NoTab, True)

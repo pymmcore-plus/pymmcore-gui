@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 from superqt.utils import WorkerBase
 
 from pymmcore_gui import __version__
+from pymmcore_gui._ads_style import apply_dark_theme
 from pymmcore_gui._main_window import ICON, MicroManagerGUI
 from pymmcore_gui._qt.QtCore import QTimer, Signal
 from pymmcore_gui._qt.QtGui import QIcon
@@ -86,6 +87,7 @@ def create_mmgui(
     install_sys_excepthook: bool = True,
     install_sentry: bool = True,
     exec_app: bool = True,
+    dark_theme: bool = True,
 ) -> MicroManagerGUI:
     """Initialize the pymmcore-gui application and Main Window.
 
@@ -119,6 +121,8 @@ def create_mmgui(
         If True (the default), the QApplication event loop will be started.  If
         False, the event loop will not be started, and the caller is responsible for
         starting it with `QApplication.instance().exec()`.
+    dark_theme : bool
+        If True, applies a dark theme to the application.  Default is False.
     """
     global _QAPP
     # Note: in practice this should almost never be None,
@@ -150,9 +154,19 @@ def create_mmgui(
         # this is used in test_bundle.py to know when the app is ready
         print("READY", flush=True)
 
+    # --------------- Style ---------------
+
+    from ._ads_style import AdsAwareQlementineStyle
+
+    app.setStyle(AdsAwareQlementineStyle())
+    if dark_theme:
+        apply_dark_theme(app.style())
+
     # -------------------------------------------------
 
     win = MicroManagerGUI(mmcore=mmcore)
+    win.dock_manager.setStyleSheet("")
+
     QTimer.singleShot(0, lambda: win.restore_state(show=True))
 
     # if False was passed, don't load any config at all
