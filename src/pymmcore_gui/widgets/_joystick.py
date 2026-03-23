@@ -23,7 +23,12 @@ if TYPE_CHECKING:
 
 
 class JoystickWidget(QWidget):
-    """Virtual joystick pad. Emits normalized (dx, dy) in [-1, 1]."""
+    """Virtual joystick pad. Emits normalized (dx, dy) in [-1, 1].
+
+    Deflection polarity:
+    - when the vector from center to knob points right, dx is positive.
+    - when the vector from center to knob points up, dy is positive.
+    """
 
     # TODO: arrow-key / accessibility support
 
@@ -201,8 +206,10 @@ class StageJoystick(QWidget):
         layout.addWidget(self._joystick)
 
     def _on_deflection(self, dx: float, dy: float) -> None:
-        self._dx = dx
-        self._dy = dy
+        # NB: invert the joystick deflection so pushing up gives negative dy,
+        # and pushing right gives positive dx
+        self._dx = -dx
+        self._dy = -dy
         if not self._tick_timer.isActive() and (dx or dy):
             self._tick_timer.start()
 
