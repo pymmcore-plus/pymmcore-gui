@@ -5,6 +5,11 @@ import pytest
 from pytest import MonkeyPatch
 
 from pymmcore_gui import __main__, _app
+from pymmcore_gui._ads_style import (
+    AdsAwareQlementineStyle,
+    apply_dark_theme,
+    apply_light_theme,
+)
 from pymmcore_gui._qt.QtWidgets import QApplication
 
 
@@ -23,3 +28,13 @@ def test_main_app(monkeypatch: MonkeyPatch) -> None:
         assert hasattr(sys, "_original_excepthook_")
         for wdg in QApplication.topLevelWidgets():
             wdg.close()
+
+
+def test_apply_dark_theme(qapp: QApplication) -> None:
+    style = AdsAwareQlementineStyle()
+    apply_dark_theme(style)  # must not raise
+
+
+def test_apply_light_theme(qapp: QApplication) -> None:
+    style = AdsAwareQlementineStyle()
+    apply_light_theme(style)  # must not raise

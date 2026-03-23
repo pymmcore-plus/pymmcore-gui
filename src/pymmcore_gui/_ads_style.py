@@ -222,7 +222,25 @@ def _set_widget_bg(widget: QWidget, color: QColor) -> None:
     widget.setAutoFillBackground(True)
 
 
+SCALE_FACTOR = 0.85
+defaults = {
+    "font_size": 13 * SCALE_FACTOR,
+    "font_size_monospace": 13 * SCALE_FACTOR,
+    "font_size_h1": 34 * SCALE_FACTOR,
+    "font_size_h2": 26 * SCALE_FACTOR,
+    "font_size_h3": 22 * SCALE_FACTOR,
+    "font_size_h4": 18 * SCALE_FACTOR,
+    "font_size_h5": 14 * SCALE_FACTOR,
+    "font_size_s1": 10 * SCALE_FACTOR,
+    "control_height_large": 32 * SCALE_FACTOR,
+    "control_height_medium": 28 * SCALE_FACTOR,
+    "control_height_small": 20 * SCALE_FACTOR,
+    "icon_extent": 16 * SCALE_FACTOR,
+    "spacing": 8 * SCALE_FACTOR,
+}
+
 radix_slate_blue = {
+    **defaults,
     "meta": {
         "name": "Radix Slate Blue",
         "version": "1.0.0",
@@ -295,14 +313,6 @@ radix_slate_blue = {
     "semi_transparent_color3": "#0090FF1E",
     "semi_transparent_color4": "#0090FF28",
     "use_system_fonts": True,
-    "font_size": 13,
-    "font_size_monospace": 13,
-    "font_size_h1": 34,
-    "font_size_h2": 26,
-    "font_size_h3": 22,
-    "font_size_h4": 18,
-    "font_size_h5": 14,
-    "font_size_s1": 10,
     "animation_duration": 200,
     "focus_animation_duration": 400,
     "slider_animation_duration": 120,
@@ -311,9 +321,6 @@ radix_slate_blue = {
     "menu_item_border_radius": 6.0,
     "menu_bar_item_border_radius": 4.0,
     "border_width": 1,
-    "control_height_large": 32,
-    "control_height_medium": 28,
-    "control_height_small": 20,
     "control_default_width": 120,
     "dial_mark_length": 8,
     "dial_mark_thickness": 2,
@@ -321,13 +328,11 @@ radix_slate_blue = {
     "dial_tick_spacing": 4,
     "dial_groove_thickness": 4,
     "focus_border_width": 2,
-    "icon_extent": 16,
     "slider_tick_size": 3,
     "slider_tick_spacing": 2,
     "slider_tick_thickness": 1,
     "slider_groove_height": 4,
     "progress_bar_groove_height": 6,
-    "spacing": 8,
     "scroll_bar_thickness_full": 12,
     "scroll_bar_thickness_small": 6,
     "scroll_bar_margin": 0,
@@ -359,3 +364,10 @@ def make_qlementine_theme(theme: dict | None = None, /, **kwargs: Any) -> Theme:
 def apply_dark_theme(style: QlementineStyle) -> None:
     """Apply a dark Qlementine theme to the given style."""
     style.setTheme(make_qlementine_theme(radix_slate_blue))
+
+
+def apply_light_theme(style: QlementineStyle) -> None:
+    """Apply a light Qlementine theme to the given style."""
+    variant = style.theme().toJson().toVariant()
+    variant.update(_to_camel_case_dict(defaults))
+    style.setTheme(Theme.fromJsonDoc(QJsonDocument.fromVariant(variant)))
