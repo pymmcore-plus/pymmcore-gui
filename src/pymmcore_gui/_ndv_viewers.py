@@ -81,8 +81,8 @@ class NDVViewersManager(QObject):
         self._is_mda_running = True
         self._view = view = self._runner.get_view()
         self._active_mda_viewer = viewer = self._create_ndv_viewer(self._view, sequence)
-        if hasattr(view, "coords_changed"):
-            view.coords_changed.connect(viewer.data_wrapper.dims_changed)
+        if (sig := getattr(view, "coords_changed", None)) is not None:
+            sig.connect(viewer.data_wrapper.dims_changed)
 
     def _on_frame_ready(
         self, frame: np.ndarray, event: useq.MDAEvent, meta: FrameMetaV1

@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 from pyconify import svg_path
 
-from pymmcore_gui._qt.Qlementine import (
+from pymmcore_gui._qt.Qlementine import (  # type: ignore[attr-defined]
     AutoIconColor,
     MouseState,
     QlementineStyle,
@@ -26,7 +26,7 @@ from pymmcore_gui._qt.Qlementine import (
     Theme,
 )
 from pymmcore_gui._qt.QtCore import QJsonDocument, QRectF, Qt
-from pymmcore_gui._qt.QtGui import QColor, QPalette, QPen
+from pymmcore_gui._qt.QtGui import QColor, QPainter, QPalette, QPen
 from pymmcore_gui._qt.QtWidgets import (
     QScrollArea,
     QStyle,
@@ -82,31 +82,43 @@ class AdsAwareQlementineStyle(QlementineStyle):
 
     # ---- Drawing overrides ----
 
-    def drawControl(self, element, option, painter, widget=None):
-        if element == QStyle.ControlElement.CE_ShapedFrame and widget:
-            active = widget.property(ADS_ACTIVE_TAB)
+    def drawControl(
+        self,
+        element: QStyle.ControlElement,
+        option: QStyleOption | None,
+        painter: QPainter | None,
+        w: QWidget | None = None,
+    ) -> None:
+        if element == QStyle.ControlElement.CE_ShapedFrame and w and option and painter:
+            active = w.property(ADS_ACTIVE_TAB)
             if active is not None:
-                self._draw_dock_tab(option, painter, widget, bool(active))
+                self._draw_dock_tab(option, painter, w, bool(active))
                 return
-            if widget.objectName() == ADS_TITLE_BAR:
-                self._draw_title_bar(option, painter, widget)
+            if w.objectName() == ADS_TITLE_BAR:
+                self._draw_title_bar(option, painter, w)
                 return
-        super().drawControl(element, option, painter, widget)
+        super().drawControl(element, option, painter, w)
 
-    def drawComplexControl(self, control, option, painter, widget=None):
+    def drawComplexControl(
+        self,
+        control: QStyle.ComplexControl,
+        option: QStyleOption | None,
+        painter: QPainter | None,
+        w: QWidget | None = None,
+    ) -> None:
         # Suppress the double-chevron menu indicator on the tabs menu
         if (
             control == QStyle.ComplexControl.CC_ToolButton
-            and widget is not None
-            and widget.objectName() == ADS_TABS_MENU
+            and w is not None
+            and w.objectName() == ADS_TABS_MENU
             and isinstance(option, QStyleOptionToolButton)
         ):
             option.features &= ~QStyleOptionToolButton.ToolButtonFeature.HasMenu
-        super().drawComplexControl(control, option, painter, widget)
+        super().drawComplexControl(control, option, painter, w)
 
     # ---- Widget polishing ----
 
-    def polish(self, obj):
+    def polish(self, obj: Any) -> Any:
         result = super().polish(obj)
         if not isinstance(obj, QWidget):
             return result
@@ -138,7 +150,13 @@ class AdsAwareQlementineStyle(QlementineStyle):
 
     # ---- Private drawing helpers ----
 
-    def _draw_dock_tab(self, option, painter, widget, is_active):
+    def _draw_dock_tab(
+        self,
+        option: QStyleOption,
+        painter: QPainter,
+        widget: QWidget,
+        is_active: bool,
+    ) -> None:
         mouse = _mouse_state(option)
         sel = SelectionState.Selected if is_active else SelectionState.NotSelected
         bg = self.tabBackgroundColor(mouse, sel)
@@ -168,7 +186,9 @@ class AdsAwareQlementineStyle(QlementineStyle):
         painter.restore()
         self._update_tab_label_color(widget, mouse, sel)
 
-    def _update_tab_label_color(self, tab, mouse, sel):
+    def _update_tab_label_color(
+        self, tab: QWidget, mouse: MouseState, sel: SelectionState
+    ) -> None:
         target = self.tabForegroundColor(mouse, sel)
         for child in tab.children():
             if (
@@ -180,7 +200,9 @@ class AdsAwareQlementineStyle(QlementineStyle):
                 pal.setColor(QPalette.ColorRole.WindowText, target)
                 child.setPalette(pal)
 
-    def _draw_title_bar(self, option, painter, widget):
+    def _draw_title_bar(
+        self, option: QStyleOption, painter: QPainter, widget: QWidget
+    ) -> None:
         painter.save()
         painter.fillRect(option.rect, self.tabBarBackgroundColor(MouseState.Normal))
         painter.setPen(QPen(self.tabBarBottomShadowColor(), 1))

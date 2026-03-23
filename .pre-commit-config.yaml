@@ -48,6 +48,7 @@ repos:
         name: mypy
         language: system
         types_or: [python, pyi]
+        exclude: '\.pyi$'
         require_serial: true
         entry: uv run mypy
       - id: pyright

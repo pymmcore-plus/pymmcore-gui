@@ -170,6 +170,7 @@ module = ["PyQt6.*"]
 follow_imports = "skip"
 
 
+
 [tool.pyright]
 include = ["src", "tests"]
 pythonVersion = "3.10"
