@@ -1,18 +1,19 @@
 from __future__ import annotations
 
-from itertools import chain
 from typing import TYPE_CHECKING
 
 from pymmcore_plus import CMMCorePlus, DeviceType
 from pymmcore_widgets import StageWidget
 
+from pymmcore_gui._qt.Qlementine import SegmentedControl
 from pymmcore_gui._qt.QtWidgets import (
-    QGridLayout,
-    QGroupBox,
     QHBoxLayout,
     QSizePolicy,
+    QStackedWidget,
+    QVBoxLayout,
     QWidget,
 )
+from pymmcore_gui.widgets._joystick import StageDPad, StageJoystick
 
 if TYPE_CHECKING:
     from qtpy.QtGui import QWheelEvent
@@ -39,16 +40,6 @@ class _StageWidget(StageWidget):
         super().wheelEvent(event)
 
 
-class _Group(QGroupBox):
-    def __init__(self, name: str, parent: QWidget | None = None) -> None:
-        super().__init__(name, parent)
-
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-
-
 class StagesControlWidget(QWidget):
     """A widget to control all the XY and Z loaded stages."""
 
@@ -61,25 +52,26 @@ class StagesControlWidget(QWidget):
         self._mmc = mmcore or CMMCorePlus.instance()
         self._mmc.events.systemConfigurationLoaded.connect(self._on_cfg_loaded)
 
-        self._layout = QGridLayout(self)
+        self._layout = QHBoxLayout(self)
         self._layout.setContentsMargins(5, 5, 5, 5)
-        self._layout.setSpacing(5)
+        self._layout.setSpacing(2)
 
         self._on_cfg_loaded()
 
     def _on_cfg_loaded(self) -> None:
         self._clear()
 
-        stages = chain(
-            self._mmc.getLoadedDevicesOfType(DeviceType.XYStage),
-            self._mmc.getLoadedDevicesOfType(DeviceType.Stage),
-        )
-        for idx, stage_dev in enumerate(stages):
-            bx = _Group(stage_dev, self)
-            stage = _StageWidget(device=stage_dev, parent=bx, mmcore=self._mmc)
-            if (lay := bx.layout()) is not None:
-                lay.addWidget(stage)
-            self._layout.addWidget(bx, idx // 2, idx % 2)
+        if current_xy := self._mmc.getXYStageDevice():
+            widget = _XYWrapper(
+                xy_device=current_xy,
+                parent=self,
+                mmcore=self._mmc,
+            )
+            self._layout.addWidget(widget)
+
+        if current_xy := self._mmc.getFocusDevice():
+            stage = _StageWidget(device=current_xy, parent=self, mmcore=self._mmc)
+            self._layout.addWidget(stage)
         self.resize(self.sizeHint())
 
     def _clear(self) -> None:
@@ -87,3 +79,35 @@ class StagesControlWidget(QWidget):
             if (item := self._layout.takeAt(0)) and (widget := item.widget()):
                 widget.setParent(self)
                 widget.deleteLater()
+
+
+class _XYWrapper(QWidget):
+    """XY stage wrapper with Joystick / D-Pad mode switcher."""
+
+    def __init__(
+        self,
+        xy_device: str,
+        parent: QWidget | None = None,
+        mmcore: CMMCorePlus | None = None,
+    ) -> None:
+        super().__init__(parent)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)
+
+        self._mode_tabs = SegmentedControl()
+        self._mode_tabs.addItem("Joystick")
+        self._mode_tabs.addItem("D-Pad")
+        layout.addWidget(self._mode_tabs)
+
+        self._stack = QStackedWidget(self)
+        joystick = StageJoystick(xy_device=xy_device, parent=self, mmcore=mmcore)
+        dpad = StageDPad(xy_device=xy_device, parent=self, mmcore=mmcore)
+        self._stack.addWidget(joystick)
+        self._stack.addWidget(dpad)
+        layout.addWidget(self._stack)
+
+        self._mode_tabs.currentIndexChanged.connect(
+            lambda: self._stack.setCurrentIndex(self._mode_tabs.currentIndex())
+        )

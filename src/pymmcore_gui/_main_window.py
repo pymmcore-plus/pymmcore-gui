@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import logging
 import sys
 from collections.abc import Callable
@@ -168,6 +169,9 @@ class MicroManagerGUI(QMainWindow):
         self._action_widgets = WeakValueDictionary[str, QWidget]()
         # the wrapping QDockWidget for widgets that are associated with a QAction
         self._dock_widgets = WeakValueDictionary[str, CDockWidget]()
+
+        # context manager for sim sample patch (kept alive while active)
+        self._sim_sample_ctx: contextlib.AbstractContextManager | None = None
 
         # get global CMMCorePlus instance
         self._mmc = mmcore or CMMCorePlus.instance()
@@ -410,6 +414,23 @@ class MicroManagerGUI(QMainWindow):
         else:
             settings.last_config = None
         settings.flush()
+
+        self._update_sim_sample()
+
+    def _update_sim_sample(self) -> None:
+        """Patch core with a sim sample when using the demo camera."""
+        # tear down any existing patch
+        if self._sim_sample_ctx is not None:
+            self._sim_sample_ctx.__exit__(None, None, None)
+            self._sim_sample_ctx = None
+
+        cam = self._mmc.getCameraDevice()
+        if cam and self._mmc.getDeviceLibrary(cam) == "DemoCamera":
+            from ._sim_sample import create_sample
+
+            ctx = create_sample().patch(self._mmc)
+            ctx.__enter__()
+            self._sim_sample_ctx = ctx
 
     def _add_toolbar(self, name: str, tb_entry: ToolDictValue) -> None:
         if callable(tb_entry):
