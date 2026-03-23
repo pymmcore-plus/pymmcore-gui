@@ -15,7 +15,13 @@ from superqt import QIconifyIcon
 
 from pymmcore_gui._qt.QtAds import CDockManager, CDockWidget, SideBarLocation
 from pymmcore_gui._qt.QtCore import Qt
-from pymmcore_gui._qt.QtGui import QAction, QCloseEvent, QGuiApplication, QIcon
+from pymmcore_gui._qt.QtGui import (
+    QAction,
+    QCloseEvent,
+    QGuiApplication,
+    QIcon,
+    QPalette,
+)
 from pymmcore_gui._qt.QtOpenGLWidgets import QOpenGLWidget
 from pymmcore_gui._qt.QtWidgets import (
     QApplication,
@@ -92,6 +98,46 @@ ToolDictValue = list[str | None] | Callable[[CMMCorePlus, "MicroManagerGUI"], QT
 MenuDictValue = list[str | None] | Callable[[CMMCorePlus, "MicroManagerGUI"], QMenu]
 
 
+def _open_url(url: str) -> None:
+    from pymmcore_gui._qt.QtCore import QUrl
+    from pymmcore_gui._qt.QtGui import QDesktopServices
+
+    QDesktopServices.openUrl(QUrl(url))
+
+
+def _create_help_menu(mmc: CMMCorePlus, parent: MicroManagerGUI) -> QMenu:
+    _items = [
+        # TODO: There may later be a tag explicitly for this GUI.
+        (
+            "Community Forum",
+            "mdi:forum-outline",
+            "https://forum.image.sc/tag/pymmcore/",
+        ),
+        (
+            "Report an Issue",
+            "mdi:bug-outline",
+            "https://github.com/pymmcore-plus/pymmcore-gui/issues/new",
+        ),
+        # TODO: Add a documentation menu action once docs exist
+    ]
+    icon_color = QApplication.palette().color(QPalette.ColorRole.WindowText)
+
+    # Add each item in items
+    menu = QMenu(Menu.HELP.value, parent)
+    for text, icon_str, url in _items:
+        icon: QIcon = QIconifyIcon(icon_str, color=icon_color.name())
+        action = QAction(icon, text, parent)
+        action.triggered.connect(lambda _checked, u=url: _open_url(u))
+        menu.addAction(action)
+
+    # Add "About" action at the end
+    # NOTE: on MacOS this will automatically be moved to the application menu
+    # and the separator should be ignored
+    menu.addSeparator()
+    menu.addAction(parent.get_action(WidgetAction.ABOUT))
+    return menu
+
+
 def _create_window_menu(mmc: CMMCorePlus, parent: MicroManagerGUI) -> QMenu:
     """
     Create the Window menu, containing all WidgetActions not in other menus.
@@ -138,7 +184,6 @@ class MicroManagerGUI(QMainWindow):
     # Menus are a mapping of strings to either a list of ActionKeys or a callable
     # that takes a CMMCorePlus instance and QMainWindow and returns a QMenu.
     MENUS: Mapping[str, MenuDictValue] = {
-        Menu.PYMM_GUI: [WidgetAction.ABOUT],
         Menu.WINDOW: _create_window_menu,
         Menu.DEVICE: [
             WidgetAction.PROP_BROWSER,
@@ -150,7 +195,7 @@ class MicroManagerGUI(QMainWindow):
             None,
             WidgetAction.INSTALL_DEVICES,
         ],
-        Menu.HELP: [],
+        Menu.HELP: _create_help_menu,
     }
 
     def __init__(self, *, mmcore: CMMCorePlus | None = None) -> None:
