@@ -113,9 +113,9 @@ def run(
         help="Use dark theme.",
     ),
     qstyle: Literal["qlementine", "fusion", "native"] = typer.Option(
-        "qlementine",
+        "native",
         "--qstyle",
-        help="The QStyle to use for the application.  Default is 'qlementine'.",
+        help="The QStyle to use for the application.  Default is 'native'.",
     ),
 ) -> None:
     """Run the Micro-Manager GUI (this is the default command)."""

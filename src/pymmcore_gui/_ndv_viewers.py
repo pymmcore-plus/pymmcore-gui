@@ -79,10 +79,13 @@ class NDVViewersManager(QObject):
     ) -> None:
         """Called when a new MDA sequence has been started."""
         self._is_mda_running = True
-        self._view = view = self._runner.get_view()
-        self._active_mda_viewer = viewer = self._create_ndv_viewer(self._view, sequence)
-        if (sig := getattr(view, "coords_changed", None)) is not None:
-            sig.connect(viewer.data_wrapper.dims_changed)
+        self._view = self._runner.get_view()
+        self._active_mda_viewer = self._create_ndv_viewer(self._view, sequence)
+        # NOTE: we intentionally do NOT connect view.coords_changed to
+        # viewer.data_wrapper.dims_changed here.  coords_changed fires in the
+        # MDA background thread, and dims_changed handlers create/modify Qt
+        # widgets which must only happen on the main thread.  Instead, we
+        # marshal dim updates through QTimer in _on_frame_ready.
 
     def _on_frame_ready(
         self, frame: np.ndarray, event: useq.MDAEvent, meta: FrameMetaV1
@@ -96,14 +99,30 @@ class NDVViewersManager(QObject):
         # asynchronously, so the data may not be available immediately to the viewer
         # after the handler's frameReady method is called.
         current_index = viewer.display_model.current_index
+        wrapper = viewer.data_wrapper
+
+        # ome-writers flattens both "p" (position) and "g" (grid) into a single
+        # "p" dimension, but useq events may use Axis.GRID ("g") as the key.
+        # Remap so the viewer can find the correct axis.
+        index = {("p" if str(k) == "g" else k): v for k, v in event.index.items()}
 
         def _update(_idx: IndexMap = current_index) -> None:
             try:
-                _idx.update(event.index.items())
+                # Update dims/sliders in the main thread (see note in
+                # _on_sequence_started about why we don't use coords_changed).
+                if wrapper is not None:
+                    wrapper.dims_changed.emit()
+                _idx.update(index.items())
             except Exception:  # pragma: no cover
                 # this happens if the viewer has been closed in the meantime
                 # usually it's a RuntimeError, but could be an EmitLoopError
-                pass
+                return
+            # Force data request: ndv's _apply_changes only triggers a fetch
+            # when current_index changes, but for the first frame the default
+            # index (all zeros) matches the initial values, so no fetch would
+            # occur without this.
+            if wrapper is not None:
+                wrapper.data_changed.emit()
 
         QTimer.singleShot(10, _update)
 

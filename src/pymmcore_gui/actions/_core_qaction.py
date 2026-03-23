@@ -33,7 +33,6 @@ class QCoreAction(QAction):
         # pyside6 is picky about not trying to disconnect an unconnected signal,
         # so we manually track the connection.
         self._triggered_connection: QMetaObject.Connection | None = None
-        self.setMenuRole(QAction.MenuRole.NoRole)  # don't guess menu placement
         if info is not None:
             self.apply_info(info)
 
