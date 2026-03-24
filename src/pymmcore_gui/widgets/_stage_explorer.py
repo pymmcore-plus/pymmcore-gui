@@ -39,8 +39,6 @@ class _StageExplorer(StageExplorer):
         )
         self._send_to_mda_action.triggered.connect(self._on_send_to_mda)
 
-        self._toolbar.setStyleSheet("")
-
     def _on_scan_action(self) -> None:
         """Override to pass output='memory' so the ndv viewer gets data."""
         if not (active_rois := self.roi_manager.selected_rois()):
