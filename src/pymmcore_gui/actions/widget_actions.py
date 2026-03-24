@@ -277,7 +277,6 @@ show_config_groups = WidgetActionInfo(
     icon="mdi-light:format-list-bulleted",
     create_widget=create_config_groups,
     dock_area=DockWidgetArea.LeftDockWidgetArea,
-    scroll_mode=CDockWidget.eInsertMode.ForceNoScrollArea,
 )
 
 show_pixel_config = WidgetActionInfo(
