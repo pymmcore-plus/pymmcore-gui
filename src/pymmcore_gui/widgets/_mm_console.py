@@ -4,6 +4,8 @@ import os
 import sys
 from typing import TYPE_CHECKING, Any, cast
 
+from pymmcore_plus import install_pymmcore_ipy_completion
+
 os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 
 
@@ -75,6 +77,8 @@ class MMConsole(QtConsole):
             self.shell.run_cell("from rich import print")  # type: ignore [no-untyped-call]
 
         self._inject_core_vars()
+
+        install_pymmcore_ipy_completion(self.shell)
 
     def _inject_core_vars(self) -> None:
         import numpy
