@@ -316,7 +316,14 @@ class _ASIDeviceWorker(QObject):
         self._mmcore.setProperty(self._device, "UpperLimY(mm)", y_mm + r)
 
     def begin_move(self) -> None:
-        """Save original limits, set initial safe limits, start tick timer."""
+        """Apply velocity immediately, then save/set limits, then start timer."""
+        # Apply velocity FIRST so the stage starts moving before slow limit I/O
+        with self._lock:
+            vx, vy = self._target_vx, self._target_vy
+        self._mmcore.setProperty(self._device, "VectorMoveX-VE(mm/s)", vx)
+        self._mmcore.setProperty(self._device, "VectorMoveY-VE(mm/s)", vy)
+
+        # Now do the slow limit setup
         self._orig_limits = {
             p: self._mmcore.getProperty(self._device, p) for p in self._LIMIT_PROPS
         }
