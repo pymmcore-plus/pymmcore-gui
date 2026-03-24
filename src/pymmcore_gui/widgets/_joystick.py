@@ -19,8 +19,6 @@ from pymmcore_gui._qt.QtWidgets import (
 from pymmcore_gui._utils import current_core
 
 if TYPE_CHECKING:
-    from contextlib import AbstractContextManager
-
     from pymmcore_plus import CMMCorePlus
     from qtpy.QtGui import QKeyEvent, QMouseEvent, QPaintEvent
 
@@ -209,7 +207,7 @@ class StageJoystick(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self._joystick)
 
-        self._no_backlash_ctx: list[AbstractContextManager] = []
+        self._backlash_orig: dict[str, str] | None = None
         self._is_ASI_stage = (mmcore is not None) and (
             "BacklashX-B(um)" in mmcore.getDevicePropertyNames(self._device)
         )
@@ -221,16 +219,16 @@ class StageJoystick(QWidget):
         # so invert Y here.
         # https://micro-manager.org/Coordinates_and_Directionality
         if (
-            not self._no_backlash_ctx
+            self._backlash_orig is None
             and (mmcore := current_core(self))
             and self._is_ASI_stage
         ):
-            self._no_backlash_ctx = [
-                mmcore.setContext(property=(self._device, "BacklashX-B(um)", 0.0)),
-                mmcore.setContext(property=(self._device, "BacklashY-B(um)", 0.0)),
-            ]
-            for _ctx in self._no_backlash_ctx:
-                _ctx.__enter__()
+            props = ("BacklashX-B(um)", "BacklashY-B(um)")
+            self._backlash_orig = {
+                p: mmcore.getProperty(self._device, p) for p in props
+            }
+            for p in props:
+                mmcore.setProperty(self._device, p, 0.0)
 
         self._dx = dx
         self._dy = -dy
@@ -239,10 +237,10 @@ class StageJoystick(QWidget):
 
     def _on_release(self) -> None:
         self._tick_timer.stop()
-        if self._no_backlash_ctx:
-            for _ctx in self._no_backlash_ctx:
-                _ctx.__exit__(None, None, None)
-            self._no_backlash_ctx.clear()
+        if self._backlash_orig is not None and (mmcore := current_core(self)):
+            for prop, val in self._backlash_orig.items():
+                mmcore.setProperty(self._device, prop, val)
+            self._backlash_orig = None
 
     def _on_tick(self) -> None:
         mag = min(math.hypot(self._dx, self._dy), 1.0)
