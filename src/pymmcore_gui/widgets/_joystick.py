@@ -210,6 +210,9 @@ class StageJoystick(QWidget):
         layout.addWidget(self._joystick)
 
         self._no_backlash_ctx: list[AbstractContextManager] = []
+        self._is_ASI_stage = (mmcore is not None) and (
+            "BacklashX-B(um)" in mmcore.getDevicePropertyNames(self._device)
+        )
 
     def _on_deflection(self, dx: float, dy: float) -> None:
         # Micromanager coordinate system is +X -> stage moves left
@@ -217,14 +220,17 @@ class StageJoystick(QWidget):
         # we want the vector of deflection to go in the same direction as stage movement
         # so invert Y here.
         # https://micro-manager.org/Coordinates_and_Directionality
-        if not self._no_backlash_ctx and (core := current_core(self)):
-            if "BacklashX-B(um)" in core.getDevicePropertyNames(self._device):
-                self._no_backlash_ctx = [
-                    core.setContext(property=(self._device, "BacklashX-B(um)", 0.0)),
-                    core.setContext(property=(self._device, "BacklashY-B(um)", 0.0)),
-                ]
-                for _ctx in self._no_backlash_ctx:
-                    _ctx.__enter__()
+        if (
+            not self._no_backlash_ctx
+            and (mmcore := current_core(self))
+            and self._is_ASI_stage
+        ):
+            self._no_backlash_ctx = [
+                mmcore.setContext(property=(self._device, "BacklashX-B(um)", 0.0)),
+                mmcore.setContext(property=(self._device, "BacklashY-B(um)", 0.0)),
+            ]
+            for _ctx in self._no_backlash_ctx:
+                _ctx.__enter__()
 
         self._dx = dx
         self._dy = -dy
