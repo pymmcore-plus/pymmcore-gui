@@ -152,6 +152,14 @@ def _create_window_menu(mmc: CMMCorePlus, parent: MicroManagerGUI) -> QMenu:
     for other_menu in parent.MENUS.values():
         if isinstance(other_menu, list):
             parented_actions.update(str(action) for action in other_menu)
+        elif callable(other_menu) and other_menu is not _create_window_menu:
+            # if it's a callable, we have to call it to find out which actions it uses
+            menu = other_menu(mmc, parent)
+            for qaction in menu.actions():
+                # If that action came from an ActionInfo, it will have a "key" attribute
+                # that we can use to identify it.
+                if key := getattr(qaction, "key", None):
+                    parented_actions.add(key)
     parentless_actions = all_actions - parented_actions
 
     # Create a new menu with the remaining parentless actions
