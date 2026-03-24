@@ -181,9 +181,9 @@ class StageJoystick(QWidget):
         self,
         xy_device: str,
         mmcore: CMMCorePlus | None = None,
-        max_um_per_sec: float = 500.0,
+        max_um_per_sec: float = 4000.0,
         speed_exponent: float = 2.0,
-        tick_ms: int = 50,
+        tick_ms: int = 20,
         parent: QWidget | None = None,
     ):
         super().__init__(parent)
