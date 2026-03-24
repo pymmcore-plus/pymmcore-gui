@@ -1,12 +1,21 @@
 from __future__ import annotations
 
 import math
+import threading
 from typing import TYPE_CHECKING, ClassVar
 
 from pymmcore_widgets.control._q_stage_controller import QStageMoveAccumulator
 
 from pymmcore_gui._qt.Qlementine import SegmentedControl  # type: ignore[attr-defined]
-from pymmcore_gui._qt.QtCore import QPointF, QSize, Qt, QTimer, Signal
+from pymmcore_gui._qt.QtCore import (
+    QObject,
+    QPointF,
+    QSize,
+    Qt,
+    QThread,
+    QTimer,
+    Signal,
+)
 from pymmcore_gui._qt.QtGui import QBrush, QPainter, QPen, QRadialGradient
 from pymmcore_gui._qt.QtWidgets import (
     QGridLayout,
@@ -20,7 +29,7 @@ from pymmcore_gui._utils import current_core
 
 if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
-    from qtpy.QtGui import QKeyEvent, QMouseEvent, QPaintEvent
+    from qtpy.QtGui import QCloseEvent, QKeyEvent, QMouseEvent, QPaintEvent
 
 
 class JoystickWidget(QWidget):
@@ -252,27 +261,79 @@ class StageJoystick(QWidget):
         self._acc.move_relative((ux * speed * dt, uy * speed * dt))
 
 
+class _ASIDeviceWorker(QObject):
+    """Worker that performs all ASI stage I/O on a dedicated thread."""
+
+    _LIMIT_PROPS = ("LowerLimX(mm)", "LowerLimY(mm)", "UpperLimX(mm)", "UpperLimY(mm)")
+
+    def __init__(self, device: str, mmcore: CMMCorePlus, safe_radius_mm: float) -> None:
+        super().__init__()
+        self._device = device
+        self._mmcore = mmcore
+        self._safe_radius_mm = safe_radius_mm
+        self._orig_limits: dict[str, str] | None = None
+        # Set when release is requested; checked by set_vector_move to skip
+        # stale queued commands that arrive after a stop.
+        self._stopped = threading.Event()
+        self._stopped.set()
+
+    def set_vector_move(self, vx: float, vy: float) -> None:
+        if self._stopped.is_set():
+            return
+        self._mmcore.setProperty(self._device, "VectorMoveX-VE(mm/s)", vx)
+        self._mmcore.setProperty(self._device, "VectorMoveY-VE(mm/s)", vy)
+
+    def begin_move(self) -> None:
+        """Save original limits, set safe limits, allow vector moves."""
+        self._stopped.clear()
+        self._orig_limits = {
+            p: self._mmcore.getProperty(self._device, p) for p in self._LIMIT_PROPS
+        }
+        self.update_safe_limits()
+
+    def update_safe_limits(self) -> None:
+        """Clamp travel limits to safe_radius_mm around current position."""
+        if self._stopped.is_set():
+            return
+        x, y = self._mmcore.getXYPosition(self._device)
+        r = self._safe_radius_mm
+        x_mm, y_mm = x / 1000.0, y / 1000.0
+        self._mmcore.setProperty(self._device, "LowerLimX(mm)", x_mm - r)
+        self._mmcore.setProperty(self._device, "LowerLimY(mm)", y_mm - r)
+        self._mmcore.setProperty(self._device, "UpperLimX(mm)", x_mm + r)
+        self._mmcore.setProperty(self._device, "UpperLimY(mm)", y_mm + r)
+
+    def end_move(self) -> None:
+        """Stop stage motion and restore original limits."""
+        # Flag first so any queued set_vector_move calls become no-ops
+        self._stopped.set()
+        self._mmcore.setProperty(self._device, "VectorMoveX-VE(mm/s)", 0.0)
+        self._mmcore.setProperty(self._device, "VectorMoveY-VE(mm/s)", 0.0)
+        if self._orig_limits is not None:
+            for prop, val in self._orig_limits.items():
+                self._mmcore.setProperty(self._device, prop, val)
+            self._orig_limits = None
+
+
 class ASIStageJoystick(QWidget):
     """Joystick that drives an ASI XY stage via VectorMove properties.
 
-    Uses ASI-specific VectorMoveX-VE / VectorMoveY-VE properties to command
-    continuous stage motion, avoiding the accumulator approach entirely.
-
-    Safety: stage travel limits are clamped to a small radius around the
-    current position while moving, and a periodic timer keeps them updated
-    during long moves.
+    All device I/O runs on a single dedicated worker thread.
     """
 
     SAFE_RADIUS_MM: float = 1.0
     LIMIT_UPDATE_MS: int = 200
 
-    _LIMIT_PROPS = ("LowerLimX(mm)", "LowerLimY(mm)", "UpperLimX(mm)", "UpperLimY(mm)")
-    _VMOVE_PROPS = ("VectorMoveX-VE(mm/s)", "VectorMoveY-VE(mm/s)")
+    # Internal signals -> worker slots (queued across threads)
+    _sig_begin_move = Signal()
+    _sig_set_vector_move = Signal(float, float)
+    _sig_update_limits = Signal()
+    _sig_end_move = Signal()
 
     def __init__(
         self,
         xy_device: str,
-        mmcore: CMMCorePlus | None = None,
+        mmcore: CMMCorePlus,
         max_mm_per_sec: float = 4.0,
         speed_exponent: float = 2.0,
         parent: QWidget | None = None,
@@ -281,7 +342,22 @@ class ASIStageJoystick(QWidget):
         self._device = xy_device
         self._max_speed = max_mm_per_sec
         self._speed_exponent = speed_exponent
+        self._moving = False
 
+        # Worker thread for device I/O
+        self._worker = _ASIDeviceWorker(xy_device, mmcore, self.SAFE_RADIUS_MM)
+        self._thread = QThread(self)
+        self._worker.moveToThread(self._thread)
+        self._thread.finished.connect(self._worker.deleteLater)
+
+        self._sig_begin_move.connect(self._worker.begin_move)
+        self._sig_set_vector_move.connect(self._worker.set_vector_move)
+        self._sig_update_limits.connect(self._worker.update_safe_limits)
+        self._sig_end_move.connect(self._worker.end_move)
+
+        self._thread.start()
+
+        # Joystick UI
         self._joystick = JoystickWidget(self)
         self._joystick.deflectionChanged.connect(self._on_deflection)
         self._joystick.released.connect(self._on_release)
@@ -293,68 +369,46 @@ class ASIStageJoystick(QWidget):
         # Timer to periodically update safe limits during a long move
         self._limit_timer = QTimer(self)
         self._limit_timer.setInterval(self.LIMIT_UPDATE_MS)
-        self._limit_timer.timeout.connect(self._update_safe_limits)
+        self._limit_timer.timeout.connect(self._sig_update_limits)
 
-        # Original limit values, stored on first deflection, restored on release
-        self._orig_limits: dict[str, str] | None = None
+    def _shutdown_thread(self) -> None:
+        if self._thread.isRunning():
+            self._on_release()
+            self._thread.quit()
+            self._thread.wait()
 
-    # ---- core helpers ----
+    def closeEvent(self, event: QCloseEvent) -> None:
+        self._shutdown_thread()
+        super().closeEvent(event)
 
-    def _set_vector_move(self, vx: float, vy: float) -> None:
-        if mmcore := current_core(self):
-            mmcore.setProperty(self._device, "VectorMoveX-VE(mm/s)", vx)
-            mmcore.setProperty(self._device, "VectorMoveY-VE(mm/s)", vy)
+    def deleteLater(self) -> None:
+        self._shutdown_thread()
+        super().deleteLater()
 
-    def _update_safe_limits(self) -> None:
-        """Clamp travel limits to SAFE_RADIUS_MM around current position."""
-        mmcore = current_core(self)
-        if mmcore is None:
-            return
-        x, y = mmcore.getXPosition(self._device), mmcore.getYPosition(self._device)
-        r = self.SAFE_RADIUS_MM
-        # convert um -> mm for limit properties
-        x_mm, y_mm = x / 1000.0, y / 1000.0
-        mmcore.setProperty(self._device, "LowerLimX(mm)", x_mm - r)
-        mmcore.setProperty(self._device, "LowerLimY(mm)", y_mm - r)
-        mmcore.setProperty(self._device, "UpperLimX(mm)", x_mm + r)
-        mmcore.setProperty(self._device, "UpperLimY(mm)", y_mm + r)
-
-    # ---- signal handlers ----
+    # ---- signal handlers (main thread) ----
 
     def _on_deflection(self, dx: float, dy: float) -> None:
-        mmcore = current_core(self)
-        if mmcore is None:
-            return
-
-        # First deflection: store original limits and start safety timer
-        if self._orig_limits is None:
-            self._orig_limits = {
-                p: mmcore.getProperty(self._device, p) for p in self._LIMIT_PROPS
-            }
-            self._update_safe_limits()
+        if not self._moving:
+            self._moving = True
+            self._sig_begin_move.emit()
             self._limit_timer.start()
 
         mag = min(math.hypot(dx, dy), 1.0)
         if mag < 0.05:
-            self._set_vector_move(0.0, 0.0)
+            self._sig_set_vector_move.emit(0.0, 0.0)
             return
 
         speed = mag**self._speed_exponent * self._max_speed
         ux, uy = dx / mag, dy / mag
         # Invert Y: MM convention is +Y = stage up, joystick +dy = screen up
-        self._set_vector_move(ux * speed, -uy * speed)
+        self._sig_set_vector_move.emit(ux * speed, -uy * speed)
 
     def _on_release(self) -> None:
-        # CRITICAL: stop stage motion immediately
-        self._set_vector_move(0.0, 0.0)
+        if not self._moving:
+            return
+        self._moving = False
         self._limit_timer.stop()
-
-        # Restore original limits
-        if self._orig_limits is not None:
-            if mmcore := current_core(self):
-                for prop, val in self._orig_limits.items():
-                    mmcore.setProperty(self._device, prop, val)
-            self._orig_limits = None
+        self._sig_end_move.emit()
 
 
 # ---- D-Pad ----
