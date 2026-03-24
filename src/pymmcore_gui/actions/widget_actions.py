@@ -40,6 +40,7 @@ class WidgetAction(ActionKey):
     CONFIG_GROUPS = "pymmcore_gui.config_groups_widget"
     CAMERA_ROI = "pymmcore_gui.camera_roi_widget"
     CONSOLE = "pymmcore_gui.console"
+    CORE_LOG = "pymmcore_gui.core_log"
     EXCEPTION_LOG = "pymmcore_gui.exception_log"
     STAGE_CONTROL = "pymmcore_gui.stage_control_widget"
     CONFIG_WIZARD = "pymmcore_gui.hardware_config_wizard"
@@ -151,6 +152,13 @@ def create_pixel_config(parent: QWidget) -> pmmw.PixelConfigurationWidget:
             return super().close()
 
     return PixelConfigurationWidget(parent=parent, mmcore=_get_core(parent))
+
+
+def create_core_log(parent: QWidget) -> ExceptionLog:
+    """Create the Core Log widget."""
+    from pymmcore_widgets import CoreLogWidget
+
+    return CoreLogWidget(parent=parent)
 
 
 def create_exception_log(parent: QWidget) -> ExceptionLog:
@@ -278,6 +286,14 @@ show_pixel_config = WidgetActionInfo(
     shortcut="Ctrl+Shift+X",
     icon="mdi-light:grid",
     create_widget=create_pixel_config,
+)
+
+show_core_log = WidgetActionInfo(
+    key=WidgetAction.CORE_LOG,
+    text="Core Log",
+    icon="mdi-light:script",
+    create_widget=create_core_log,
+    dock_area=None,
 )
 
 show_exception_log = WidgetActionInfo(
