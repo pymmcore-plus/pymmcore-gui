@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Annotated, TypeVar, cast
 import pymmcore_widgets as pmmw
 from pymmcore_plus import CMMCorePlus
 
-from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea, SideBarLocation
+from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea
 from pymmcore_gui._qt.QtCore import Qt
 from pymmcore_gui._qt.QtGui import QAction
 from pymmcore_gui._qt.QtWidgets import QDialog, QVBoxLayout, QWidget
