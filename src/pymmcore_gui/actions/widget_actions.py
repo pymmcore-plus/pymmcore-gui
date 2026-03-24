@@ -239,7 +239,7 @@ show_property_browser = WidgetActionInfo(
     shortcut="Ctrl+Shift+P",
     icon="mdi-light:format-list-bulleted",
     create_widget=create_property_browser,
-    dock_area=SideBarLocation.SideBarLeft,
+    dock_area=None,
 )
 
 show_install_devices = WidgetActionInfo(
@@ -274,9 +274,13 @@ show_config_groups = WidgetActionInfo(
     key=WidgetAction.CONFIG_GROUPS,
     text="Config Groups",
     shortcut="Ctrl+Shift+G",
-    icon="mdi-light:format-list-bulleted",
+    icon="mdi-light:menu",
     create_widget=create_config_groups,
     dock_area=DockWidgetArea.LeftDockWidgetArea,
+    # On macOS, Qt automatically moves actions whose text contains "config" to the
+    # application's "Preferences" menu. NoRole prevents that and keeps this action
+    # in the intended menu.
+    menu_role=QAction.MenuRole.NoRole,
 )
 
 show_pixel_config = WidgetActionInfo(

@@ -182,11 +182,12 @@ class MicroManagerGUI(QMainWindow):
         Toolbar.OPTICAL_CONFIGS: OCToolBar,
         # Toolbar.SHUTTERS: ShuttersToolbar,
         Toolbar.WIDGETS: [
-            WidgetAction.CONSOLE,
-            WidgetAction.PROP_BROWSER,
+            WidgetAction.CONFIG_GROUPS,
             WidgetAction.MDA_WIDGET,
             WidgetAction.STAGE_CONTROL,
             WidgetAction.CAMERA_ROI,
+            WidgetAction.PROP_BROWSER,
+            WidgetAction.CONSOLE,
         ],
     }
     # Menus are a mapping of strings to either a list of ActionKeys or a callable
