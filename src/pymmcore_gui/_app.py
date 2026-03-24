@@ -14,7 +14,8 @@ from superqt.utils import WorkerBase
 
 from pymmcore_gui import __version__
 from pymmcore_gui._ads_style import apply_dark_theme
-from pymmcore_gui._main_window import ICON, MicroManagerGUI
+from pymmcore_gui._main_window import ICON
+from pymmcore_gui._main_window3 import MicroManagerGUI
 from pymmcore_gui._qt.QtCore import QTimer, Signal
 from pymmcore_gui._qt.QtGui import QIcon
 from pymmcore_gui._qt.QtWidgets import QApplication, QCheckBox, QMessageBox, QWidget
@@ -173,10 +174,13 @@ def create_mmgui(
     # -------------------------------------------------
 
     win = MicroManagerGUI(mmcore=mmcore)
-    if qstyle == "qlementine":
+    if qstyle == "qlementine" and hasattr(win, "dock_manager"):
         win.dock_manager.setStyleSheet("")
 
-    QTimer.singleShot(0, lambda: win.restore_state(show=True))
+    if hasattr(win, "restore_state"):
+        QTimer.singleShot(0, lambda: win.restore_state(show=True))
+    else:
+        win.show()
 
     # if False was passed, don't load any config at all
     if mm_config is not False:
