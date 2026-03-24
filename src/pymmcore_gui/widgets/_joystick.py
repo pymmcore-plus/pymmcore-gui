@@ -262,9 +262,16 @@ class StageJoystick(QWidget):
 
 
 class _ASIDeviceWorker(QObject):
-    """Worker that performs all ASI stage I/O on a dedicated thread."""
+    """Worker that performs all ASI stage I/O on a dedicated thread.
+
+    The main thread writes the target velocity via set_target_velocity()
+    (lock-protected, no queuing). A tick timer on the worker thread
+    periodically applies the latest velocity and updates safe limits.
+    """
 
     _LIMIT_PROPS = ("LowerLimX(mm)", "LowerLimY(mm)", "UpperLimX(mm)", "UpperLimY(mm)")
+    TICK_MS: int = 50
+    LIMIT_UPDATE_EVERY: int = 4  # update limits every N ticks (~200ms at 50ms tick)
 
     def __init__(self, device: str, mmcore: CMMCorePlus, safe_radius_mm: float) -> None:
         super().__init__()
@@ -272,29 +279,34 @@ class _ASIDeviceWorker(QObject):
         self._mmcore = mmcore
         self._safe_radius_mm = safe_radius_mm
         self._orig_limits: dict[str, str] | None = None
-        # Set when release is requested; checked by set_vector_move to skip
-        # stale queued commands that arrive after a stop.
-        self._stopped = threading.Event()
-        self._stopped.set()
+        self._lock = threading.Lock()
+        self._target_vx = 0.0
+        self._target_vy = 0.0
+        self._tick_count = 0
 
-    def set_vector_move(self, vx: float, vy: float) -> None:
-        if self._stopped.is_set():
-            return
+        self._tick_timer = QTimer(self)
+        self._tick_timer.setInterval(self.TICK_MS)
+        self._tick_timer.timeout.connect(self._tick)
+
+    def set_target_velocity(self, vx: float, vy: float) -> None:
+        """Called from main thread. Stores latest target; no queuing."""
+        with self._lock:
+            self._target_vx = vx
+            self._target_vy = vy
+
+    def _tick(self) -> None:
+        """Apply latest velocity and periodically update safe limits."""
+        with self._lock:
+            vx, vy = self._target_vx, self._target_vy
         self._mmcore.setProperty(self._device, "VectorMoveX-VE(mm/s)", vx)
         self._mmcore.setProperty(self._device, "VectorMoveY-VE(mm/s)", vy)
 
-    def begin_move(self) -> None:
-        """Save original limits, set safe limits, allow vector moves."""
-        self._stopped.clear()
-        self._orig_limits = {
-            p: self._mmcore.getProperty(self._device, p) for p in self._LIMIT_PROPS
-        }
-        self.update_safe_limits()
+        self._tick_count += 1
+        if self._tick_count >= self.LIMIT_UPDATE_EVERY:
+            self._tick_count = 0
+            self._update_safe_limits()
 
-    def update_safe_limits(self) -> None:
-        """Clamp travel limits to safe_radius_mm around current position."""
-        if self._stopped.is_set():
-            return
+    def _update_safe_limits(self) -> None:
         x, y = self._mmcore.getXYPosition(self._device)
         r = self._safe_radius_mm
         x_mm, y_mm = x / 1000.0, y / 1000.0
@@ -303,10 +315,18 @@ class _ASIDeviceWorker(QObject):
         self._mmcore.setProperty(self._device, "UpperLimX(mm)", x_mm + r)
         self._mmcore.setProperty(self._device, "UpperLimY(mm)", y_mm + r)
 
+    def begin_move(self) -> None:
+        """Save original limits, set initial safe limits, start tick timer."""
+        self._orig_limits = {
+            p: self._mmcore.getProperty(self._device, p) for p in self._LIMIT_PROPS
+        }
+        self._tick_count = 0
+        self._update_safe_limits()
+        self._tick_timer.start()
+
     def end_move(self) -> None:
-        """Stop stage motion and restore original limits."""
-        # Flag first so any queued set_vector_move calls become no-ops
-        self._stopped.set()
+        """Stop stage motion, stop tick timer, restore original limits."""
+        self._tick_timer.stop()
         self._mmcore.setProperty(self._device, "VectorMoveX-VE(mm/s)", 0.0)
         self._mmcore.setProperty(self._device, "VectorMoveY-VE(mm/s)", 0.0)
         if self._orig_limits is not None:
@@ -322,12 +342,9 @@ class ASIStageJoystick(QWidget):
     """
 
     SAFE_RADIUS_MM: float = 1.0
-    LIMIT_UPDATE_MS: int = 200
 
     # Internal signals -> worker slots (queued across threads)
     _sig_begin_move = Signal()
-    _sig_set_vector_move = Signal(float, float)
-    _sig_update_limits = Signal()
     _sig_end_move = Signal()
 
     def __init__(
@@ -351,8 +368,6 @@ class ASIStageJoystick(QWidget):
         self._thread.finished.connect(self._worker.deleteLater)
 
         self._sig_begin_move.connect(self._worker.begin_move)
-        self._sig_set_vector_move.connect(self._worker.set_vector_move)
-        self._sig_update_limits.connect(self._worker.update_safe_limits)
         self._sig_end_move.connect(self._worker.end_move)
 
         self._thread.start()
@@ -365,11 +380,6 @@ class ASIStageJoystick(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self._joystick)
-
-        # Timer to periodically update safe limits during a long move
-        self._limit_timer = QTimer(self)
-        self._limit_timer.setInterval(self.LIMIT_UPDATE_MS)
-        self._limit_timer.timeout.connect(self._sig_update_limits)
 
     def _shutdown_thread(self) -> None:
         if self._thread.isRunning():
@@ -388,26 +398,25 @@ class ASIStageJoystick(QWidget):
     # ---- signal handlers (main thread) ----
 
     def _on_deflection(self, dx: float, dy: float) -> None:
-        if not self._moving:
-            self._moving = True
-            self._sig_begin_move.emit()
-            self._limit_timer.start()
-
         mag = min(math.hypot(dx, dy), 1.0)
         if mag < 0.05:
-            self._sig_set_vector_move.emit(0.0, 0.0)
+            self._worker.set_target_velocity(0.0, 0.0)
             return
 
         speed = mag**self._speed_exponent * self._max_speed
         ux, uy = dx / mag, dy / mag
         # Invert Y: MM convention is +Y = stage up, joystick +dy = screen up
-        self._sig_set_vector_move.emit(ux * speed, -uy * speed)
+        self._worker.set_target_velocity(ux * speed, -uy * speed)
+
+        if not self._moving:
+            self._moving = True
+            self._sig_begin_move.emit()
 
     def _on_release(self) -> None:
         if not self._moving:
             return
         self._moving = False
-        self._limit_timer.stop()
+        self._worker.set_target_velocity(0.0, 0.0)
         self._sig_end_move.emit()
 
 
