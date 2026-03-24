@@ -16,8 +16,11 @@ from pymmcore_gui._qt.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from pymmcore_gui._utils import current_core
 
 if TYPE_CHECKING:
+    from contextlib import AbstractContextManager
+
     from pymmcore_plus import CMMCorePlus
     from qtpy.QtGui import QKeyEvent, QMouseEvent, QPaintEvent
 
@@ -186,6 +189,7 @@ class StageJoystick(QWidget):
         parent: QWidget | None = None,
     ):
         super().__init__(parent)
+        self._device = xy_device
         self._acc = QStageMoveAccumulator.for_device(xy_device, mmcore)
         self._max_speed = max_um_per_sec
         self._speed_exponent = speed_exponent
@@ -205,12 +209,23 @@ class StageJoystick(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self._joystick)
 
+        self._no_backlash_ctx: list[AbstractContextManager] = []
+
     def _on_deflection(self, dx: float, dy: float) -> None:
         # Micromanager coordinate system is +X -> stage moves left
         # and +Y -> stage moves up (opposite of X situation).
         # we want the vector of deflection to go in the same direction as stage movement
         # so invert Y here.
         # https://micro-manager.org/Coordinates_and_Directionality
+        if not self._no_backlash_ctx and (core := current_core(self)):
+            if "BacklashX-B(um)" in core.getDevicePropertyNames(self._device):
+                self._no_backlash_ctx = [
+                    core.setContext(property=(self._device, "BacklashX-B(um)", 0.0)),
+                    core.setContext(property=(self._device, "BacklashY-B(um)", 0.0)),
+                ]
+                for _ctx in self._no_backlash_ctx:
+                    _ctx.__enter__()
+
         self._dx = dx
         self._dy = -dy
         if not self._tick_timer.isActive() and (dx or dy):
@@ -218,6 +233,10 @@ class StageJoystick(QWidget):
 
     def _on_release(self) -> None:
         self._tick_timer.stop()
+        if self._no_backlash_ctx:
+            for _ctx in self._no_backlash_ctx:
+                _ctx.__exit__(None, None, None)
+            self._no_backlash_ctx.clear()
 
     def _on_tick(self) -> None:
         mag = min(math.hypot(self._dx, self._dy), 1.0)
