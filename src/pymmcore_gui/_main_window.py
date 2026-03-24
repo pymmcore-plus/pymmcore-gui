@@ -276,10 +276,10 @@ class MicroManagerGUI(QMainWindow):
         self._central.setFeature(CDockWidget.DockWidgetFeature.NoTab, True)
         blank = QWidget()
         blank.setObjectName("blank")
-        # blank.setStyleSheet(
-        #     "background-color: qlineargradient("
-        #     "x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #333, stop: 1 #111);"
-        # )
+        blank.setStyleSheet(
+            "background-color: qlineargradient("
+            "x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #333, stop: 1 #111);"
+        )
         self._central.setWidget(blank)
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
