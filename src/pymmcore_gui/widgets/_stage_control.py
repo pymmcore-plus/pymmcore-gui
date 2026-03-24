@@ -13,7 +13,7 @@ from pymmcore_gui._qt.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from pymmcore_gui.widgets._joystick import StageDPad, StageJoystick
+from pymmcore_gui.widgets._joystick import ASIStageJoystick, StageDPad
 
 if TYPE_CHECKING:
     from qtpy.QtGui import QWheelEvent
@@ -102,7 +102,8 @@ class _XYWrapper(QWidget):
         layout.addWidget(self._mode_tabs)
 
         self._stack = QStackedWidget(self)
-        joystick = StageJoystick(xy_device=xy_device, parent=self, mmcore=mmcore)
+        # joystick = StageJoystick(xy_device=xy_device, parent=self, mmcore=mmcore)
+        joystick = ASIStageJoystick(xy_device=xy_device, parent=self, mmcore=mmcore)
         dpad = StageDPad(xy_device=xy_device, parent=self, mmcore=mmcore)
         self._stack.addWidget(joystick)
         self._stack.addWidget(dpad)

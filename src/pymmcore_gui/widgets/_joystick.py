@@ -252,6 +252,111 @@ class StageJoystick(QWidget):
         self._acc.move_relative((ux * speed * dt, uy * speed * dt))
 
 
+class ASIStageJoystick(QWidget):
+    """Joystick that drives an ASI XY stage via VectorMove properties.
+
+    Uses ASI-specific VectorMoveX-VE / VectorMoveY-VE properties to command
+    continuous stage motion, avoiding the accumulator approach entirely.
+
+    Safety: stage travel limits are clamped to a small radius around the
+    current position while moving, and a periodic timer keeps them updated
+    during long moves.
+    """
+
+    SAFE_RADIUS_MM: float = 1.0
+    LIMIT_UPDATE_MS: int = 200
+
+    _LIMIT_PROPS = ("LowerLimX(mm)", "LowerLimY(mm)", "UpperLimX(mm)", "UpperLimY(mm)")
+    _VMOVE_PROPS = ("VectorMoveX-VE(mm/s)", "VectorMoveY-VE(mm/s)")
+
+    def __init__(
+        self,
+        xy_device: str,
+        mmcore: CMMCorePlus | None = None,
+        max_mm_per_sec: float = 4.0,
+        speed_exponent: float = 2.0,
+        parent: QWidget | None = None,
+    ):
+        super().__init__(parent)
+        self._device = xy_device
+        self._max_speed = max_mm_per_sec
+        self._speed_exponent = speed_exponent
+
+        self._joystick = JoystickWidget(self)
+        self._joystick.deflectionChanged.connect(self._on_deflection)
+        self._joystick.released.connect(self._on_release)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self._joystick)
+
+        # Timer to periodically update safe limits during a long move
+        self._limit_timer = QTimer(self)
+        self._limit_timer.setInterval(self.LIMIT_UPDATE_MS)
+        self._limit_timer.timeout.connect(self._update_safe_limits)
+
+        # Original limit values, stored on first deflection, restored on release
+        self._orig_limits: dict[str, str] | None = None
+
+    # ---- core helpers ----
+
+    def _set_vector_move(self, vx: float, vy: float) -> None:
+        if mmcore := current_core(self):
+            mmcore.setProperty(self._device, "VectorMoveX-VE(mm/s)", vx)
+            mmcore.setProperty(self._device, "VectorMoveY-VE(mm/s)", vy)
+
+    def _update_safe_limits(self) -> None:
+        """Clamp travel limits to SAFE_RADIUS_MM around current position."""
+        mmcore = current_core(self)
+        if mmcore is None:
+            return
+        x, y = mmcore.getXPosition(self._device), mmcore.getYPosition(self._device)
+        r = self.SAFE_RADIUS_MM
+        # convert um -> mm for limit properties
+        x_mm, y_mm = x / 1000.0, y / 1000.0
+        mmcore.setProperty(self._device, "LowerLimX(mm)", x_mm - r)
+        mmcore.setProperty(self._device, "LowerLimY(mm)", y_mm - r)
+        mmcore.setProperty(self._device, "UpperLimX(mm)", x_mm + r)
+        mmcore.setProperty(self._device, "UpperLimY(mm)", y_mm + r)
+
+    # ---- signal handlers ----
+
+    def _on_deflection(self, dx: float, dy: float) -> None:
+        mmcore = current_core(self)
+        if mmcore is None:
+            return
+
+        # First deflection: store original limits and start safety timer
+        if self._orig_limits is None:
+            self._orig_limits = {
+                p: mmcore.getProperty(self._device, p) for p in self._LIMIT_PROPS
+            }
+            self._update_safe_limits()
+            self._limit_timer.start()
+
+        mag = min(math.hypot(dx, dy), 1.0)
+        if mag < 0.05:
+            self._set_vector_move(0.0, 0.0)
+            return
+
+        speed = mag**self._speed_exponent * self._max_speed
+        ux, uy = dx / mag, dy / mag
+        # Invert Y: MM convention is +Y = stage up, joystick +dy = screen up
+        self._set_vector_move(ux * speed, -uy * speed)
+
+    def _on_release(self) -> None:
+        # CRITICAL: stop stage motion immediately
+        self._set_vector_move(0.0, 0.0)
+        self._limit_timer.stop()
+
+        # Restore original limits
+        if self._orig_limits is not None:
+            if mmcore := current_core(self):
+                for prop, val in self._orig_limits.items():
+                    mmcore.setProperty(self._device, prop, val)
+            self._orig_limits = None
+
+
 # ---- D-Pad ----
 
 STEP_SIZES = [0.1, 1, 10, 100, 1000]
