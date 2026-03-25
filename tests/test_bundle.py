@@ -19,25 +19,26 @@ def app_process() -> Iterator[subprocess.Popen]:
     env = os.environ.copy()
     env["PYMMGUI_TEST_QUIT_AFTER"] = "2"
 
-    proc = subprocess.Popen(
+    with subprocess.Popen(
         [str(APP)],
         env=env,
         start_new_session=True,
         stdout=subprocess.PIPE,
-    )
+    ) as proc:
+        # --- wait for the GUI to tell us it's ready ---
+        while True:
+            # this "READY" line is printed in _app.create_mmgui
+            # when "PYTEST_VERSION" is set in the environment
+            if proc.stdout and proc.stdout.readline().strip() == b"READY":
+                break
+            time.sleep(0.1)
 
-    # --- wait for the GUI to tell us it's ready ---
-    while True:
-        # this "READY" line is printed in _app.create_mmgui
-        # when "PYTEST_VERSION" is set in the environment
-        if proc.stdout and proc.stdout.readline().strip() == b"READY":
-            break
-        time.sleep(0.1)
+        yield proc
 
-    yield proc
-
-    proc.wait(timeout=10)
-    assert proc.returncode == 0
+        proc.wait(timeout=10)
+        assert proc.returncode == 0
+        if proc.stdout is not None:
+            proc.stdout.close()
 
 
 CMD_CTRL = "ctrl" if os.name == "nt" else "command"
