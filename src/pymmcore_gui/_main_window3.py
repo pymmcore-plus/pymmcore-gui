@@ -154,6 +154,27 @@ class MicroManagerGUI(QMainWindow):
         self.resize(1200, 800)
 
     # ---- public API -------------------------------------------------------
+    def setMode(self, mode: str | int) -> None:
+        """Set the current mode.
+
+        Parameters
+        ----------
+        mode : str
+            The mode to switch to. Must be one of "configure" or "acquire".
+        """
+        if isinstance(mode, str):
+            mode = mode.lower()
+            if mode == "configure":
+                idx = 0
+            elif mode == "acquire":
+                idx = 1
+            else:
+                raise ValueError(f"Invalid mode: {mode!r}")
+        elif isinstance(mode, int):
+            idx = mode
+        else:
+            raise TypeError(f"Mode must be a string or integer, got {type(mode)}")
+        self._navigation.setCurrentIndex(idx)
 
     @property
     def mmcore(self) -> CMMCorePlus:
