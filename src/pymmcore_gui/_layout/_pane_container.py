@@ -12,6 +12,7 @@ from pymmcore_gui._qt.QtWidgets import (
 
 from ._activity_bar import ActivityBar
 from ._enums import ActivityBarPosition
+from ._navigation_bar import NavigationBarAdapter
 from ._splitter_utils import (
     DEFAULT_SIDEBAR_WIDTH,
     MIN_SIDEBAR_WIDTH,
@@ -29,12 +30,10 @@ class PaneContainer(QWidget):
     def __init__(
         self,
         *,
-        orientation: Qt.Orientation = Qt.Orientation.Vertical,
         default_ab_position: str = "side",
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
-        self._activity_bar = ActivityBar(orientation, self)
         self._stack = QStackedWidget()
         self._stack.setSizePolicy(
             QSizePolicy.Policy.Expanding,
@@ -53,19 +52,18 @@ class PaneContainer(QWidget):
         self._combined_layout.setContentsMargins(0, 0, 0, 0)
         self._combined_layout.setSpacing(0)
 
-        # Forward activity bar signal
-        self._activity_bar.panelToggled.connect(self.panelToggled)
+        # Create initial activity bar based on default position
+        self._activity_bar: ActivityBar | NavigationBarAdapter = self._make_bar()
+        self._wire_bar()
 
-        # Enable context menu on activity bar and stack
-        self._activity_bar.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self._activity_bar.customContextMenuRequested.connect(self._show_context_menu)
+        # Enable context menu on stack
         self._stack.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._stack.customContextMenuRequested.connect(self._show_context_menu_stack)
 
     # ---- public API -------------------------------------------------------
 
     @property
-    def activityBar(self) -> ActivityBar:
+    def activityBar(self) -> ActivityBar | NavigationBarAdapter:
         return self._activity_bar
 
     @property
@@ -101,6 +99,9 @@ class PaneContainer(QWidget):
     def arrange(self) -> None:
         """Rearrange activity bar and stack for current position."""
         pos = self.resolvedAbPosition
+
+        # Swap bar type if needed (vertical ↔ horizontal)
+        self._ensure_correct_bar_type()
 
         self._activity_bar.setParent(None)
         self._stack.setParent(None)
@@ -167,6 +168,62 @@ class PaneContainer(QWidget):
         """Fully hide the container."""
         self.splitterWidget.hide()
         self.deselect()
+
+    # ---- bar type management ----------------------------------------------
+
+    def _needs_horizontal(self) -> bool:
+        """Whether the current position requires a horizontal bar."""
+        return self.resolvedAbPosition in ("top", "bottom")
+
+    def _is_horizontal(self) -> bool:
+        return isinstance(self._activity_bar, NavigationBarAdapter)
+
+    def _make_bar(self) -> ActivityBar | NavigationBarAdapter:
+        if self._needs_horizontal():
+            return NavigationBarAdapter(self)
+        return ActivityBar(parent=self)
+
+    def _wire_bar(self) -> None:
+        self._activity_bar.panelToggled.connect(self.panelToggled)
+        self._activity_bar.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._activity_bar.customContextMenuRequested.connect(self._show_context_menu)
+
+    def _ensure_correct_bar_type(self) -> None:
+        """Recreate the bar widget if orientation changed."""
+        need_h = self._needs_horizontal()
+        if need_h == self._is_horizontal():
+            return
+
+        # Save state from old bar
+        active = self._activity_bar.activePanel
+        panel_ids_and_titles: list[tuple[str, str, QIcon | None]] = []
+        for pid in self._activity_bar.panelIds:
+            # Recover title from tooltip (ActivityBar) or nav item text
+            if isinstance(self._activity_bar, ActivityBar):
+                btn = self._activity_bar._buttons[pid]
+                title = btn.toolTip()
+                icon = btn.icon() if not btn.icon().isNull() else None
+            else:
+                idx = self._activity_bar._panel_ids.index(pid)
+                title = self._activity_bar._nav.getItemText(idx)
+                icon = self._activity_bar._nav.getItemIcon(idx)
+                if icon and icon.isNull():
+                    icon = None
+            panel_ids_and_titles.append((pid, title, icon))
+
+        # Destroy old bar
+        self._activity_bar.setParent(None)
+        self._activity_bar.deleteLater()
+
+        # Create new bar and re-add panels
+        self._activity_bar = self._make_bar()
+        self._wire_bar()
+        for pid, title, icon in panel_ids_and_titles:
+            self._activity_bar.addPanel(pid, title, icon=icon)
+
+        # Restore active state
+        if active:
+            self._activity_bar.setActiveSilent(active)
 
     # ---- context menu -----------------------------------------------------
 

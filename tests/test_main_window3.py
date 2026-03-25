@@ -94,7 +94,7 @@ class TestActivityBar:
         btn = activity_bar.addPanel("foo", "Foo")
         assert "foo" in activity_bar.panelIds
         assert btn.toolTip() == "Foo"
-        assert btn.text() == "Fo"  # fallback: first 2 chars
+        assert btn.text() == "Foo"
 
     def test_default_orientation_is_vertical(self, activity_bar: ActivityBar) -> None:
         assert activity_bar.orientation == Qt.Orientation.Vertical
@@ -238,13 +238,20 @@ class TestPaneContainer:
         assert container.activityBar.collapsible is False
         assert container.activityBar.parent() is container._combined
 
-    def test_horizontal_activity_bar(self, qtbot: QtBot) -> None:
-        c = PaneContainer(orientation=Qt.Orientation.Horizontal)
+    def test_top_position_uses_navigation_bar(self, qtbot: QtBot) -> None:
+        from pymmcore_gui._layout import NavigationBarAdapter
+
+        c = PaneContainer(default_ab_position="top")
         qtbot.addWidget(c)
         c.addPanel("a", "A", _label())
         c.addPanel("b", "B", _label())
-        assert c.activityBar.orientation == Qt.Orientation.Horizontal
+        # top position → horizontal → NavigationBarAdapter
+        assert isinstance(c.activityBar, NavigationBarAdapter)
         assert len(c.activityBar.panelIds) == 2
+
+    def test_side_position_uses_activity_bar(self, container: PaneContainer) -> None:
+        # Default is "side" → vertical → ActivityBar
+        assert isinstance(container.activityBar, ActivityBar)
 
 
 # ---- WorkbenchWidget tests ------------------------------------------------
@@ -336,12 +343,11 @@ class TestWorkbenchWidget:
         assert "b" in w.rightSidebar.activityBar.panelIds
         assert "c" in w.bottomPanel.activityBar.panelIds
 
-    def test_bottom_panel_is_pane_container(self, workbench: WorkbenchWidget) -> None:
-        """Bottom panel should be a PaneContainer, not a QTabWidget."""
+    def test_bottom_panel_uses_navigation_bar(self, workbench: WorkbenchWidget) -> None:
+        from pymmcore_gui._layout import NavigationBarAdapter
+
         assert isinstance(workbench.bottomPanel, PaneContainer)
-        assert (
-            workbench.bottomPanel.activityBar.orientation == Qt.Orientation.Horizontal
-        )
+        assert isinstance(workbench.bottomPanel.activityBar, NavigationBarAdapter)
 
     def test_state_buttons(self, workbench: WorkbenchWidget) -> None:
         """stateButtons() returns a widget with 4 auto-raise buttons."""
@@ -459,6 +465,31 @@ def _sidebar_sizes(wb: WorkbenchWidget) -> tuple[int, int, int]:
     right = wb.rightSidebar.splitterWidget
     editor = wb.centralWidget
     return left.width(), editor.width(), right.width()
+
+
+def test_switching_views_in_panel_does_not_resize(
+    shown_workbench: WorkbenchWidget,
+) -> None:
+    """Switching between views within the same container must not resize it."""
+    wb = shown_workbench
+
+    # Add a second view to the panel
+    wb.addView("console", "Console", _label(), L.PANEL)
+
+    panel_w = wb.bottomPanel.splitterWidget
+    h0 = splitter_size(panel_w)
+    assert h0 > 0
+
+    # Switch to the new view
+    wb.bottomPanel.activityBar.setActive("console")
+    h1 = splitter_size(panel_w)
+
+    # Switch back
+    wb.bottomPanel.activityBar.setActive("terminal")
+    h2 = splitter_size(panel_w)
+
+    assert h1 == h0, f"panel grew on first switch: {h0} -> {h1}"
+    assert h2 == h0, f"panel grew on second switch: {h0} -> {h2}"
 
 
 def test_alignment_cycle_no_drift(shown_workbench: WorkbenchWidget) -> None:

@@ -69,7 +69,7 @@ class ActivityBar(QWidget):
         if icon:
             btn.setIcon(icon)
         else:
-            btn.setText(text[:2])
+            btn.setText(text)
         btn.setCheckable(True)
         btn.setAutoExclusive(False)
         btn.setObjectName(panel_id)
@@ -105,12 +105,12 @@ class ActivityBar(QWidget):
         self._active = panel_id
         self._buttons[panel_id].setChecked(True)
 
+    # ---- internals --------------------------------------------------------
+
     def _activate_without_collapse(self, panel_id: str) -> None:
         """Set panel as active (checked) without allowing collapse."""
         self.setActiveSilent(panel_id)
         self.panelToggled.emit(panel_id)
-
-    # ---- internals --------------------------------------------------------
 
     def _on_clicked(self) -> None:
         panel_id = self.sender().objectName()

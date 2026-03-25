@@ -54,7 +54,6 @@ class WorkbenchWidget(QWidget):
                 default_ab_position="top",
             ),
             ViewContainerLocation.PANEL: PaneContainer(
-                orientation=Qt.Orientation.Horizontal,
                 default_ab_position="top",
             ),
         }
@@ -512,7 +511,11 @@ class WorkbenchWidget(QWidget):
     def _on_container_toggled(self, panel_id: str) -> None:
         container: PaneContainer = self.sender()  # type: ignore[assignment,unused-ignore]
         if panel_id:
-            self._restore_container(container, panel_id)
+            if container.isCollapsed:
+                self._restore_container(container, panel_id)
+            elif panel_id in container._panels:
+                # Already visible — just switch the view, don't resize
+                container.stack.setCurrentWidget(container._panels[panel_id])
         else:
             self._collapse_container(container)
         self.visibilityChanged.emit()

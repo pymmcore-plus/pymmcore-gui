@@ -79,6 +79,7 @@ class MicroManagerGUI(QMainWindow):
             "Explorer",
             _make_label("Primary Side Bar"),
             L.LEFT_SIDEBAR,
+            icon=QIconifyIcon("codicon:files"),
         )
         wb.leftSidebar.activityBar.setActive("explorer")
         wb.addView(
@@ -91,6 +92,12 @@ class MicroManagerGUI(QMainWindow):
         wb.addView(
             "terminal",
             "Terminal",
+            _make_label("Panel"),
+            L.PANEL,
+        )
+        wb.addView(
+            "console",
+            "Console",
             _make_label("Panel"),
             L.PANEL,
         )
