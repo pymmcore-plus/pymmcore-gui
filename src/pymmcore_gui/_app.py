@@ -24,6 +24,7 @@ from pymmcore_gui._qt.QtWidgets import (
     QWidget,
 )
 from pymmcore_gui._settings import Settings
+from pymmcore_gui._sim_sample import install_sim_sample
 
 from . import _sentry
 
@@ -191,6 +192,8 @@ def create_mmgui(
         QTimer.singleShot(0, lambda: win.restore_state(show=True))
     else:
         win.show()
+
+    install_sim_sample(win.mmcore)
 
     # if False was passed, don't load any config at all
     if mm_config is not False:
