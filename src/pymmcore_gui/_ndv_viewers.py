@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import warnings
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 from weakref import WeakSet, WeakValueDictionary
 
 import ndv
 import useq
-from pymmcore_plus.mda.handlers import TensorStoreHandler
 
 from pymmcore_gui._qt.QtAds import CDockWidget
 from pymmcore_gui._qt.QtCore import QObject, QTimer, Signal
@@ -21,7 +19,6 @@ if TYPE_CHECKING:
         IndexMap,  # pyright: ignore[reportPrivateImportUsage]
     )
     from pymmcore_plus import CMMCorePlus
-    from pymmcore_plus.mda import SupportsFrameReady
     from pymmcore_plus.metadata import FrameMetaV1, SummaryMetaV1
     from useq import MDASequence
 
@@ -53,14 +50,7 @@ class NDVViewersManager(QObject):
         # weakref map of {sequence_uid: ndv.ArrayViewer}
         self._seq_viewers = WeakValueDictionary[str, ndv.ArrayViewer]()
         self._preview_dock_widgets = WeakSet[CDockWidget]()
-        # currently active viewer
         self._active_mda_viewer: ndv.ArrayViewer | None = None
-
-        # We differentiate between handlers that were created by someone else, and
-        # gathered using mda.get_output_handlers(), vs handlers that were created by us.
-        # because we need to call frameReady/sequenceFinished manually on the latter.
-        self._handler: SupportsFrameReady | None = None
-        self._own_handler: TensorStoreHandler | None = None
 
         # CONNECTIONS ---------------------------------------------------------
 
@@ -73,6 +63,7 @@ class NDVViewersManager(QObject):
         ev.continuousSequenceAcquisitionStarted.connect(self._on_streaming_started)
         ev.propertyChanged.connect(self._on_property_changed)
 
+        self._runner = self._mmc.mda
         mda_ev = self._mmc.mda.events
         mda_ev.sequenceStarted.connect(self._on_sequence_started)
         mda_ev.frameReady.connect(self._on_frame_ready)
@@ -82,82 +73,58 @@ class NDVViewersManager(QObject):
 
     def _cleanup(self, obj: QObject | None = None) -> None:
         self._active_mda_viewer = None
-        self._handler = None
-        self._own_handler = None
 
     def _on_sequence_started(
         self, sequence: useq.MDASequence, meta: SummaryMetaV1
     ) -> None:
-        """Called when a new MDA sequence has been started.
-
-        We grab the first handler in the list of output handlers, or create a new
-        TensorStoreHandler if none exist. Then we create a new ndv viewer and show it.
-        """
+        """Called when a new MDA sequence has been started."""
         self._is_mda_running = True
-
-        self._own_handler = self._handler = None
-        if handlers := self._mmc.mda.get_output_handlers():
-            # someone else has created a handler for this sequence
-            self._handler = handlers[0]
-        else:
-            # if it does not exist, create a new TensorStoreHandler
-            self._own_handler = TensorStoreHandler(driver="zarr", kvstore="memory://")
-            self._own_handler.reset(sequence)
-
-        # since the handler is empty at this point, create a ndv viewer with no data
-        self._active_mda_viewer = self._create_ndv_viewer(sequence)
+        self._view = self._runner.get_view()
+        self._active_mda_viewer = self._create_ndv_viewer(self._view, sequence)
+        # NOTE: we intentionally do NOT connect view.coords_changed to
+        # viewer.data_wrapper.dims_changed here.  coords_changed fires in the
+        # MDA background thread, and dims_changed handlers create/modify Qt
+        # widgets which must only happen on the main thread.  Instead, we
+        # marshal dim updates through QTimer in _on_frame_ready.
 
     def _on_frame_ready(
         self, frame: np.ndarray, event: useq.MDAEvent, meta: FrameMetaV1
     ) -> None:
         """Create a viewer if it does not exist, otherwise update the current index."""
-        # at this point the viewer should exist
-        if self._own_handler is not None:
-            self._own_handler.frameReady(frame, event, meta)
-
         if (viewer := self._active_mda_viewer) is None:
             return  # pragma: no cover
 
-        # if the viewer does not yet have data, it's likely the very first frame
-        # so update the viewer's data source to the underlying handlers store
-        if viewer.data_wrapper is None:
-            handler = self._handler or self._own_handler
-            if isinstance(handler, TensorStoreHandler):
-                # TODO: temporary. maybe create the DataWrapper for the handlers
-                viewer.data = handler.store
-            else:
-                warnings.warn(
-                    f"don't know how to show data of type {type(handler)}",
-                    stacklevel=2,
-                )
-        # otherwise update the sliders to the most recently acquired frame
-        else:
-            # Add a small delay to make sure the data are available in the handler
-            # This is a bit of a hack to get around the data handlers can write data
-            # asynchronously, so the data may not be available immediately to the viewer
-            # after the handler's frameReady method is called.
-            current_index = viewer.display_model.current_index
+        # Add a small delay to make sure the data are available in the handler
+        # This is a bit of a hack to get around the data handlers can write data
+        # asynchronously, so the data may not be available immediately to the viewer
+        # after the handler's frameReady method is called.
+        current_index = viewer.display_model.current_index
+        wrapper = viewer.data_wrapper
 
-            def _update(_idx: IndexMap = current_index) -> None:
-                try:
-                    _idx.update(event.index.items())
-                except Exception:  # pragma: no cover
-                    # this happens if the viewer has been closed in the meantime
-                    # usually it's a RuntimeError, but could be an EmitLoopError
-                    pass
+        # ome-writers flattens both "p" (position) and "g" (grid) into a single
+        # "p" dimension, but useq events may use Axis.GRID ("g") as the key.
+        # Remap so the viewer can find the correct axis.
+        index = {("p" if str(k) == "g" else k): v for k, v in event.index.items()}
 
-            QTimer.singleShot(10, _update)
+        def _update(_idx: IndexMap = current_index) -> None:
+            try:
+                _idx.update(index.items())
+                if wrapper is not None:
+                    wrapper.data_changed.emit()
+            except Exception:  # pragma: no cover
+                # this happens if the viewer has been closed in the meantime
+                # usually it's a RuntimeError, but could be an EmitLoopError
+                return
+
+        QTimer.singleShot(10, _update)
 
     def _on_sequence_finished(self, sequence: useq.MDASequence) -> None:
         """Called when a sequence has finished."""
-        if self._own_handler is not None:
-            self._own_handler.sequenceFinished(sequence)
-        # cleanup pointers somehow?
         self._is_mda_running = False
 
-    def _create_ndv_viewer(self, sequence: MDASequence) -> ndv.ArrayViewer:
+    def _create_ndv_viewer(self, view: Any, sequence: MDASequence) -> ndv.ArrayViewer:
         """Create a new ndv viewer with no data."""
-        ndv_viewer = ndv.ArrayViewer()
+        ndv_viewer = ndv.ArrayViewer(view)
         self._seq_viewers[str(sequence.uid)] = ndv_viewer
         self.mdaViewerCreated.emit(ndv_viewer, sequence)
         return ndv_viewer
