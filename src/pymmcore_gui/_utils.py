@@ -1,6 +1,15 @@
+from __future__ import annotations
+
 import urllib.error
 import urllib.request
 from functools import cache
+from typing import TYPE_CHECKING, cast
+
+if TYPE_CHECKING:
+    from pymmcore_plus import CMMCorePlus
+
+    from pymmcore_gui._qt.QtCore import QObject
+
 
 GH_REPO_URL = "http://github.com/pymmcore-plus/pymmcore-gui"
 
@@ -72,3 +81,12 @@ def gh_link(
                 href = root
 
     return href
+
+
+def current_core(obj: QObject) -> CMMCorePlus | None:
+    """Walk the Qt parent chain to find the nearest CMMCorePlus instance."""
+    while obj is not None:
+        if (core := getattr(obj, "mmcore", None)) is not None:
+            return cast("CMMCorePlus", core)
+        obj = obj.parent()
+    return None
