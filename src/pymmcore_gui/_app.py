@@ -3,12 +3,11 @@ from __future__ import annotations
 import importlib
 import importlib.util
 import os
-import signal
 import sys
 import traceback
 import warnings
 from contextlib import suppress
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 from superqt.utils import WorkerBase
 
@@ -134,21 +133,19 @@ def create_mmgui(
             stacklevel=2,
         )
 
-    # prepare graceful shutdown from SIGINT/SIGTERM when running tests
-
     if TESTING:
-
-        def _quit(*_: Any) -> None:
-            if app := QApplication.instance():
-                QTimer.singleShot(0, app.quit)
-
-        signal.signal(signal.SIGINT, _quit)
-        if hasattr(signal, "SIGTERM"):
-            signal.signal(signal.SIGTERM, _quit)
-
         # when the main window shows up, print "READY" to stdout
         # this is used in test_bundle.py to know when the app is ready
         print("READY", flush=True)
+
+        # Optional test-only auto-quit to avoid external process termination.
+        if quit_after := os.environ.get("PYMMGUI_TEST_QUIT_AFTER"):
+            try:
+                delay_ms = int(float(quit_after) * 1000)
+            except ValueError:
+                delay_ms = 0
+            if delay_ms > 0:
+                QTimer.singleShot(delay_ms, app.quit)
 
     # -------------------------------------------------
 
