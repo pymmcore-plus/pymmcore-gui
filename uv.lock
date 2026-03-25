@@ -2790,7 +2790,7 @@ requires-dist = [
     { name = "pymmcore-plus", extras = ["cli"], specifier = ">=0.18.0rc1" },
     { name = "pymmcore-widgets", git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=christina" },
     { name = "pyqt6", specifier = "==6.9.1" },
-    { name = "pyqt6-qlementine", directory = "../PyQlementine/packages/PyQt6-Qlementine" },
+    { name = "pyqt6-qlementine", specifier = ">=1.4.3.0rc2" },
     { name = "pyqt6ads", specifier = "==4.4.0.post2" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "qtconsole", specifier = ">=5.6.1" },
@@ -2975,20 +2975,15 @@ wheels = [
 [[package]]
 name = "pyqt6-qlementine"
 version = "1.4.3.0rc2"
-source = { directory = "../PyQlementine/packages/PyQt6-Qlementine" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyqt6" },
+    { name = "pyqt6-sip" },
 ]
-
-[package.metadata]
-requires-dist = [{ name = "pyqt6", specifier = ">=6.8.0" }]
-
-[package.metadata.requires-dev]
-build = [
-    { name = "pyqt-builder", specifier = ">=1.17,<2" },
-    { name = "pyqt6", specifier = "==6.8.1" },
-    { name = "pyqt6-qt6", specifier = "==6.8.2" },
-    { name = "sip", specifier = ">=6,<7" },
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/44/1e/981b3f66632adf4d4ef5ec972a55eecbad644a1324c09d68a4aa468b8368/pyqt6_qlementine-1.4.3.0rc2-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:9ef3375119377ac1a013fdac1e5ebc9d1acb2036447ca2a98fd5844516657006", size = 2356026, upload-time = "2026-03-22T20:54:52.411Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/7e/e1742d2b107fcfc43c89d3241a3f5323d633654f4b6daf8ecae5f812b631/pyqt6_qlementine-1.4.3.0rc2-cp310-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:c281511f18afbcf3a24d1edcbfb6812cc13f5e69d216ae32500c2abadf07b3b8", size = 2433862, upload-time = "2026-03-22T20:54:54.525Z" },
+    { url = "https://files.pythonhosted.org/packages/79/a9/c9063c0dfc0f4aa8a6da2f27eb47e3002800eb18937b1da20f4272f42b0f/pyqt6_qlementine-1.4.3.0rc2-cp310-abi3-win_amd64.whl", hash = "sha256:29a38b9831d5b7baa1f6c98f0707419527f2f10517ca63a768fbe03a4ffd3503", size = 2349033, upload-time = "2026-03-22T20:54:56.213Z" },
 ]
 
 [[package]]
