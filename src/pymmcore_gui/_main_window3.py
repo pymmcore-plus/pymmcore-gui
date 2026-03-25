@@ -324,10 +324,19 @@ class SidebarContainer(QWidget):
         self.activity_bar.deselect()
 
     def restore_from_drag(self) -> None:
-        """Re-activate the first panel after being dragged from zero."""
+        """Re-activate the first panel after being dragged from zero.
+
+        Updates button state and stack only — does NOT emit panel_toggled,
+        so the splitter sizes (which the user is actively dragging) are not
+        disturbed.
+        """
         first = next(iter(self._panels), None)
         if first:
-            self.activity_bar._activate_without_collapse(first)
+            ab = self.activity_bar
+            if ab._active and ab._active in ab._buttons:
+                ab._buttons[ab._active].setChecked(False)
+            ab._active = first
+            ab._buttons[first].setChecked(True)
             self.stack.setCurrentWidget(self._panels[first])
 
     def collapse(self) -> None:
@@ -424,10 +433,10 @@ class AcquireModeWidget(QWidget):
         self._panel_alignment = PanelAlignment.CENTER
         self._root_splitter: QSplitter | None = None
 
-        # Saved part sizes (survive alignment rebuilds)
-        self._left_sb_width = DEFAULT_SIDEBAR_WIDTH
-        self._right_sb_width = DEFAULT_SIDEBAR_WIDTH
-        self._panel_height = DEFAULT_PANEL_HEIGHT
+        # Saved sidebar/panel sizes in pixels (survive alignment rebuilds)
+        self._left_px = DEFAULT_SIDEBAR_WIDTH
+        self._right_px = DEFAULT_SIDEBAR_WIDTH
+        self._panel_px = DEFAULT_PANEL_HEIGHT
 
         # ---- leaf widgets (never destroyed) ----
         self._left_sidebar = SidebarContainer(default_ab_position="side")
@@ -507,13 +516,47 @@ class AcquireModeWidget(QWidget):
         self._panel_alignment = alignment
         self._rebuild_layout()
 
+    def toggle_sidebar(self, sidebar: SidebarContainer) -> None:
+        """Toggle a sidebar, transferring space to/from the editor only."""
+        if sidebar.is_collapsed:
+            active = sidebar.activity_bar.active_panel
+            if active:
+                self._restore_sidebar(sidebar, active)
+            else:
+                # activate_first fires panel_toggled → _on_sidebar_toggled
+                sidebar.activity_bar.activate_first()
+        else:
+            self._collapse_sidebar(sidebar)
+        self.visibility_changed.emit()
+
     def toggle_panel(self) -> None:
-        """Toggle bottom panel visibility."""
+        """Toggle bottom panel visibility, transferring space to the editor."""
         panel = self._bottom_panel
+        parent = panel.parentWidget()
         if not panel.isVisible() or _splitter_size(panel) == 0:
             panel.show()
-            _ensure_splitter_size(panel, DEFAULT_PANEL_HEIGHT)
+            if isinstance(parent, QSplitter):
+                ph = max(self._panel_px, DEFAULT_PANEL_HEIGHT)
+                idx = parent.indexOf(panel)
+                sizes = parent.sizes()
+                editor_idx = self._editor_index_in(parent)
+                if editor_idx >= 0:
+                    sizes[editor_idx] = max(sizes[editor_idx] - ph, 1)
+                sizes[idx] = ph
+                parent.setSizes(sizes)
+            else:
+                _ensure_splitter_size(panel, DEFAULT_PANEL_HEIGHT)
         else:
+            if isinstance(parent, QSplitter):
+                self._save_sizes()
+                idx = parent.indexOf(panel)
+                sizes = parent.sizes()
+                freed = sizes[idx]
+                sizes[idx] = 0
+                editor_idx = self._editor_index_in(parent)
+                if editor_idx >= 0:
+                    sizes[editor_idx] += freed
+                parent.setSizes(sizes)
             panel.hide()
         self.visibility_changed.emit()
 
@@ -522,7 +565,13 @@ class AcquireModeWidget(QWidget):
     def _detach_leaf_widgets(self) -> None:
         """Detach all reusable widgets from the splitter tree."""
         for sb in (self._left_sidebar, self._right_sidebar):
-            sb.splitter_widget.setParent(None)
+            # Detach both possible splitter widgets unconditionally.
+            # splitter_widget returns _combined or stack depending on the
+            # *current* ab_position, but the *previous* layout may have used
+            # the other one. Leaving the old widget parented to the root
+            # splitter would cause it to be destroyed with the splitter.
+            sb._combined.setParent(None)
+            sb.stack.setParent(None)
             sb.activity_bar.setParent(None)
         self._editor_tabs.setParent(None)
         self._bottom_panel.setParent(None)
@@ -646,58 +695,150 @@ class AcquireModeWidget(QWidget):
     # ---- size persistence across rebuilds ---------------------------------
 
     def _save_sizes(self) -> None:
+        """Save sidebar/panel sizes as absolute pixel values."""
         left = self._left_sidebar.splitter_widget
         right = self._right_sidebar.splitter_widget
         panel = self._bottom_panel
 
         if left.isVisible() and left.width() > 0:
-            self._left_sb_width = left.width()
+            self._left_px = left.width()
         if right.isVisible() and right.width() > 0:
-            self._right_sb_width = right.width()
+            self._right_px = right.width()
         if panel.isVisible() and panel.height() > 0:
-            self._panel_height = panel.height()
+            self._panel_px = panel.height()
+
+    @staticmethod
+    def _splitter_avail(splitter: QSplitter, fallback: int) -> int:
+        """Available widget space in a splitter (excludes handle pixels)."""
+        total = sum(splitter.sizes())
+        if total > 0:
+            return total
+        # Not yet laid out — estimate from fallback minus handles
+        handles = (splitter.count() - 1) * splitter.handleWidth()
+        return max(fallback - handles, 1)
 
     def _restore_sizes(self) -> None:
+        """Restore splitter sizes using saved pixel values.
+
+        The editor gets the residual from actual available widget space
+        (sum of sizes), so no handle-width drift accumulates.
+        """
         root = self._root_splitter
         if root is None:
             return
 
-        total_w = self._splitter_container.width() or 1200
-        total_h = self._splitter_container.height() or 800
-        lw = self._left_sb_width
-        rw = self._right_sb_width
-        ph = self._panel_height
+        cont_w = self._splitter_container.width() or 1200
+        cont_h = self._splitter_container.height() or 800
+        lw = self._left_px
+        rw = self._right_px
+        ph = self._panel_px
         align = self._panel_alignment
 
         if align == PanelAlignment.CENTER:
+            # root = H[left, V[editor, panel], right]
             v = root.widget(1)
-            root.setSizes([lw, total_w - lw - rw, rw])
-            v.setSizes([total_h - ph, ph])
+            avail = self._splitter_avail(root, cont_w)
+            root.setSizes([lw, avail - lw - rw, rw])
+            avail_v = self._splitter_avail(v, cont_h)
+            v.setSizes([avail_v - ph, ph])
+
         elif align == PanelAlignment.JUSTIFY:
+            # root = V[H[left, editor, right], panel]
             h = root.widget(0)
-            root.setSizes([total_h - ph, ph])
-            h.setSizes([lw, total_w - lw - rw, rw])
+            avail_v = self._splitter_avail(root, cont_h)
+            root.setSizes([avail_v - ph, ph])
+            avail_h = self._splitter_avail(h, cont_w)
+            h.setSizes([lw, avail_h - lw - rw, rw])
+
         elif align == PanelAlignment.LEFT:
+            # root = H[V[H[left, editor], panel], right]
             v = root.widget(0)
             inner_h = v.widget(0)
-            root.setSizes([total_w - rw, rw])
-            v.setSizes([total_h - ph, ph])
-            inner_h.setSizes([lw, total_w - rw - lw])
+            avail = self._splitter_avail(root, cont_w)
+            root.setSizes([avail - rw, rw])
+            avail_v = self._splitter_avail(v, cont_h)
+            v.setSizes([avail_v - ph, ph])
+            avail_ih = self._splitter_avail(inner_h, avail - rw)
+            inner_h.setSizes([lw, avail_ih - lw])
+
         elif align == PanelAlignment.RIGHT:
+            # root = H[left, V[H[editor, right], panel]]
             v = root.widget(1)
             inner_h = v.widget(0)
-            root.setSizes([lw, total_w - lw])
-            v.setSizes([total_h - ph, ph])
-            inner_h.setSizes([total_w - lw - rw, rw])
+            avail = self._splitter_avail(root, cont_w)
+            root.setSizes([lw, avail - lw])
+            avail_v = self._splitter_avail(v, cont_h)
+            v.setSizes([avail_v - ph, ph])
+            avail_ih = self._splitter_avail(inner_h, avail - lw)
+            inner_h.setSizes([avail_ih - rw, rw])
 
     # ---- sidebar toggling -------------------------------------------------
+
+    def _collapse_sidebar(self, sidebar: SidebarContainer) -> None:
+        """Collapse a sidebar, giving all freed space to the editor."""
+        widget = sidebar.splitter_widget
+        parent = widget.parentWidget()
+        if not isinstance(parent, QSplitter):
+            sidebar.collapse()
+            return
+        # Save current fraction before collapsing
+        self._save_sizes()
+        idx = parent.indexOf(widget)
+        sizes = parent.sizes()
+        freed = sizes[idx]
+        sizes[idx] = 0
+        # Give all freed space to the editor's slice in this splitter
+        editor_idx = self._editor_index_in(parent)
+        if editor_idx >= 0:
+            sizes[editor_idx] += freed
+        parent.setSizes(sizes)
+        sidebar.deselect()
+
+    def _restore_sidebar(self, sidebar: SidebarContainer, panel_id: str) -> None:
+        """Restore a sidebar, taking space only from the editor."""
+        # Show the widget and update button state directly — avoid
+        # sidebar.activate() which calls _ensure_splitter_size, and avoid
+        # _activate_without_collapse which emits panel_toggled (re-entering).
+        if panel_id in sidebar._panels:
+            sidebar.stack.setCurrentWidget(sidebar._panels[panel_id])
+        widget = sidebar.splitter_widget
+        widget.show()
+        ab = sidebar.activity_bar
+        if ab._active and ab._active in ab._buttons:
+            ab._buttons[ab._active].setChecked(False)
+        ab._active = panel_id
+        ab._buttons[panel_id].setChecked(True)
+
+        parent = widget.parentWidget()
+        if not isinstance(parent, QSplitter):
+            return
+        is_left = sidebar is self._left_sidebar
+        sb_px = max(self._left_px if is_left else self._right_px, DEFAULT_SIDEBAR_WIDTH)
+        idx = parent.indexOf(widget)
+        sizes = parent.sizes()
+        # Take space only from the editor
+        editor_idx = self._editor_index_in(parent)
+        if editor_idx >= 0:
+            sizes[editor_idx] = max(sizes[editor_idx] - sb_px, 1)
+        sizes[idx] = sb_px
+        parent.setSizes(sizes)
+
+    def _editor_index_in(self, splitter: QSplitter) -> int:
+        """Find the index of the editor (or sub-splitter containing it)."""
+        for i in range(splitter.count()):
+            w = splitter.widget(i)
+            if w is self._editor_tabs or (
+                isinstance(w, QSplitter) and w.isAncestorOf(self._editor_tabs)
+            ):
+                return i
+        return -1
 
     def _on_sidebar_toggled(self, panel_id: str) -> None:
         sidebar: SidebarContainer = self.sender()  # type: ignore[assignment]
         if panel_id:
-            sidebar.activate(panel_id)
+            self._restore_sidebar(sidebar, panel_id)
         else:
-            sidebar.collapse()
+            self._collapse_sidebar(sidebar)
         self.visibility_changed.emit()
 
     def _on_ab_position_changed(self) -> None:
@@ -876,7 +1017,7 @@ class MicroManagerGUI(QMainWindow):
         self._panel_align_btn.setToolTip(f"Panel Alignment: {align.value.capitalize()}")
 
     def _toggle_left_sidebar(self) -> None:
-        self._acquire_mode.left_sidebar.toggle()
+        self._acquire_mode.toggle_sidebar(self._acquire_mode.left_sidebar)
         self._update_layout_icons()
 
     def _toggle_panel(self) -> None:
@@ -884,5 +1025,5 @@ class MicroManagerGUI(QMainWindow):
         self._update_layout_icons()
 
     def _toggle_right_sidebar(self) -> None:
-        self._acquire_mode.right_sidebar.toggle()
+        self._acquire_mode.toggle_sidebar(self._acquire_mode.right_sidebar)
         self._update_layout_icons()

@@ -339,3 +339,154 @@ class TestMicroManagerGUI:
         for expected in expected_cycle:
             gui._cycle_panel_alignment()
             assert acq.panel_alignment == expected
+
+
+# ---- Splitter size stability tests ----------------------------------------
+
+TOLERANCE = 3  # pixels — accounts for integer rounding
+
+
+@pytest.fixture()
+def shown_acquire(qtbot: QtBot) -> AcquireModeWidget:
+    """AcquireModeWidget shown and laid out so splitter sizes are meaningful."""
+    w = AcquireModeWidget()
+    qtbot.addWidget(w)
+    w.resize(1200, 800)
+    w.show()
+    qtbot.waitExposed(w)
+    # Process events so Qt finalizes the layout and _save_sizes captures
+    # correct pixel values (not the pre-layout defaults).
+    from pymmcore_gui._qt.QtWidgets import QApplication
+
+    QApplication.processEvents()
+    w._save_sizes()
+    return w
+
+
+def _sidebar_sizes(acq: AcquireModeWidget) -> tuple[int, int, int]:
+    """Return (left_width, editor_width, right_width) from actual geometry."""
+    left = acq.left_sidebar.splitter_widget
+    right = acq.right_sidebar.splitter_widget
+    editor = acq.editor_tabs
+    return left.width(), editor.width(), right.width()
+
+
+def test_alignment_cycle_no_drift(shown_acquire: AcquireModeWidget) -> None:
+    """Cycling through all alignments and back should preserve sidebar sizes."""
+    from pymmcore_gui._qt.QtWidgets import QApplication
+
+    acq = shown_acquire
+    left0, _, right0 = _sidebar_sizes(acq)
+
+    alignments = list(PanelAlignment)
+    # Cycle through all alignments 3 full times
+    for _ in range(3):
+        for alignment in alignments:
+            acq.set_panel_alignment(alignment)
+            QApplication.processEvents()
+
+    # Back to original (CENTER)
+    acq.set_panel_alignment(PanelAlignment.CENTER)
+    QApplication.processEvents()
+    left_after, _, right_after = _sidebar_sizes(acq)
+
+    assert abs(left_after - left0) <= TOLERANCE, (
+        f"left sidebar drifted: {left0} -> {left_after}"
+    )
+    assert abs(right_after - right0) <= TOLERANCE, (
+        f"right sidebar drifted: {right0} -> {right_after}"
+    )
+
+
+def test_sidebar_toggle_preserves_other_sidebar(
+    shown_acquire: AcquireModeWidget,
+) -> None:
+    """Toggling one sidebar should not change the other sidebar's size."""
+    acq = shown_acquire
+    _, _, right0 = _sidebar_sizes(acq)
+
+    # Collapse and restore left sidebar several times
+    for _ in range(5):
+        acq.toggle_sidebar(acq.left_sidebar)
+        acq.toggle_sidebar(acq.left_sidebar)
+
+    _, _, right_after = _sidebar_sizes(acq)
+    assert abs(right_after - right0) <= TOLERANCE, (
+        f"right sidebar changed when toggling left: {right0} -> {right_after}"
+    )
+
+
+def test_sidebar_toggle_restores_own_size(
+    shown_acquire: AcquireModeWidget,
+) -> None:
+    """A sidebar should return to its original size after collapse/restore."""
+    acq = shown_acquire
+    left0, _, _ = _sidebar_sizes(acq)
+
+    acq.toggle_sidebar(acq.left_sidebar)  # collapse
+    acq.toggle_sidebar(acq.left_sidebar)  # restore
+
+    left_after, _, _ = _sidebar_sizes(acq)
+    assert abs(left_after - left0) <= TOLERANCE, (
+        f"left sidebar size changed after toggle cycle: {left0} -> {left_after}"
+    )
+
+
+def test_panel_toggle_preserves_sidebar_sizes(
+    shown_acquire: AcquireModeWidget,
+) -> None:
+    """Toggling the bottom panel should not affect sidebar widths."""
+    acq = shown_acquire
+    left0, _, right0 = _sidebar_sizes(acq)
+
+    for _ in range(5):
+        acq.toggle_panel()
+        acq.toggle_panel()
+
+    left_after, _, right_after = _sidebar_sizes(acq)
+    assert abs(left_after - left0) <= TOLERANCE, (
+        f"left sidebar changed when toggling panel: {left0} -> {left_after}"
+    )
+    assert abs(right_after - right0) <= TOLERANCE, (
+        f"right sidebar changed when toggling panel: {right0} -> {right_after}"
+    )
+
+
+def test_drag_restore_does_not_disturb_other_sidebar(
+    shown_acquire: AcquireModeWidget,
+) -> None:
+    """Simulating drag-to-zero then drag-back should not shift other sidebar."""
+    acq = shown_acquire
+    left0, _, _ = _sidebar_sizes(acq)
+    right_widget = acq.right_sidebar.splitter_widget
+    parent = right_widget.parentWidget()
+    assert parent is not None
+
+    from pymmcore_gui._qt.QtWidgets import QSplitter
+
+    assert isinstance(parent, QSplitter)
+    idx = parent.indexOf(right_widget)
+
+    # Simulate drag to zero (collapse right sidebar)
+    sizes = parent.sizes()
+    freed = sizes[idx]
+    editor_idx = acq._editor_index_in(parent)
+    sizes[editor_idx] += freed
+    sizes[idx] = 0
+    parent.setSizes(sizes)
+    acq._on_splitter_moved()
+
+    assert acq.right_sidebar.activity_bar.active_panel is None
+
+    # Simulate drag back (restore ~150px)
+    sizes = parent.sizes()
+    restore_px = 150
+    sizes[editor_idx] -= restore_px
+    sizes[idx] = restore_px
+    parent.setSizes(sizes)
+    acq._on_splitter_moved()
+
+    left_after, _, _ = _sidebar_sizes(acq)
+    assert abs(left_after - left0) <= TOLERANCE, (
+        f"left sidebar shifted during right drag-restore: {left0} -> {left_after}"
+    )
