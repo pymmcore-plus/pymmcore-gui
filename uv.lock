@@ -1989,8 +1989,8 @@ wheels = [
 
 [[package]]
 name = "ome-writers"
-version = "0.3.1.dev5+g71dc49126"
-source = { git = "https://github.com/pymmcore-plus/ome-writers?rev=main#71dc49126c933a5fa3b1fc01c5a6b07ebc98eb9e" }
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -1998,6 +1998,10 @@ dependencies = [
     { name = "pydantic-extra-types" },
     { name = "typing-extensions" },
     { name = "yaozarrs", extra = ["io"] },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/64/d1/bfe5e6020cf72a95031bbc0a43b175ee54fb388dba2ad28641f84c31ecb9/ome_writers-0.3.0.tar.gz", hash = "sha256:52497f55ab473aa1c8b44d66d3382b552fabe7197823f37d522a8bcc57e03acc", size = 159039, upload-time = "2026-02-27T16:15:09.64Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2e/f0/20a63db89681f73f1dc3d75d720322d9b92e3ee6df2a9861b24371d52e16/ome_writers-0.3.0-py3-none-any.whl", hash = "sha256:6f74c825170d4d76059bcf592c2086cd1fdaaf0ee9d6e2bc3004a8d7b7384500", size = 90478, upload-time = "2026-02-27T16:15:08.321Z" },
 ]
 
 [package.optional-dependencies]
@@ -2745,7 +2749,6 @@ dependencies = [
     { name = "pymmcore-plus", extra = ["cli"] },
     { name = "pymmcore-widgets" },
     { name = "pyqt6" },
-    { name = "pyqt6-qlementine" },
     { name = "pyqt6ads" },
     { name = "pyyaml" },
     { name = "qtconsole" },
@@ -2795,12 +2798,11 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "ndv", extras = ["vispy"], specifier = ">=0.5.0rc4" },
-    { name = "ome-writers", extras = ["tensorstore", "tifffile"], git = "https://github.com/pymmcore-plus/ome-writers?rev=main" },
+    { name = "ome-writers", extras = ["tensorstore", "tifffile"], specifier = ">=0.3.0" },
     { name = "pydantic-settings", specifier = ">=2.7.1" },
-    { name = "pymmcore-plus", extras = ["cli"], specifier = ">=0.18.0rc1" },
-    { name = "pymmcore-widgets", git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=christina" },
+    { name = "pymmcore-plus", extras = ["cli"], specifier = ">=0.18.0" },
+    { name = "pymmcore-widgets", specifier = ">=0.12.0" },
     { name = "pyqt6", specifier = "==6.9.1" },
-    { name = "pyqt6-qlementine", specifier = ">=1.4.3.0rc2" },
     { name = "pyqt6ads", specifier = "==4.4.0.post2" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "qtconsole", specifier = ">=5.6.1" },
@@ -2875,8 +2877,8 @@ cli = [
 
 [[package]]
 name = "pymmcore-widgets"
-version = "0.12.1.dev15+g7f5875ca2"
-source = { git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=christina#7f5875ca2d2e9f27c5a1779764155abb410eab7e" }
+version = "0.12.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pymmcore-plus", extra = ["cli"] },
     { name = "pyopengl", marker = "sys_platform == 'darwin'" },
@@ -2885,6 +2887,10 @@ dependencies = [
     { name = "superqt", extra = ["cmap", "iconify", "quantity"] },
     { name = "useq-schema" },
     { name = "vispy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e9/97/ac1f3951731cf37ebc3f6b2d859a7324a59e0ffdf031f31eba6840ec558c/pymmcore_widgets-0.12.0.tar.gz", hash = "sha256:fc1a34374ea96e51c859616ac4017d552aa8ab7eab72ad3bbd90aebcdcf27994", size = 270766, upload-time = "2026-03-15T19:13:55.233Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9a/ba/ec5909d32e2d0ec4e7de8380ae0ddb627bbd4031039d5685f302021d7584/pymmcore_widgets-0.12.0-py3-none-any.whl", hash = "sha256:fe7e157c4c6aef1b2f10e68c8abc5ab181a70e21564aa14aa2ed7b45aff21471", size = 292392, upload-time = "2026-03-15T19:13:53.68Z" },
 ]
 
 [[package]]
@@ -2981,20 +2987,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/5a/5e/e77fa2761d809cd08d724f44af01a4b6ceb0ff9648e43173187b0e4fac4e/pyqt6-6.9.1-cp39-abi3-manylinux_2_39_aarch64.whl", hash = "sha256:055870b703c1a49ca621f8a89e2ec4d848e6c739d39367eb9687af3b056d9aa3", size = 40414608, upload-time = "2025-06-06T08:49:00.26Z" },
     { url = "https://files.pythonhosted.org/packages/c4/09/69cf80456b6a985e06dd24ed0c2d3451e43567bf2807a5f3a86ef7a74a2e/pyqt6-6.9.1-cp39-abi3-win_amd64.whl", hash = "sha256:15b95bd273bb6288b070ed7a9503d5ff377aa4882dd6d175f07cad28cdb21da0", size = 25717996, upload-time = "2025-06-06T08:49:13.208Z" },
     { url = "https://files.pythonhosted.org/packages/52/b3/0839d8fd18b86362a4de384740f2f6b6885b5d06fda7720f8a335425e316/pyqt6-6.9.1-cp39-abi3-win_arm64.whl", hash = "sha256:08792c72d130a02e3248a120f0b9bbb4bf4319095f92865bc5b365b00518f53d", size = 25212132, upload-time = "2025-06-06T08:49:27.41Z" },
-]
-
-[[package]]
-name = "pyqt6-qlementine"
-version = "1.4.3.0rc2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pyqt6" },
-    { name = "pyqt6-sip" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/1e/981b3f66632adf4d4ef5ec972a55eecbad644a1324c09d68a4aa468b8368/pyqt6_qlementine-1.4.3.0rc2-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:9ef3375119377ac1a013fdac1e5ebc9d1acb2036447ca2a98fd5844516657006", size = 2356026, upload-time = "2026-03-22T20:54:52.411Z" },
-    { url = "https://files.pythonhosted.org/packages/1e/7e/e1742d2b107fcfc43c89d3241a3f5323d633654f4b6daf8ecae5f812b631/pyqt6_qlementine-1.4.3.0rc2-cp310-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:c281511f18afbcf3a24d1edcbfb6812cc13f5e69d216ae32500c2abadf07b3b8", size = 2433862, upload-time = "2026-03-22T20:54:54.525Z" },
-    { url = "https://files.pythonhosted.org/packages/79/a9/c9063c0dfc0f4aa8a6da2f27eb47e3002800eb18937b1da20f4272f42b0f/pyqt6_qlementine-1.4.3.0rc2-cp310-abi3-win_amd64.whl", hash = "sha256:29a38b9831d5b7baa1f6c98f0707419527f2f10517ca63a768fbe03a4ffd3503", size = 2349033, upload-time = "2026-03-22T20:54:56.213Z" },
 ]
 
 [[package]]
