@@ -39,7 +39,7 @@ from ._notification_manager import NotificationManager
 from ._settings import Settings
 from .actions import CoreAction, QCoreAction, WidgetAction, WidgetActionInfo
 from .actions._action_info import ActionInfo
-from .widgets._toolbars import OCToolBar
+from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -180,7 +180,7 @@ class MicroManagerGUI(QMainWindow):
             CoreAction.TOGGLE_LIVE,
         ],
         Toolbar.OPTICAL_CONFIGS: OCToolBar,
-        # Toolbar.SHUTTERS: ShuttersToolbar,
+        Toolbar.SHUTTERS: ShuttersToolbar,
         Toolbar.WIDGETS: [
             WidgetAction.CONFIG_GROUPS,
             WidgetAction.MDA_WIDGET,
