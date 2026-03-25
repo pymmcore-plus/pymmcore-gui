@@ -491,6 +491,57 @@ def test_alignment_change_preserves_collapsed_state(
     )
 
 
+def test_rapid_alignment_cycling_with_collapses(
+    shown_acquire: AcquireModeWidget,
+) -> None:
+    """Rapid alignment changes with collapsed parts must not crash or corrupt."""
+    from pymmcore_gui._qt.QtWidgets import QApplication
+
+    acq = shown_acquire
+
+    # Collapse right sidebar and panel
+    acq.toggle_sidebar(acq.right_sidebar)
+    acq.toggle_panel()
+    QApplication.processEvents()
+
+    # Rapidly cycle all alignments
+    for _ in range(3):
+        for align in PanelAlignment:
+            acq.set_panel_alignment(align)
+
+    QApplication.processEvents()
+
+    # Both should still be collapsed
+    assert acq.right_sidebar.is_collapsed
+    assert not acq.is_panel_visible
+
+    # Left sidebar should still be visible
+    assert not acq.left_sidebar.is_collapsed
+    assert acq.left_sidebar.activity_bar.active_panel is not None
+
+
+def test_collapse_all_then_change_alignment(
+    shown_acquire: AcquireModeWidget,
+) -> None:
+    """Collapsing everything then changing alignment must not crash."""
+    from pymmcore_gui._qt.QtWidgets import QApplication
+
+    acq = shown_acquire
+
+    acq.toggle_sidebar(acq.left_sidebar)
+    acq.toggle_sidebar(acq.right_sidebar)
+    acq.toggle_panel()
+    QApplication.processEvents()
+
+    for align in PanelAlignment:
+        acq.set_panel_alignment(align)
+        QApplication.processEvents()
+        # Everything should stay collapsed
+        assert acq.left_sidebar.is_collapsed
+        assert acq.right_sidebar.is_collapsed
+        assert not acq.is_panel_visible
+
+
 def test_drag_restore_does_not_disturb_other_sidebar(
     shown_acquire: AcquireModeWidget,
 ) -> None:

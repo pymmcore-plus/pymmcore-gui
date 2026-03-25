@@ -432,6 +432,7 @@ class AcquireModeWidget(QWidget):
         super().__init__(parent)
         self._panel_alignment = PanelAlignment.CENTER
         self._root_splitter: QSplitter | None = None
+        self._rebuilding = False
 
         # Saved sidebar/panel sizes in pixels (survive alignment rebuilds)
         self._left_px = DEFAULT_SIDEBAR_WIDTH
@@ -549,6 +550,7 @@ class AcquireModeWidget(QWidget):
                 parent.setSizes(sizes)
             else:
                 _ensure_splitter_size(panel, DEFAULT_PANEL_HEIGHT)
+            self._panel_collapsed = False
         else:
             if isinstance(parent, QSplitter):
                 self._save_sizes()
@@ -561,6 +563,7 @@ class AcquireModeWidget(QWidget):
                     sizes[editor_idx] += freed
                 parent.setSizes(sizes)
             panel.hide()
+            self._panel_collapsed = True
         self.visibility_changed.emit()
 
     # ---- layout rebuild ---------------------------------------------------
@@ -580,6 +583,7 @@ class AcquireModeWidget(QWidget):
         self._bottom_panel.setParent(None)
 
     def _rebuild_layout(self) -> None:
+        self._rebuilding = True
         self.setUpdatesEnabled(False)
         try:
             # Save sizes from current splitters
@@ -619,6 +623,7 @@ class AcquireModeWidget(QWidget):
 
             self._restore_sizes()
         finally:
+            self._rebuilding = False
             self.setUpdatesEnabled(True)
 
     def _build_splitter_tree(self) -> QSplitter:
@@ -684,35 +689,50 @@ class AcquireModeWidget(QWidget):
         splitter.splitterMoved.connect(self._on_splitter_moved)
 
     def _on_splitter_moved(self) -> None:
+        if self._rebuilding:
+            return
         for sb in (self._left_sidebar, self._right_sidebar):
             w = sb.splitter_widget
             if not w.isVisible():
                 continue
+            is_left = sb is self._left_sidebar
             size = _splitter_size(w)
             if size == 0 and sb.activity_bar.active_panel is not None:
                 sb.deselect()
+                if is_left:
+                    self._left_collapsed = True
+                else:
+                    self._right_collapsed = True
             elif size > 0 and sb.activity_bar.active_panel is None:
                 sb.restore_from_drag()
+                if is_left:
+                    self._left_collapsed = False
+                else:
+                    self._right_collapsed = False
         self.visibility_changed.emit()
 
     # ---- size persistence across rebuilds ---------------------------------
 
     def _save_sizes(self) -> None:
-        """Save sidebar/panel sizes as absolute pixel values."""
+        """Save sidebar/panel pixel sizes (not collapsed state).
+
+        Collapsed flags are maintained explicitly by toggle/collapse/restore
+        methods, not inferred from widget geometry (which can be stale during
+        rapid rebuilds).
+        """
         left = self._left_sidebar.splitter_widget
         right = self._right_sidebar.splitter_widget
         panel = self._bottom_panel
 
-        self._left_collapsed = self._left_sidebar.is_collapsed
-        self._right_collapsed = self._right_sidebar.is_collapsed
-        self._panel_collapsed = not panel.isVisible() or _splitter_size(panel) == 0
-
-        if left.isVisible() and left.width() > 0:
-            self._left_px = left.width()
-        if right.isVisible() and right.width() > 0:
-            self._right_px = right.width()
-        if panel.isVisible() and panel.height() > 0:
-            self._panel_px = panel.height()
+        sz = _splitter_size(left)
+        if sz > 0:
+            self._left_px = sz
+        sz = _splitter_size(right)
+        if sz > 0:
+            self._right_px = sz
+        sz = _splitter_size(panel)
+        if sz > 0:
+            self._panel_px = sz
 
     @staticmethod
     def _splitter_avail(splitter: QSplitter, fallback: int) -> int:
@@ -800,6 +820,10 @@ class AcquireModeWidget(QWidget):
             sizes[editor_idx] += freed
         parent.setSizes(sizes)
         sidebar.deselect()
+        if sidebar is self._left_sidebar:
+            self._left_collapsed = True
+        else:
+            self._right_collapsed = True
 
     def _restore_sidebar(self, sidebar: SidebarContainer, panel_id: str) -> None:
         """Restore a sidebar, taking space only from the editor."""
@@ -825,6 +849,10 @@ class AcquireModeWidget(QWidget):
             sizes[editor_idx] = max(sizes[editor_idx] - sb_px, 1)
         sizes[idx] = sb_px
         parent.setSizes(sizes)
+        if sidebar is self._left_sidebar:
+            self._left_collapsed = False
+        else:
+            self._right_collapsed = False
 
     def _editor_index_in(self, splitter: QSplitter) -> int:
         """Find the index of the editor (or sub-splitter containing it)."""
