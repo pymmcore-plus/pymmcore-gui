@@ -13,6 +13,40 @@ APP = DIST / NAME / (NAME + (".exe" if os.name == "nt" else ""))
 if not APP.exists():
     pytest.skip(f"App not built: {APP}", allow_module_level=True)
 
+STARTUP_TIMEOUT_S = 30.0
+
+
+def _wait_for_ready(proc: subprocess.Popen, timeout_s: float) -> None:
+    if proc.stdout is None:  # pragma: no cover
+        pytest.fail("Subprocess stdout was not captured.")
+
+    os.set_blocking(proc.stdout.fileno(), False)
+    deadline = time.monotonic() + timeout_s
+    output = ""
+
+    while time.monotonic() < deadline:
+        if (returncode := proc.poll()) is not None:
+            tail = output.strip().splitlines()[-10:]
+            tail_text = "\n".join(tail)
+            pytest.fail(
+                "App exited before reporting READY "
+                f"(returncode={returncode}).\nCaptured output:\n{tail_text}"
+            )
+
+        chunk = proc.stdout.read()
+        if chunk:
+            output += chunk
+            if any(line.strip() == "READY" for line in output.splitlines()):
+                return
+
+        time.sleep(0.05)
+
+    tail = output.strip().splitlines()[-10:]
+    tail_text = "\n".join(tail)
+    pytest.fail(
+        f"Timed out waiting {timeout_s:.0f}s for READY.\nCaptured output:\n{tail_text}"
+    )
+
 
 @pytest.fixture
 def app_process() -> Iterator[subprocess.Popen]:
@@ -24,14 +58,10 @@ def app_process() -> Iterator[subprocess.Popen]:
         env=env,
         start_new_session=True,
         stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
     ) as proc:
-        # --- wait for the GUI to tell us it's ready ---
-        while True:
-            # this "READY" line is printed in _app.create_mmgui
-            # when "PYTEST_VERSION" is set in the environment
-            if proc.stdout and proc.stdout.readline().strip() == b"READY":
-                break
-            time.sleep(0.1)
+        _wait_for_ready(proc, STARTUP_TIMEOUT_S)
 
         yield proc
 
