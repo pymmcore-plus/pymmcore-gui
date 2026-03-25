@@ -11,6 +11,7 @@ from pymmcore_gui._main_window3 import (
     MicroManagerGUI,
     PanelAlignment,
     SidebarContainer,
+    _splitter_size,
 )
 
 if TYPE_CHECKING:
@@ -449,6 +450,44 @@ def test_panel_toggle_preserves_sidebar_sizes(
     )
     assert abs(right_after - right0) <= TOLERANCE, (
         f"right sidebar changed when toggling panel: {right0} -> {right_after}"
+    )
+
+
+def test_alignment_change_preserves_collapsed_state(
+    shown_acquire: AcquireModeWidget,
+) -> None:
+    """Changing panel alignment should not resurrect a collapsed sidebar."""
+    from pymmcore_gui._qt.QtWidgets import QApplication
+
+    acq = shown_acquire
+
+    # Collapse right sidebar
+    acq.toggle_sidebar(acq.right_sidebar)
+    QApplication.processEvents()
+    assert acq.right_sidebar.is_collapsed
+
+    # Switch alignment: CENTER -> RIGHT
+    acq.set_panel_alignment(PanelAlignment.RIGHT)
+    QApplication.processEvents()
+
+    right_w = acq.right_sidebar.splitter_widget
+    assert _splitter_size(right_w) == 0, (
+        "collapsed right sidebar reappeared after alignment change"
+    )
+
+    # Also test left sidebar stays collapsed across alignment changes
+    acq.set_panel_alignment(PanelAlignment.CENTER)
+    QApplication.processEvents()
+    acq.toggle_sidebar(acq.left_sidebar)
+    QApplication.processEvents()
+    assert acq.left_sidebar.is_collapsed
+
+    acq.set_panel_alignment(PanelAlignment.JUSTIFY)
+    QApplication.processEvents()
+
+    left_w = acq.left_sidebar.splitter_widget
+    assert _splitter_size(left_w) == 0, (
+        "collapsed left sidebar reappeared after alignment change"
     )
 
 

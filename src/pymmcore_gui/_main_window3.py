@@ -437,6 +437,9 @@ class AcquireModeWidget(QWidget):
         self._left_px = DEFAULT_SIDEBAR_WIDTH
         self._right_px = DEFAULT_SIDEBAR_WIDTH
         self._panel_px = DEFAULT_PANEL_HEIGHT
+        self._left_collapsed = False
+        self._right_collapsed = False
+        self._panel_collapsed = False
 
         # ---- leaf widgets (never destroyed) ----
         self._left_sidebar = SidebarContainer(default_ab_position="side")
@@ -700,6 +703,10 @@ class AcquireModeWidget(QWidget):
         right = self._right_sidebar.splitter_widget
         panel = self._bottom_panel
 
+        self._left_collapsed = self._left_sidebar.is_collapsed
+        self._right_collapsed = self._right_sidebar.is_collapsed
+        self._panel_collapsed = not panel.isVisible() or _splitter_size(panel) == 0
+
         if left.isVisible() and left.width() > 0:
             self._left_px = left.width()
         if right.isVisible() and right.width() > 0:
@@ -729,9 +736,9 @@ class AcquireModeWidget(QWidget):
 
         cont_w = self._splitter_container.width() or 1200
         cont_h = self._splitter_container.height() or 800
-        lw = self._left_px
-        rw = self._right_px
-        ph = self._panel_px
+        lw = 0 if self._left_collapsed else self._left_px
+        rw = 0 if self._right_collapsed else self._right_px
+        ph = 0 if self._panel_collapsed else self._panel_px
         align = self._panel_alignment
 
         if align == PanelAlignment.CENTER:
