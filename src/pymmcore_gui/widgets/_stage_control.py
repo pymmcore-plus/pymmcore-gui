@@ -76,7 +76,10 @@ class StagesControlWidget(QWidget):
         )
         for idx, stage_dev in enumerate(stages):
             bx = _Group(stage_dev, self)
-            stage = _StageWidget(device=stage_dev, parent=bx, mmcore=self._mmc)
+            if self._mmc.getDeviceType(stage_dev) == DeviceType.Stage:
+                stage = _StageWidget(device=stage_dev, parent=bx, mmcore=self._mmc)
+            else:
+                stage = StageWidget(device=stage_dev, parent=bx, mmcore=self._mmc)
             if (lay := bx.layout()) is not None:
                 lay.addWidget(stage)
             self._layout.addWidget(bx, idx // 2, idx % 2)
