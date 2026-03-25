@@ -147,12 +147,16 @@ class ActivityBar(QWidget):
         if first:
             self._activate_without_collapse(first)
 
-    def _activate_without_collapse(self, panel_id: str) -> None:
-        """Set panel as active (checked) without allowing collapse toggle."""
+    def set_active_silent(self, panel_id: str) -> None:
+        """Update checked state without emitting panel_toggled."""
         if self._active and self._active in self._buttons:
             self._buttons[self._active].setChecked(False)
         self._active = panel_id
         self._buttons[panel_id].setChecked(True)
+
+    def _activate_without_collapse(self, panel_id: str) -> None:
+        """Set panel as active (checked) without allowing collapse toggle."""
+        self.set_active_silent(panel_id)
         self.panel_toggled.emit(panel_id)
 
     # ---- internals --------------------------------------------------------
@@ -332,11 +336,7 @@ class SidebarContainer(QWidget):
         """
         first = next(iter(self._panels), None)
         if first:
-            ab = self.activity_bar
-            if ab._active and ab._active in ab._buttons:
-                ab._buttons[ab._active].setChecked(False)
-            ab._active = first
-            ab._buttons[first].setChecked(True)
+            self.activity_bar.set_active_silent(first)
             self.stack.setCurrentWidget(self._panels[first])
 
     def collapse(self) -> None:
@@ -781,7 +781,7 @@ class AcquireModeWidget(QWidget):
         if not isinstance(parent, QSplitter):
             sidebar.collapse()
             return
-        # Save current fraction before collapsing
+        # Save current sizes before collapsing
         self._save_sizes()
         idx = parent.indexOf(widget)
         sizes = parent.sizes()
@@ -796,18 +796,14 @@ class AcquireModeWidget(QWidget):
 
     def _restore_sidebar(self, sidebar: SidebarContainer, panel_id: str) -> None:
         """Restore a sidebar, taking space only from the editor."""
-        # Show the widget and update button state directly — avoid
-        # sidebar.activate() which calls _ensure_splitter_size, and avoid
-        # _activate_without_collapse which emits panel_toggled (re-entering).
+        # Show the widget and update button state silently — avoid
+        # sidebar.activate() (calls _ensure_splitter_size, causing redistribution)
+        # and _activate_without_collapse (emits panel_toggled, causing re-entry).
         if panel_id in sidebar._panels:
             sidebar.stack.setCurrentWidget(sidebar._panels[panel_id])
         widget = sidebar.splitter_widget
         widget.show()
-        ab = sidebar.activity_bar
-        if ab._active and ab._active in ab._buttons:
-            ab._buttons[ab._active].setChecked(False)
-        ab._active = panel_id
-        ab._buttons[panel_id].setChecked(True)
+        sidebar.activity_bar.set_active_silent(panel_id)
 
         parent = widget.parentWidget()
         if not isinstance(parent, QSplitter):
