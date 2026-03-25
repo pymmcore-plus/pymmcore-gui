@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import ClassVar
 
 from pymmcore_plus import CMMCorePlus
 from superqt import QIconifyIcon
@@ -27,19 +28,14 @@ from pymmcore_gui._qt.QtWidgets import (
 
 from ._main_window import ICON
 
-DEFAULT_SIDEBAR_WIDTH = 240
-DEFAULT_PANEL_HEIGHT = 200
-MIN_SIDEBAR_WIDTH = 170
+DEFAULT_SIDEBAR_WIDTH = 180
+DEFAULT_PANEL_HEIGHT = 120
+MIN_SIDEBAR_WIDTH = 160
 MIN_PANEL_HEIGHT = 100
 
 
 def _splitter_size(widget: QWidget) -> int:
-    """Return the size allocated to *widget* by its parent QSplitter.
-
-    Returns -1 if the widget is not inside a QSplitter.
-    Unlike widget.width()/height(), this reflects the splitter's
-    internal state immediately during splitterMoved signals.
-    """
+    """Return the size allocated to *widget* by its parent QSplitter."""
     parent = widget.parent()
     if not isinstance(parent, QSplitter):
         return -1
@@ -89,12 +85,30 @@ class ActivityBar(QWidget):
         super().__init__(parent)
         self._buttons: dict[str, QToolButton] = {}
         self._active: str | None = None
-        self.collapsible = True
+        self._collapsible = True
 
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(4, 4, 4, 4)
         self._layout.setSpacing(2)
         self._layout.addStretch()
+
+    # ---- public API -------------------------------------------------------
+
+    @property
+    def active_panel(self) -> str | None:
+        return self._active
+
+    @property
+    def collapsible(self) -> bool:
+        return self._collapsible
+
+    @collapsible.setter
+    def collapsible(self, value: bool) -> None:
+        self._collapsible = value
+
+    @property
+    def panel_ids(self) -> list[str]:
+        return list(self._buttons)
 
     def add_panel(
         self, panel_id: str, text: str, *, icon: QIcon | None = None
@@ -121,13 +135,35 @@ class ActivityBar(QWidget):
         elif self._active:
             self._toggle(self._active)
 
+    def deselect(self) -> None:
+        """Uncheck the active button without emitting panel_toggled."""
+        if self._active and self._active in self._buttons:
+            self._buttons[self._active].setChecked(False)
+        self._active = None
+
+    def activate_first(self) -> None:
+        """Activate the first panel if any exist."""
+        first = next(iter(self._buttons), None)
+        if first:
+            self._activate_without_collapse(first)
+
+    def _activate_without_collapse(self, panel_id: str) -> None:
+        """Set panel as active (checked) without allowing collapse toggle."""
+        if self._active and self._active in self._buttons:
+            self._buttons[self._active].setChecked(False)
+        self._active = panel_id
+        self._buttons[panel_id].setChecked(True)
+        self.panel_toggled.emit(panel_id)
+
+    # ---- internals --------------------------------------------------------
+
     def _on_clicked(self) -> None:
         panel_id = self.sender().objectName()
         self._toggle(panel_id)
 
     def _toggle(self, panel_id: str) -> None:
         if self._active == panel_id:
-            if not self.collapsible:
+            if not self._collapsible:
                 self._buttons[panel_id].setChecked(True)
                 return
             self._buttons[panel_id].setChecked(False)
@@ -153,6 +189,7 @@ class SidebarContainer(QWidget):
     - hidden: activity bar is not shown
     """
 
+    panel_toggled = Signal(str)  # forwarded from activity_bar
     ab_position_changed = Signal(ActivityBarPosition)
 
     def __init__(
@@ -172,7 +209,6 @@ class SidebarContainer(QWidget):
         self._default_ab_position = default_ab_position
         self._ab_position = ActivityBarPosition.DEFAULT
 
-        # Both possible splitter widgets need a minimum width
         self.stack.setMinimumWidth(MIN_SIDEBAR_WIDTH)
 
         # Combined container for top/bottom activity bar positions
@@ -182,11 +218,16 @@ class SidebarContainer(QWidget):
         self._combined_layout.setContentsMargins(0, 0, 0, 0)
         self._combined_layout.setSpacing(0)
 
+        # Forward activity bar signal
+        self.activity_bar.panel_toggled.connect(self.panel_toggled)
+
         # Enable context menu on activity bar and stack
         self.activity_bar.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.activity_bar.customContextMenuRequested.connect(self._show_context_menu)
         self.stack.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.stack.customContextMenuRequested.connect(self._show_context_menu_stack)
+
+    # ---- public API -------------------------------------------------------
 
     @property
     def resolved_ab_position(self) -> str:
@@ -206,6 +247,11 @@ class SidebarContainer(QWidget):
             return self._combined
         return self.stack
 
+    @property
+    def is_collapsed(self) -> bool:
+        w = self.splitter_widget
+        return not w.isVisible() or _splitter_size(w) == 0
+
     def set_ab_position(self, pos: ActivityBarPosition) -> None:
         self._ab_position = pos
 
@@ -213,13 +259,10 @@ class SidebarContainer(QWidget):
         """Rearrange activity bar and stack for current position."""
         pos = self.resolved_ab_position
 
-        # Detach both from wherever they currently live
+        # Detach both from wherever they currently live.
+        # setParent(None) also removes from any layout they were in.
         self.activity_bar.setParent(None)
         self.stack.setParent(None)
-
-        # Clear the combined layout
-        while self._combined_layout.count():
-            self._combined_layout.takeAt(0)
 
         # Only allow collapsing the sidebar when the activity bar
         # is on the side (external). When top/bottom/hidden, the
@@ -253,6 +296,7 @@ class SidebarContainer(QWidget):
         self._panels[panel_id] = widget
 
     def activate(self, panel_id: str) -> None:
+        """Show a specific panel by id."""
         if panel_id not in self._panels:
             return
         self.stack.setCurrentWidget(self._panels[panel_id])
@@ -260,25 +304,34 @@ class SidebarContainer(QWidget):
         widget.show()
         _ensure_splitter_size(widget, DEFAULT_SIDEBAR_WIDTH)
 
-    @property
-    def is_collapsed(self) -> bool:
-        w = self.splitter_widget
-        return not w.isVisible() or _splitter_size(w) == 0
+    def toggle(self) -> None:
+        """Toggle sidebar visibility. Show first/active panel, or collapse."""
+        if self.is_collapsed:
+            active = self.activity_bar.active_panel
+            if active:
+                self.activate(active)
+            else:
+                self.activity_bar.activate_first()
+        else:
+            self.collapse()
 
     def deselect(self) -> None:
         """Deselect the active AB button without hiding the widget.
 
-        Used when the splitter snaps to zero — the widget stays in the
-        splitter (so drag-to-restore works) but the state updates.
+        Used when the splitter snaps to zero - the widget stays in the
+        splitter (so drag-to-restore works) but the button state updates.
         """
-        if self.activity_bar._active:
-            btn = self.activity_bar._buttons.get(self.activity_bar._active)
-            if btn:
-                btn.setChecked(False)
-            self.activity_bar._active = None
+        self.activity_bar.deselect()
+
+    def restore_from_drag(self) -> None:
+        """Re-activate the first panel after being dragged from zero."""
+        first = next(iter(self._panels), None)
+        if first:
+            self.activity_bar._activate_without_collapse(first)
+            self.stack.setCurrentWidget(self._panels[first])
 
     def collapse(self) -> None:
-        """Fully hide the sidebar (programmatic toggle)."""
+        """Fully hide the sidebar."""
         self.splitter_widget.hide()
         self.deselect()
 
@@ -293,7 +346,6 @@ class SidebarContainer(QWidget):
     def _build_context_menu(self) -> QMenu:
         menu = QMenu(self.activity_bar)
 
-        # Activity Bar Position submenu
         ab_menu = menu.addMenu("Activity Bar Position")
         group = QActionGroup(ab_menu)
         group.setExclusive(True)
@@ -377,9 +429,6 @@ class AcquireModeWidget(QWidget):
         self._right_sb_width = DEFAULT_SIDEBAR_WIDTH
         self._panel_height = DEFAULT_PANEL_HEIGHT
 
-        # Sidebar lookup for sender()-based signal handling
-        self._sidebar_for_bar: dict[int, SidebarContainer] = {}
-
         # ---- leaf widgets (never destroyed) ----
         self._left_sidebar = SidebarContainer(default_ab_position="side")
         self._right_sidebar = SidebarContainer(default_ab_position="top")
@@ -400,8 +449,7 @@ class AcquireModeWidget(QWidget):
 
         # ---- wire sidebar signals ----
         for sb in (self._left_sidebar, self._right_sidebar):
-            self._sidebar_for_bar[id(sb.activity_bar)] = sb
-            sb.activity_bar.panel_toggled.connect(self._on_sidebar_toggled)
+            sb.panel_toggled.connect(self._on_sidebar_toggled)
             sb.ab_position_changed.connect(self._on_ab_position_changed)
 
         # ---- placeholder content ----
@@ -428,8 +476,30 @@ class AcquireModeWidget(QWidget):
     # ---- public API -------------------------------------------------------
 
     @property
+    def left_sidebar(self) -> SidebarContainer:
+        return self._left_sidebar
+
+    @property
+    def right_sidebar(self) -> SidebarContainer:
+        return self._right_sidebar
+
+    @property
+    def bottom_panel(self) -> BottomPanel:
+        return self._bottom_panel
+
+    @property
+    def editor_tabs(self) -> QTabWidget:
+        return self._editor_tabs
+
+    @property
     def panel_alignment(self) -> PanelAlignment:
         return self._panel_alignment
+
+    @property
+    def is_panel_visible(self) -> bool:
+        return (
+            self._bottom_panel.isVisible() and _splitter_size(self._bottom_panel) != 0
+        )
 
     def set_panel_alignment(self, alignment: PanelAlignment) -> None:
         if alignment == self._panel_alignment:
@@ -437,53 +507,67 @@ class AcquireModeWidget(QWidget):
         self._panel_alignment = alignment
         self._rebuild_layout()
 
+    def toggle_panel(self) -> None:
+        """Toggle bottom panel visibility."""
+        panel = self._bottom_panel
+        if not panel.isVisible() or _splitter_size(panel) == 0:
+            panel.show()
+            _ensure_splitter_size(panel, DEFAULT_PANEL_HEIGHT)
+        else:
+            panel.hide()
+        self.visibility_changed.emit()
+
     # ---- layout rebuild ---------------------------------------------------
+
+    def _detach_leaf_widgets(self) -> None:
+        """Detach all reusable widgets from the splitter tree."""
+        for sb in (self._left_sidebar, self._right_sidebar):
+            sb.splitter_widget.setParent(None)
+            sb.activity_bar.setParent(None)
+        self._editor_tabs.setParent(None)
+        self._bottom_panel.setParent(None)
 
     def _rebuild_layout(self) -> None:
         self.setUpdatesEnabled(False)
+        try:
+            # Save sizes from current splitters
+            if self._root_splitter is not None:
+                self._save_sizes()
+                self._detach_leaf_widgets()
+                self._root_splitter.setParent(None)
+                self._root_splitter.deleteLater()
 
-        # Save sizes from current splitters
-        if self._root_splitter is not None:
-            self._save_sizes()
-            # Detach leaf widgets so they survive splitter deletion
-            for sb in (self._left_sidebar, self._right_sidebar):
-                sb.splitter_widget.setParent(None)
-                sb.activity_bar.setParent(None)
-            self._editor_tabs.setParent(None)
-            self._bottom_panel.setParent(None)
-            self._root_splitter.setParent(None)
-            self._root_splitter.deleteLater()
+            # Clear outer layout
+            while self._outer_layout.count():
+                self._outer_layout.takeAt(0)
 
-        # Clear outer layout
-        while self._outer_layout.count():
-            self._outer_layout.takeAt(0)
+            # Arrange sidebars (reparents activity bar + stack internally)
+            self._left_sidebar.arrange()
+            self._right_sidebar.arrange()
 
-        # Arrange sidebars (reparents activity bar + stack internally)
-        self._left_sidebar.arrange()
-        self._right_sidebar.arrange()
+            # Rebuild outer: [ext_ab_L?] [splitter_container] [ext_ab_R?]
+            if self._left_sidebar.is_ab_external:
+                self._outer_layout.addWidget(self._left_sidebar.activity_bar)
+            self._outer_layout.addWidget(self._splitter_container, 1)
+            if self._right_sidebar.is_ab_external:
+                self._outer_layout.addWidget(self._right_sidebar.activity_bar)
 
-        # Rebuild outer: [ext_ab_L?] [splitter_container] [ext_ab_R?]
-        if self._left_sidebar.is_ab_external:
-            self._outer_layout.addWidget(self._left_sidebar.activity_bar)
-        self._outer_layout.addWidget(self._splitter_container, 1)
-        if self._right_sidebar.is_ab_external:
-            self._outer_layout.addWidget(self._right_sidebar.activity_bar)
+            # Build splitter tree
+            root = self._build_splitter_tree()
+            self._root_splitter = root
+            self._splitter_layout.addWidget(root)
 
-        # Build splitter tree
-        root = self._build_splitter_tree()
-        self._root_splitter = root
-        self._splitter_layout.addWidget(root)
+            # Mark sidebar/panel widgets as collapsible and connect signals
+            collapsible_widgets = {
+                self._left_sidebar.splitter_widget,
+                self._right_sidebar.splitter_widget,
+                self._bottom_panel,
+            }
+            self._configure_splitters(root, collapsible_widgets)
 
-        # Mark sidebar/panel widgets as collapsible and connect signals
-        collapsible_widgets = {
-            self._left_sidebar.splitter_widget,
-            self._right_sidebar.splitter_widget,
-            self._bottom_panel,
-        }
-        self._configure_splitters(root, collapsible_widgets)
-
-        self._restore_sizes()
-        self.setUpdatesEnabled(True)
+            self._restore_sizes()
+        finally:
+            self.setUpdatesEnabled(True)
 
     def _build_splitter_tree(self) -> QSplitter:
         V = Qt.Orientation.Vertical
@@ -551,19 +635,12 @@ class AcquireModeWidget(QWidget):
         for sb in (self._left_sidebar, self._right_sidebar):
             w = sb.splitter_widget
             if not w.isVisible():
-                continue  # programmatically hidden, ignore
+                continue
             size = _splitter_size(w)
-            if size == 0 and sb.activity_bar._active is not None:
-                # Splitter collapsed it — deselect but keep in splitter
-                # so drag-to-restore works.
+            if size == 0 and sb.activity_bar.active_panel is not None:
                 sb.deselect()
-            elif size > 0 and sb.activity_bar._active is None:
-                # Dragged back from zero — re-activate first panel
-                first = next(iter(sb._panels), None)
-                if first:
-                    sb.activity_bar._active = first
-                    sb.activity_bar._buttons[first].setChecked(True)
-                    sb.stack.setCurrentWidget(sb._panels[first])
+            elif size > 0 and sb.activity_bar.active_panel is None:
+                sb.restore_from_drag()
         self.visibility_changed.emit()
 
     # ---- size persistence across rebuilds ---------------------------------
@@ -616,7 +693,7 @@ class AcquireModeWidget(QWidget):
     # ---- sidebar toggling -------------------------------------------------
 
     def _on_sidebar_toggled(self, panel_id: str) -> None:
-        sidebar = self._sidebar_for_bar[id(self.sender())]
+        sidebar: SidebarContainer = self.sender()  # type: ignore[assignment]
         if panel_id:
             sidebar.activate(panel_id)
         else:
@@ -658,34 +735,38 @@ class MicroManagerGUI(QMainWindow):
         self._navigation.currentIndexChanged.connect(self._on_mode_changed)
 
         # ---- layout toggle buttons ----
-        self._left_sb_btn = QToolButton()
-        self._left_sb_btn.setCheckable(True)
-        self._left_sb_btn.setChecked(True)
-        self._left_sb_btn.setToolTip("Toggle Primary Side Bar")
-        self._left_sb_btn.clicked.connect(self._toggle_left_sidebar)
+        self._left_sb_btn = self._make_toggle_btn(
+            "Toggle Primary Side Bar",
+            "codicon:layout-sidebar-left",
+            self._toggle_left_sidebar,
+        )
+        self._panel_btn = self._make_toggle_btn(
+            "Toggle Panel",
+            "codicon:layout-panel",
+            self._toggle_panel,
+        )
+        self._right_sb_btn = self._make_toggle_btn(
+            "Toggle Secondary Side Bar",
+            "codicon:layout-sidebar-right",
+            self._toggle_right_sidebar,
+        )
 
-        self._panel_btn = QToolButton()
-        self._panel_btn.setCheckable(True)
-        self._panel_btn.setChecked(True)
-        self._panel_btn.setToolTip("Toggle Panel")
-        self._panel_btn.clicked.connect(self._toggle_panel)
-
-        self._right_sb_btn = QToolButton()
-        self._right_sb_btn.setCheckable(True)
-        self._right_sb_btn.setChecked(True)
-        self._right_sb_btn.setToolTip("Toggle Secondary Side Bar")
-        self._right_sb_btn.clicked.connect(self._toggle_right_sidebar)
-
-        self._update_layout_icons()
+        # ---- panel alignment cycle button ----
+        self._panel_align_btn = QToolButton()
+        self._panel_align_btn.setAutoRaise(True)
+        self._panel_align_btn.setToolTip("Panel Alignment")
+        self._panel_align_btn.clicked.connect(self._cycle_panel_alignment)
+        self._update_panel_align_icon()
 
         # Sync toggle buttons when any part visibility changes
-        self._acquire_mode.visibility_changed.connect(self._sync_toggle_buttons)
+        self._acquire_mode.visibility_changed.connect(self._update_layout_icons)
 
         top_row = QHBoxLayout()
         top_row.setContentsMargins(0, 0, 0, 0)
         top_row.setSpacing(0)
         top_row.addWidget(self._navigation)
         top_row.addStretch()
+        top_row.addWidget(self._panel_align_btn)
         top_row.addWidget(self._left_sb_btn)
         top_row.addWidget(self._panel_btn)
         top_row.addWidget(self._right_sb_btn)
@@ -725,15 +806,27 @@ class MicroManagerGUI(QMainWindow):
     def configure_mode(self) -> ConfigureModeWidget:
         return self._configure_mode
 
+    # ---- internals --------------------------------------------------------
+
+    @staticmethod
+    def _make_toggle_btn(tooltip: str, icon_key: str, slot: object) -> QToolButton:
+        btn = QToolButton()
+        btn.setAutoRaise(True)
+        btn.setToolTip(tooltip)
+        btn.setIcon(QIconifyIcon(icon_key))
+        btn.clicked.connect(slot)
+        return btn
+
     def _on_mode_changed(self) -> None:
         self._mode_stack.setCurrentIndex(self._navigation.currentIndex())
 
     # ---- layout toggle buttons --------------------------------------------
 
     def _update_layout_icons(self) -> None:
-        left_on = self._left_sb_btn.isChecked()
-        panel_on = self._panel_btn.isChecked()
-        right_on = self._right_sb_btn.isChecked()
+        acq = self._acquire_mode
+        left_on = not acq.left_sidebar.is_collapsed
+        panel_on = acq.is_panel_visible
+        right_on = not acq.right_sidebar.is_collapsed
 
         self._left_sb_btn.setIcon(
             QIconifyIcon(
@@ -755,44 +848,41 @@ class MicroManagerGUI(QMainWindow):
             )
         )
 
+    _PANEL_ALIGN_CYCLE = (
+        PanelAlignment.LEFT,
+        PanelAlignment.CENTER,
+        PanelAlignment.RIGHT,
+        PanelAlignment.JUSTIFY,
+    )
+    _PANEL_ALIGN_ICONS: ClassVar[dict[PanelAlignment, str]] = {
+        PanelAlignment.LEFT: "codicon:layout-panel-left",
+        PanelAlignment.CENTER: "codicon:layout-panel-center",
+        PanelAlignment.RIGHT: "codicon:layout-panel-right",
+        PanelAlignment.JUSTIFY: "codicon:layout-panel-justify",
+    }
+
+    def _cycle_panel_alignment(self) -> None:
+        cycle = self._PANEL_ALIGN_CYCLE
+        current = self._acquire_mode.panel_alignment
+        idx = cycle.index(current) if current in cycle else -1
+        next_align = cycle[(idx + 1) % len(cycle)]
+        self._acquire_mode.set_panel_alignment(next_align)
+        self._update_panel_align_icon()
+
+    def _update_panel_align_icon(self) -> None:
+        align = self._acquire_mode.panel_alignment
+        icon_key = self._PANEL_ALIGN_ICONS.get(align, "codicon:layout-panel-center")
+        self._panel_align_btn.setIcon(QIconifyIcon(icon_key))
+        self._panel_align_btn.setToolTip(f"Panel Alignment: {align.value.capitalize()}")
+
     def _toggle_left_sidebar(self) -> None:
-        acq = self._acquire_mode
-        if self._left_sb_btn.isChecked():
-            ab = acq._left_sidebar.activity_bar
-            if ab._active:
-                acq._left_sidebar.activate(ab._active)
-            else:
-                ab.set_active(next(iter(ab._buttons), None))
-        else:
-            acq._left_sidebar.collapse()
+        self._acquire_mode.left_sidebar.toggle()
         self._update_layout_icons()
 
     def _toggle_panel(self) -> None:
-        panel = self._acquire_mode._bottom_panel
-        if self._panel_btn.isChecked():
-            panel.show()
-            _ensure_splitter_size(panel, DEFAULT_PANEL_HEIGHT)
-        else:
-            panel.hide()
+        self._acquire_mode.toggle_panel()
         self._update_layout_icons()
 
     def _toggle_right_sidebar(self) -> None:
-        acq = self._acquire_mode
-        if self._right_sb_btn.isChecked():
-            ab = acq._right_sidebar.activity_bar
-            if ab._active:
-                acq._right_sidebar.activate(ab._active)
-            else:
-                ab.set_active(next(iter(ab._buttons), None))
-        else:
-            acq._right_sidebar.collapse()
-        self._update_layout_icons()
-
-    def _sync_toggle_buttons(self) -> None:
-        acq = self._acquire_mode
-        self._left_sb_btn.setChecked(not acq._left_sidebar.is_collapsed)
-        self._right_sb_btn.setChecked(not acq._right_sidebar.is_collapsed)
-        self._panel_btn.setChecked(
-            acq._bottom_panel.isVisible() and _splitter_size(acq._bottom_panel) != 0
-        )
+        self._acquire_mode.right_sidebar.toggle()
         self._update_layout_icons()
