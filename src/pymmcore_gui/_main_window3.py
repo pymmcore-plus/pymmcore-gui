@@ -44,18 +44,6 @@ def _make_label(text: str) -> QLabel:
     return lbl
 
 
-# ---- Mode Widgets ---------------------------------------------------------
-
-
-class ConfigureModeWidget(QWidget):
-    """Placeholder for the Configure mode."""
-
-    def __init__(self, parent: QWidget | None = None) -> None:
-        super().__init__(parent)
-        layout = QVBoxLayout(self)
-        layout.addWidget(_make_label("Configure Mode"))
-
-
 # ---- Main Window ----------------------------------------------------------
 
 
