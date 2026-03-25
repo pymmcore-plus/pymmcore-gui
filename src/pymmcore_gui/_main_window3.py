@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from typing import ClassVar
-
 from pymmcore_plus import CMMCorePlus
 from superqt import QIconifyIcon
 
 from pymmcore_gui._qt.Qlementine import NavigationBar  # type: ignore[attr-defined]
 from pymmcore_gui._qt.QtCore import Qt
-from pymmcore_gui._qt.QtGui import QAction, QIcon
+from pymmcore_gui._qt.QtGui import QIcon
 from pymmcore_gui._qt.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -15,7 +13,6 @@ from pymmcore_gui._qt.QtWidgets import (
     QPushButton,
     QStackedWidget,
     QStatusBar,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -99,21 +96,7 @@ class MicroManagerGUI(QMainWindow):
         )
         wb.bottomPanel.activityBar.setActive("terminal")
 
-        # ---- mode stack ----
-        self._mode_stack = QStackedWidget()
-        self._mode_stack.addWidget(self._configure_mode)
-        self._mode_stack.addWidget(self._acquire_mode)
-
-        # ---- navigation bar (mode switcher) ----
-        self._navigation = NavigationBar()
-        self._navigation.setItemsShouldExpand(False)
-        self._navigation.addItem("Configure")
-        self._navigation.addItem("Acquire")
-        self._navigation.setCurrentIndex(1)  # start on Acquire
-        self._mode_stack.setCurrentIndex(1)
-        self._navigation.currentIndexChanged.connect(self._on_mode_changed)  # pyright: ignore[reportAttributeAccessIssue]
-
-        # ---- toggle action icons ----
+        # ---- set icons on workbench actions ----
         wb.setActionIcons(
             wb.toggleLeftSidebarAction,
             QIconifyIcon("codicon:layout-sidebar-left"),
@@ -129,30 +112,37 @@ class MicroManagerGUI(QMainWindow):
             QIconifyIcon("codicon:layout-sidebar-right"),
             QIconifyIcon("codicon:layout-sidebar-right-off"),
         )
+        wb.setAlignmentIcons(
+            {
+                PanelAlignment.LEFT: QIconifyIcon("codicon:layout-panel-left"),
+                PanelAlignment.CENTER: QIconifyIcon("codicon:layout-panel-center"),
+                PanelAlignment.RIGHT: QIconifyIcon("codicon:layout-panel-right"),
+                PanelAlignment.JUSTIFY: QIconifyIcon("codicon:layout-panel-justify"),
+            }
+        )
 
-        # ---- ghost toggle buttons ----
-        self._left_sb_btn = self._make_ghost_button(wb.toggleLeftSidebarAction)
-        self._panel_btn = self._make_ghost_button(wb.togglePanelAction)
-        self._right_sb_btn = self._make_ghost_button(wb.toggleRightSidebarAction)
+        # ---- mode stack ----
+        self._mode_stack = QStackedWidget()
+        self._mode_stack.addWidget(self._configure_mode)
+        self._mode_stack.addWidget(self._acquire_mode)
 
-        # ---- panel alignment cycle button ----
-        self._panel_align_btn = QToolButton()
-        self._panel_align_btn.setAutoRaise(True)
-        self._panel_align_btn.setToolTip("Panel Alignment")
-        self._panel_align_btn.clicked.connect(self._cycle_panel_alignment)
-        self._update_panel_align_icon()
+        # ---- navigation bar (mode switcher) ----
+        self._navigation = NavigationBar()
+        self._navigation.setItemsShouldExpand(False)
+        self._navigation.addItem("Configure")
+        self._navigation.addItem("Acquire")
+        self._navigation.setCurrentIndex(1)  # start on Acquire
+        self._mode_stack.setCurrentIndex(1)
+        self._navigation.currentIndexChanged.connect(self._on_mode_changed)  # pyright: ignore[reportAttributeAccessIssue]
 
+        # ---- layout ----
         top_row = QHBoxLayout()
         top_row.setContentsMargins(0, 0, 0, 0)
         top_row.setSpacing(0)
         top_row.addWidget(self._navigation)
         top_row.addStretch()
-        top_row.addWidget(self._panel_align_btn)
-        top_row.addWidget(self._left_sb_btn)
-        top_row.addWidget(self._panel_btn)
-        top_row.addWidget(self._right_sb_btn)
+        top_row.addWidget(wb.stateButtons())
 
-        # ---- central layout ----
         central = QWidget()
         layout = QVBoxLayout(central)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -183,41 +173,5 @@ class MicroManagerGUI(QMainWindow):
 
     # ---- internals --------------------------------------------------------
 
-    @staticmethod
-    def _make_ghost_button(action: QAction) -> QToolButton:
-        btn = QToolButton()
-        btn.setDefaultAction(action)
-        btn.setAutoRaise(True)
-        return btn
-
     def _on_mode_changed(self) -> None:
         self._mode_stack.setCurrentIndex(self._navigation.currentIndex())
-
-    # ---- panel alignment --------------------------------------------------
-
-    _PANEL_ALIGN_CYCLE = (
-        PanelAlignment.LEFT,
-        PanelAlignment.CENTER,
-        PanelAlignment.RIGHT,
-        PanelAlignment.JUSTIFY,
-    )
-    _PANEL_ALIGN_ICONS: ClassVar[dict[PanelAlignment, str]] = {
-        PanelAlignment.LEFT: "codicon:layout-panel-left",
-        PanelAlignment.CENTER: "codicon:layout-panel-center",
-        PanelAlignment.RIGHT: "codicon:layout-panel-right",
-        PanelAlignment.JUSTIFY: "codicon:layout-panel-justify",
-    }
-
-    def _cycle_panel_alignment(self) -> None:
-        cycle = self._PANEL_ALIGN_CYCLE
-        current = self._acquire_mode.panelAlignment
-        idx = cycle.index(current) if current in cycle else -1
-        next_align = cycle[(idx + 1) % len(cycle)]
-        self._acquire_mode.setPanelAlignment(next_align)
-        self._update_panel_align_icon()
-
-    def _update_panel_align_icon(self) -> None:
-        align = self._acquire_mode.panelAlignment
-        icon_key = self._PANEL_ALIGN_ICONS.get(align, "codicon:layout-panel-center")
-        self._panel_align_btn.setIcon(QIconifyIcon(icon_key))
-        self._panel_align_btn.setToolTip(f"Panel Alignment: {align.value.capitalize()}")

@@ -6,6 +6,7 @@ from pymmcore_gui._qt.QtWidgets import (
     QHBoxLayout,
     QSizePolicy,
     QSplitter,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -79,6 +80,9 @@ class WorkbenchWidget(QWidget):
 
         self._toggle_right_action = QAction("Toggle Secondary Side Bar", self)
         self._toggle_right_action.triggered.connect(self.toggleRightSidebar)
+
+        self._cycle_align_action = QAction("Cycle Panel Alignment", self)
+        self._cycle_align_action.triggered.connect(self.cyclePanelAlignment)
 
         self.visibilityChanged.connect(self._update_action_icons)
 
@@ -155,6 +159,10 @@ class WorkbenchWidget(QWidget):
     def toggleRightSidebarAction(self) -> QAction:
         return self._toggle_right_action
 
+    @property
+    def cyclePanelAlignmentAction(self) -> QAction:
+        return self._cycle_align_action
+
     def setActionIcons(
         self,
         action: QAction,
@@ -166,13 +174,43 @@ class WorkbenchWidget(QWidget):
         action.setProperty("iconOff", icon_off)
         action.setIcon(icon_on)
 
+    def setAlignmentIcons(self, icons: dict[PanelAlignment, QIcon]) -> None:
+        """Set per-alignment icons for the cycle action."""
+        self._cycle_align_action.setProperty("alignIcons", icons)
+        current = icons.get(self._panel_alignment)
+        if current:
+            self._cycle_align_action.setIcon(current)
+
+    def stateButtons(self, parent: QWidget | None = None) -> QWidget:
+        """Create and return a widget with layout-control buttons.
+
+        Each call creates a new set of buttons bound to the workbench's
+        actions. The caller places the returned widget wherever it wants.
+        """
+        return WorkbenchStateButtons(self)
+
     # ---- public methods ---------------------------------------------------
+
+    _PANEL_ALIGN_CYCLE = (
+        PanelAlignment.LEFT,
+        PanelAlignment.CENTER,
+        PanelAlignment.RIGHT,
+        PanelAlignment.JUSTIFY,
+    )
 
     def setPanelAlignment(self, alignment: PanelAlignment) -> None:
         if alignment == self._panel_alignment:
             return
         self._panel_alignment = alignment
         self._rebuild_layout()
+        self._update_align_icon()
+
+    def cyclePanelAlignment(self) -> None:
+        """Advance to the next panel alignment in the cycle."""
+        cycle = self._PANEL_ALIGN_CYCLE
+        current = self._panel_alignment
+        idx = cycle.index(current) if current in cycle else -1
+        self.setPanelAlignment(cycle[(idx + 1) % len(cycle)])
 
     def addView(
         self,
@@ -493,6 +531,31 @@ class WorkbenchWidget(QWidget):
             if icon is not None:
                 action.setIcon(icon)
 
+    def _update_align_icon(self) -> None:
+        icons = self._cycle_align_action.property("alignIcons")
+        if isinstance(icons, dict):
+            icon = icons.get(self._panel_alignment)
+            if icon is not None:
+                self._cycle_align_action.setIcon(icon)
+        self._cycle_align_action.setToolTip(
+            f"Panel Alignment: {self._panel_alignment.value.capitalize()}"
+        )
 
-# Backwards-compatible alias
-AcquireModeWidget = WorkbenchWidget
+
+class WorkbenchStateButtons(QWidget):
+    def __init__(self, workbench: WorkbenchWidget) -> None:
+        super().__init__(workbench)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        for action in (
+            workbench._cycle_align_action,
+            workbench._toggle_left_action,
+            workbench._toggle_panel_action,
+            workbench._toggle_right_action,
+        ):
+            btn = QToolButton(workbench)
+            btn.setDefaultAction(action)
+            btn.setAutoRaise(True)
+            layout.addWidget(btn)

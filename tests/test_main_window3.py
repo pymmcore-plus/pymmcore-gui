@@ -343,6 +343,33 @@ class TestWorkbenchWidget:
             workbench.bottomPanel.activityBar.orientation == Qt.Orientation.Horizontal
         )
 
+    def test_state_buttons(self, workbench: WorkbenchWidget) -> None:
+        """stateButtons() returns a widget with 4 auto-raise buttons."""
+        from pymmcore_gui._qt.QtWidgets import QToolButton
+
+        w = workbench.stateButtons()
+        buttons = w.findChildren(QToolButton)
+        assert len(buttons) == 4
+        assert all(b.autoRaise() for b in buttons)
+
+    def test_state_buttons_creates_independent_instances(
+        self, workbench: WorkbenchWidget
+    ) -> None:
+        w1 = workbench.stateButtons()
+        w2 = workbench.stateButtons()
+        assert w1 is not w2
+
+    def test_cycle_panel_alignment(self, workbench: WorkbenchWidget) -> None:
+        expected = [
+            PanelAlignment.RIGHT,
+            PanelAlignment.JUSTIFY,
+            PanelAlignment.LEFT,
+            PanelAlignment.CENTER,
+        ]
+        for align in expected:
+            workbench.cyclePanelAlignment()
+            assert workbench.panelAlignment == align
+
 
 # ---- MicroManagerGUI tests ------------------------------------------------
 
@@ -403,13 +430,8 @@ class TestMicroManagerGUI:
             PanelAlignment.CENTER,
         ]
         for expected in expected_cycle:
-            gui._cycle_panel_alignment()
+            wb.cyclePanelAlignment()
             assert wb.panelAlignment == expected
-
-    def test_ghost_buttons_are_auto_raise(self, gui: MicroManagerGUI) -> None:
-        assert gui._left_sb_btn.autoRaise()
-        assert gui._panel_btn.autoRaise()
-        assert gui._right_sb_btn.autoRaise()
 
 
 # ---- Splitter size stability tests ----------------------------------------
