@@ -19,6 +19,7 @@ from pymmcore_gui._qt.QtWidgets import (
 
 from ._layout import PanelAlignment, ViewContainerLocation, WorkbenchWidget
 from ._main_window import ICON
+from .widgets._configure_widget import ConfigureModeWidget
 
 # ---- Status Bar -----------------------------------------------------------
 
@@ -43,18 +44,6 @@ def _make_label(text: str) -> QLabel:
     return lbl
 
 
-# ---- Mode Widgets ---------------------------------------------------------
-
-
-class ConfigureModeWidget(QWidget):
-    """Placeholder for the Configure mode."""
-
-    def __init__(self, parent: QWidget | None = None) -> None:
-        super().__init__(parent)
-        layout = QVBoxLayout(self)
-        layout.addWidget(_make_label("Configure Mode"))
-
-
 # ---- Main Window ----------------------------------------------------------
 
 
@@ -68,7 +57,7 @@ class MicroManagerGUI(QMainWindow):
         self._mmc = mmcore or CMMCorePlus.instance()
 
         # ---- mode widgets ----
-        self._configure_mode = ConfigureModeWidget()
+        self._configure_mode = ConfigureModeWidget(self)
         self._acquire_mode = WorkbenchWidget(central=_make_label("Editor Area"))
 
         # Populate workbench with placeholder content
@@ -138,8 +127,8 @@ class MicroManagerGUI(QMainWindow):
         self._navigation.setItemsShouldExpand(False)
         self._navigation.addItem("Configure")
         self._navigation.addItem("Acquire")
-        self._navigation.setCurrentIndex(1)  # start on Acquire
-        self._mode_stack.setCurrentIndex(1)
+        self._navigation.setCurrentIndex(0)  # start on Acquire
+        self._mode_stack.setCurrentIndex(0)
         self._navigation.currentIndexChanged.connect(self._on_mode_changed)  # pyright: ignore[reportAttributeAccessIssue]
 
         # ---- layout ----
