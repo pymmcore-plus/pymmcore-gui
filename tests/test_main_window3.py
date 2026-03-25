@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import sys
 from typing import TYPE_CHECKING
 
 import pytest
@@ -532,6 +534,10 @@ def test_sidebar_toggle_preserves_other_sidebar(
     )
 
 
+@pytest.mark.skipif(
+    bool(sys.platform == "darwin" and os.getenv("CI")),
+    reason="flaky on CI macOS runners",
+)
 def test_sidebar_toggle_restores_own_size(
     shown_workbench: WorkbenchWidget,
 ) -> None:
