@@ -67,6 +67,7 @@ constraint-dependencies = ["chardet<6"]
 pyside6-stubs = { git = "https://github.com/tlambert03/PySide6-stubs", rev = "v6.9.1" }
 ome-writers = { git = "https://github.com/pymmcore-plus/ome-writers", rev = "main"}
 pymmcore-widgets = { git = "https://github.com/pymmcore-plus/pymmcore-widgets", rev = "christina"}
+pyqt6-qlementine = { path = "../PyQlementine/packages/PyQt6-Qlementine" }
 
 [dependency-groups]
 # should only be used after manually uninstalling PyQt6 and PyQt6Ads
