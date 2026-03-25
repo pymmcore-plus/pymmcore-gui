@@ -69,6 +69,7 @@ def workbench(qtbot: QtBot) -> WorkbenchWidget:
 def gui(qtbot: QtBot) -> Iterator[MicroManagerGUI]:
     g = MicroManagerGUI()
     qtbot.addWidget(g)
+    g.setMode("acquire")
     yield g
 
 
