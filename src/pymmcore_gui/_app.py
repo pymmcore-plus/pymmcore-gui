@@ -12,12 +12,17 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 
 from superqt.utils import WorkerBase
 
-from pymmcore_gui import __version__
+from pymmcore_gui import __version__, _main_window, _main_window3
 from pymmcore_gui._ads_style import apply_dark_theme
-from pymmcore_gui._main_window import ICON, MicroManagerGUI
 from pymmcore_gui._qt.QtCore import QTimer, Signal
 from pymmcore_gui._qt.QtGui import QIcon
-from pymmcore_gui._qt.QtWidgets import QApplication, QCheckBox, QMessageBox, QWidget
+from pymmcore_gui._qt.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QMainWindow,
+    QMessageBox,
+    QWidget,
+)
 from pymmcore_gui._settings import Settings
 
 from . import _sentry
@@ -64,7 +69,7 @@ class MMQApplication(QApplication):
     def __init__(self, argv: list[str]) -> None:
         super().__init__(argv)
 
-        self.setWindowIcon(QIcon(str(ICON)))
+        self.setWindowIcon(QIcon(str(_main_window.ICON)))
         self.setApplicationName(APP_NAME)
         self.setApplicationVersion(APP_VERSION)
         self.setOrganizationName(ORG_NAME)
@@ -89,7 +94,8 @@ def create_mmgui(
     exec_app: bool = True,
     theme: Literal["dark", "light"] = "dark",
     qstyle: Literal["qlementine", "fusion", "native"] = "qlementine",
-) -> MicroManagerGUI:
+    modern: bool = False,
+) -> QMainWindow:
     """Initialize the pymmcore-gui application and Main Window.
 
     This is the primary way to start pymmcore-gui.  (It is also called by
@@ -128,6 +134,8 @@ def create_mmgui(
     qstyle : Literal["qlementine", "fusion", "native"]
         The QStyle to use for the application.  Default is "qlementine".  Use "native"
         for the native style.
+    modern : bool
+        If True, use the modern main window design (experimental).  Default is False.
     """
     global _QAPP
     # Note: in practice this should almost never be None,
@@ -172,11 +180,17 @@ def create_mmgui(
 
     # -------------------------------------------------
 
-    win = MicroManagerGUI(mmcore=mmcore)
-    if qstyle == "qlementine":
+    if modern:
+        win = _main_window3.MicroManagerGUI(mmcore=mmcore)
+    else:
+        win = _main_window.MicroManagerGUI(mmcore=mmcore)
+    if qstyle == "qlementine" and hasattr(win, "dock_manager"):
         win.dock_manager.setStyleSheet("")
 
-    QTimer.singleShot(0, lambda: win.restore_state(show=True))
+    if hasattr(win, "restore_state"):
+        QTimer.singleShot(0, lambda: win.restore_state(show=True))
+    else:
+        win.show()
 
     # if False was passed, don't load any config at all
     if mm_config is not False:

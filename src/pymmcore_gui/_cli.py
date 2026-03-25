@@ -117,6 +117,11 @@ def run(
         "--qstyle",
         help="The QStyle to use for the application.  Default is 'native'.",
     ),
+    modern: bool = typer.Option(
+        False,
+        "--modern",
+        help="Use the modern main window design (experimental).",
+    ),
 ) -> None:
     """Run the Micro-Manager GUI (this is the default command)."""
     from pymmcore_gui import create_mmgui
@@ -128,6 +133,7 @@ def run(
         install_sentry=not no_telemetry,
         theme=theme,
         qstyle=qstyle,
+        modern=modern,
     )
     sys.exit(0)
 

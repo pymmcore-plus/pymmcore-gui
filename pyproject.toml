@@ -215,6 +215,7 @@ ignore = [".pre-commit-config.yaml", ".ruff_cache/**/*", "tests/**/*"]
 
 [tool.typos.default]
 extend-ignore-identifiers-re = ["(?i)nd2?.*", "(?i)ome"]
+extend-ignore-words-re = ["Fo"]
 
 [tool.typos.files]
 extend-exclude = ["*.spec", "hooks/"]
