@@ -134,38 +134,11 @@ def create_mmgui(
         )
 
     win = MicroManagerGUI(mmcore=mmcore)
+    QTimer.singleShot(0, lambda: win.restore_state(show=True))
 
-    def _show_main_window() -> None:
-        win.restore_state(show=True)
-
-        if not TESTING:
-            return
-
-        # This is used in test_bundle.py to know when the app is ready.
-        print("READY", flush=True)
-
-        # Optional test-only auto-close to avoid external process termination.
-        if quit_after := os.environ.get("PYMMGUI_TEST_QUIT_AFTER"):
-            try:
-                delay_ms = int(float(quit_after) * 1000)
-            except ValueError:
-                warnings.warn(
-                    f"Ignoring invalid PYMMGUI_TEST_QUIT_AFTER value: {quit_after!r}.",
-                    RuntimeWarning,
-                    stacklevel=2,
-                )
-            else:
-                if delay_ms > 0:
-                    QTimer.singleShot(delay_ms, win.close)
-                else:
-                    warnings.warn(
-                        "Ignoring non-positive PYMMGUI_TEST_QUIT_AFTER value: "
-                        f"{quit_after!r}.",
-                        RuntimeWarning,
-                        stacklevel=2,
-                    )
-
-    QTimer.singleShot(0, _show_main_window)
+    # Optional auto-close delay for test_bundle.py
+    if quit_s := os.environ.get("PYMMGUI_TEST_QUIT_AFTER"):
+        QTimer.singleShot(int(float(quit_s) * 1000), win.close)
 
     # if False was passed, don't load any config at all
     if mm_config is not False:
