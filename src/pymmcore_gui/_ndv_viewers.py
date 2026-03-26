@@ -108,21 +108,13 @@ class NDVViewersManager(QObject):
 
         def _update(_idx: IndexMap = current_index) -> None:
             try:
-                # Update dims/sliders in the main thread (see note in
-                # _on_sequence_started about why we don't use coords_changed).
-                if wrapper is not None:
-                    wrapper.dims_changed.emit()
                 _idx.update(index.items())
+                if wrapper is not None:
+                    wrapper.data_changed.emit()
             except Exception:  # pragma: no cover
                 # this happens if the viewer has been closed in the meantime
                 # usually it's a RuntimeError, but could be an EmitLoopError
                 return
-            # Force data request: ndv's _apply_changes only triggers a fetch
-            # when current_index changes, but for the first frame the default
-            # index (all zeros) matches the initial values, so no fetch would
-            # occur without this.
-            if wrapper is not None:
-                wrapper.data_changed.emit()
 
         QTimer.singleShot(10, _update)
 

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
 
 
-BUFFER_SIZE = 1
+BUFFER_SIZE = 100
 
 
 class NDVPreview(ImagePreviewBase):

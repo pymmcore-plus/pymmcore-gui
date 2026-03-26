@@ -14,6 +14,7 @@ repos:
       - id: check-yaml
         args: ["--unsafe"]
       - id: check-added-large-files
+        exclude: "uv.lock"
 
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.24.1
