@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import weakref
+from contextlib import suppress
 from typing import TYPE_CHECKING, Any, cast
 from weakref import WeakSet, WeakValueDictionary
 
@@ -55,6 +57,7 @@ class NDVViewersManager(QObject):
         # CONNECTIONS ---------------------------------------------------------
 
         self._is_mda_running = False
+        self._follow_acquisition = True
         self._current_image_preview: CDockWidget | None = None
 
         ev = self._mmc.events
@@ -81,11 +84,6 @@ class NDVViewersManager(QObject):
         self._is_mda_running = True
         self._view = self._runner.get_view()
         self._active_mda_viewer = self._create_ndv_viewer(self._view, sequence)
-        # NOTE: we intentionally do NOT connect view.coords_changed to
-        # viewer.data_wrapper.dims_changed here.  coords_changed fires in the
-        # MDA background thread, and dims_changed handlers create/modify Qt
-        # widgets which must only happen on the main thread.  Instead, we
-        # marshal dim updates through QTimer in _on_frame_ready.
 
     def _on_frame_ready(
         self, frame: np.ndarray, event: useq.MDAEvent, meta: FrameMetaV1
@@ -93,6 +91,8 @@ class NDVViewersManager(QObject):
         """Create a viewer if it does not exist, otherwise update the current index."""
         if (viewer := self._active_mda_viewer) is None:
             return  # pragma: no cover
+        if not self._follow_acquisition:
+            return
 
         # Add a small delay to make sure the data are available in the handler
         # This is a bit of a hack to get around the data handlers can write data
@@ -125,6 +125,15 @@ class NDVViewersManager(QObject):
     def _create_ndv_viewer(self, view: Any, sequence: MDASequence) -> ndv.ArrayViewer:
         """Create a new ndv viewer with no data."""
         ndv_viewer = ndv.ArrayViewer(view)
+        # Duck-typed connection between an ome_writers.StreamView (currently not
+        # publicly exported) and the ndv DataWrapper.
+        if hasattr(view, "coords_changed") and hasattr(
+            ndv_viewer.data_wrapper, "dims_changed"
+        ):
+            view.coords_changed.connect(ndv_viewer.data_wrapper.dims_changed)
+        self._follow_acquisition = True
+        with suppress(Exception):
+            _add_follow_lock_button(ndv_viewer, self)
         self._seq_viewers[str(sequence.uid)] = ndv_viewer
         self.mdaViewerCreated.emit(ndv_viewer, sequence)
         return ndv_viewer
@@ -189,3 +198,41 @@ class NDVViewersManager(QObject):
                 if preview._get_core_dtype_shape() != preview.dtype_shape:
                     preview.detach()
                     self._current_image_preview = None
+
+
+# ---------------------------------------------------------------------------
+# HACK: Add a "follow acquisition" lock toggle to ndv's internal button bar.
+# This reaches into ndv's private _btn_layout. Wrapped in try/except so that
+# if ndv's internals change, the button simply won't appear.
+# ---------------------------------------------------------------------------
+def _add_follow_lock_button(
+    ndv_viewer: ndv.ArrayViewer, manager: NDVViewersManager
+) -> None:
+    """Add a lock button to *ndv_viewer*; calls *on_toggled(locked)* on toggle."""
+    from superqt import QIconifyIcon
+
+    from pymmcore_gui._qt.QtWidgets import QPushButton
+
+    q_widget = ndv_viewer.widget()
+    btn_layout = getattr(q_widget, "_btn_layout", None)
+    if btn_layout is None:
+        return
+
+    btn = QPushButton(q_widget)
+    btn.setCheckable(True)
+    btn.setIcon(QIconifyIcon("mdi:lock-open-variant-outline"))
+    btn.setToolTip("Lock sliders (don't follow acquisition)")
+    mgr_ref = weakref.ref(manager)
+
+    def _toggled(locked: bool) -> None:
+        if locked:
+            btn.setIcon(QIconifyIcon("mdi:lock-outline"))
+            btn.setToolTip("Unlock sliders (follow acquisition)")
+        else:
+            btn.setIcon(QIconifyIcon("mdi:lock-open-variant-outline"))
+            btn.setToolTip("Lock sliders (don't follow acquisition)")
+        if manager := mgr_ref():
+            manager._follow_acquisition = not locked
+
+    btn.toggled.connect(_toggled)
+    btn_layout.addWidget(btn)
