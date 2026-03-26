@@ -81,11 +81,6 @@ class NDVViewersManager(QObject):
         self._is_mda_running = True
         self._view = self._runner.get_view()
         self._active_mda_viewer = self._create_ndv_viewer(self._view, sequence)
-        # NOTE: we intentionally do NOT connect view.coords_changed to
-        # viewer.data_wrapper.dims_changed here.  coords_changed fires in the
-        # MDA background thread, and dims_changed handlers create/modify Qt
-        # widgets which must only happen on the main thread.  Instead, we
-        # marshal dim updates through QTimer in _on_frame_ready.
 
     def _on_frame_ready(
         self, frame: np.ndarray, event: useq.MDAEvent, meta: FrameMetaV1
@@ -125,6 +120,12 @@ class NDVViewersManager(QObject):
     def _create_ndv_viewer(self, view: Any, sequence: MDASequence) -> ndv.ArrayViewer:
         """Create a new ndv viewer with no data."""
         ndv_viewer = ndv.ArrayViewer(view)
+        # Duck-typed connection between an ome_writers.StreamView (currently not
+        # publicly exported) and the ndv DataWrapper.
+        if hasattr(view, "coords_changed") and hasattr(
+            ndv_viewer.data_wrapper, "dims_changed"
+        ):
+            view.coords_changed.connect(ndv_viewer.data_wrapper.dims_changed)
         self._seq_viewers[str(sequence.uid)] = ndv_viewer
         self.mdaViewerCreated.emit(ndv_viewer, sequence)
         return ndv_viewer
