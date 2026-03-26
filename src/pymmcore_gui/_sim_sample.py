@@ -19,7 +19,7 @@ def create_sample(
     point_spacing: float = 200,
     n_spokes: int = 24,
     ring_radii: tuple[float, ...] = (300, 600, 900, 1200, 1500),
-    n_scattered_lines: int = 80,
+    n_scattered_lines: int = 120,
     grid_line_spacing: float = 250,
     cluster_positions: tuple[tuple[float, float], ...] = (
         (800, 800),
@@ -49,7 +49,7 @@ def create_sample(
         length = rng.uniform(extent * 0.25, extent * 0.75)
         x2 = length * math.cos(angle)
         y2 = length * math.sin(angle)
-        objects.append(Line((0, 0), (x2, y2), intensity=rng.randint(60, 140)))
+        objects.append(Line((0, 0), (x2, y2), intensity=rng.randint(460, 1040)))
 
     # Concentric rings of rectangles
     for ring_r in ring_radii:
@@ -71,13 +71,14 @@ def create_sample(
             )
 
     # Scattered lines across the field
+    length = extent * 0.25
     for _ in range(n_scattered_lines):
         x1 = rng.uniform(-extent, extent)
         y1 = rng.uniform(-extent, extent)
-        dx = rng.uniform(-extent * 0.15, extent * 0.15)
-        dy = rng.uniform(-extent * 0.15, extent * 0.15)
+        dx = rng.uniform(-length, length)
+        dy = rng.uniform(-length, length)
         objects.append(
-            Line((x1, y1), (x1 + dx, y1 + dy), intensity=rng.randint(50, 180))
+            Line((x1, y1), (x1 + dx, y1 + dy), intensity=rng.randint(390, 1080))
         )
 
     # Diagonal grid lines
