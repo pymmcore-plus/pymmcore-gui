@@ -2847,8 +2847,8 @@ test = [
 
 [[package]]
 name = "pymmcore-plus"
-version = "0.18.0"
-source = { git = "https://github.com/pymmcore-plus/pymmcore-plus?rev=main#693effc23a6e37274f51469ab1853c800b690615" }
+version = "0.18.1.dev2+gb0375a3f9"
+source = { git = "https://github.com/pymmcore-plus/pymmcore-plus?rev=main#b0375a3f994467f822ae37caf7facf64a5797452" }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -2871,8 +2871,8 @@ cli = [
 
 [[package]]
 name = "pymmcore-widgets"
-version = "0.12.1.dev22+g475417c82"
-source = { git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=christina#475417c82cd888ef42daf0e5805a0fd6d4adbbf3" }
+version = "0.12.1.dev24+g76de502a6"
+source = { git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=christina#76de502a6f015ec57a7a0d19ca6a6c240f5a0733" }
 dependencies = [
     { name = "pymmcore-plus", extra = ["cli"] },
     { name = "pyopengl", marker = "sys_platform == 'darwin'" },

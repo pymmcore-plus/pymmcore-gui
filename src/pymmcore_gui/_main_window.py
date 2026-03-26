@@ -269,6 +269,9 @@ class MicroManagerGUI(QMainWindow):
         CDockManager.setConfigFlag(
             CDockManager.eConfigFlag.DockAreaHasCloseButton, False
         )
+        CDockManager.setConfigFlag(
+            CDockManager.eConfigFlag.RetainTabSizeWhenCloseButtonHidden, True
+        )
         CDockManager.setConfigFlag(CDockManager.eConfigFlag.OpaqueSplitterResize, True)
         CDockManager.setAutoHideConfigFlag(
             CDockManager.eAutoHideFlag.AutoHideFeatureEnabled, True
