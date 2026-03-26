@@ -2797,7 +2797,7 @@ requires-dist = [
     { name = "ndv", extras = ["vispy"], specifier = ">=0.5.0rc4" },
     { name = "ome-writers", extras = ["tensorstore", "tifffile"], git = "https://github.com/pymmcore-plus/ome-writers?rev=main" },
     { name = "pydantic-settings", specifier = ">=2.7.1" },
-    { name = "pymmcore-plus", extras = ["cli"], specifier = ">=0.18.0" },
+    { name = "pymmcore-plus", extras = ["cli"], git = "https://github.com/pymmcore-plus/pymmcore-plus?rev=main" },
     { name = "pymmcore-widgets", git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=christina" },
     { name = "pyqt6", specifier = "==6.9.1" },
     { name = "pyqt6-qlementine", specifier = ">=1.4.3.0rc2" },
@@ -2848,7 +2848,7 @@ test = [
 [[package]]
 name = "pymmcore-plus"
 version = "0.18.0"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/pymmcore-plus/pymmcore-plus?rev=main#693effc23a6e37274f51469ab1853c800b690615" }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -2862,10 +2862,6 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "useq-schema" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/61/82/8956e666d8ede7beb46794c66f9d153fc3f4dc8b02b4fb51d6eaecb7d7b8/pymmcore_plus-0.18.0.tar.gz", hash = "sha256:4e8ec043cf972c6c10e6570c546b01b20d7c8e683e9ffb539c7ce3c85d398b5e", size = 291362, upload-time = "2026-03-23T22:02:16.837Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/53/94/e059a611330d1a9aa4beecefa86ca43c80d8abed5a8808b983f211f7527a/pymmcore_plus-0.18.0-py3-none-any.whl", hash = "sha256:cdde30aaba7332f25b635caa12fcc11ed5e37d0d3a9601837bf1e38ab8f22a1c", size = 257684, upload-time = "2026-03-23T22:02:15.444Z" },
-]
 
 [package.optional-dependencies]
 cli = [
@@ -2875,8 +2871,8 @@ cli = [
 
 [[package]]
 name = "pymmcore-widgets"
-version = "0.12.1.dev21+g6037a1063"
-source = { git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=christina#6037a1063e2cf3acd8a44120a635be112d33741c" }
+version = "0.12.1.dev22+g475417c82"
+source = { git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=christina#475417c82cd888ef42daf0e5805a0fd6d4adbbf3" }
 dependencies = [
     { name = "pymmcore-plus", extra = ["cli"] },
     { name = "pyopengl", marker = "sys_platform == 'darwin'" },
