@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import weakref
+from contextlib import suppress
 from typing import TYPE_CHECKING, Any, cast
 from weakref import WeakSet, WeakValueDictionary
 
@@ -55,6 +57,7 @@ class NDVViewersManager(QObject):
         # CONNECTIONS ---------------------------------------------------------
 
         self._is_mda_running = False
+        self._follow_acquisition = True
         self._current_image_preview: CDockWidget | None = None
 
         ev = self._mmc.events
@@ -88,6 +91,8 @@ class NDVViewersManager(QObject):
         """Create a viewer if it does not exist, otherwise update the current index."""
         if (viewer := self._active_mda_viewer) is None:
             return  # pragma: no cover
+        if not self._follow_acquisition:
+            return
 
         # Add a small delay to make sure the data are available in the handler
         # This is a bit of a hack to get around the data handlers can write data
@@ -126,6 +131,9 @@ class NDVViewersManager(QObject):
             ndv_viewer.data_wrapper, "dims_changed"
         ):
             view.coords_changed.connect(ndv_viewer.data_wrapper.dims_changed)
+        self._follow_acquisition = True
+        with suppress(Exception):
+            _add_follow_lock_button(ndv_viewer, self)
         self._seq_viewers[str(sequence.uid)] = ndv_viewer
         self.mdaViewerCreated.emit(ndv_viewer, sequence)
         return ndv_viewer
@@ -190,3 +198,41 @@ class NDVViewersManager(QObject):
                 if preview._get_core_dtype_shape() != preview.dtype_shape:
                     preview.detach()
                     self._current_image_preview = None
+
+
+# ---------------------------------------------------------------------------
+# HACK: Add a "follow acquisition" lock toggle to ndv's internal button bar.
+# This reaches into ndv's private _btn_layout. Wrapped in try/except so that
+# if ndv's internals change, the button simply won't appear.
+# ---------------------------------------------------------------------------
+def _add_follow_lock_button(
+    ndv_viewer: ndv.ArrayViewer, manager: NDVViewersManager
+) -> None:
+    """Add a lock button to *ndv_viewer*; calls *on_toggled(locked)* on toggle."""
+    from superqt import QIconifyIcon
+
+    from pymmcore_gui._qt.QtWidgets import QPushButton
+
+    q_widget = ndv_viewer.widget()
+    btn_layout = getattr(q_widget, "_btn_layout", None)
+    if btn_layout is None:
+        return
+
+    btn = QPushButton(q_widget)
+    btn.setCheckable(True)
+    btn.setIcon(QIconifyIcon("mdi:lock-open-variant-outline"))
+    btn.setToolTip("Lock sliders (don't follow acquisition)")
+    mgr_ref = weakref.ref(manager)
+
+    def _toggled(locked: bool) -> None:
+        if locked:
+            btn.setIcon(QIconifyIcon("mdi:lock-outline"))
+            btn.setToolTip("Unlock sliders (follow acquisition)")
+        else:
+            btn.setIcon(QIconifyIcon("mdi:lock-open-variant-outline"))
+            btn.setToolTip("Lock sliders (don't follow acquisition)")
+        if manager := mgr_ref():
+            manager._follow_acquisition = not locked
+
+    btn.toggled.connect(_toggled)
+    btn_layout.addWidget(btn)
