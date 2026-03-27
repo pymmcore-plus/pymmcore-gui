@@ -6,9 +6,19 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
-from qtpy.QtCore import QEvent, Qt
-from qtpy.QtGui import QColor, QImage, QPainter, QPixmap
-from qtpy.QtWidgets import QWidget
+from qtpy.QtCore import (  # type: ignore[attr-defined]
+    Property,  # pyright: ignore[reportPrivateImportUsage]
+    QEasingCurve,
+    QEvent,
+    QParallelAnimationGroup,
+    QPoint,
+    QPointF,
+    QPropertyAnimation,
+    QSequentialAnimationGroup,
+    Qt,
+)
+from qtpy.QtGui import QColor, QContextMenuEvent, QImage, QPainter, QPixmap, QTransform
+from qtpy.QtWidgets import QGraphicsOpacityEffect, QLabel, QWidget
 
 from pymmcore_gui._qt.Qlementine import QlementineStyle  # type: ignore[attr-defined]
 
@@ -185,4 +195,97 @@ class DitheredGradient(QWidget):
 
         painter = QPainter(self)
         painter.drawPixmap(0, 0, self._cache)
+        painter.end()
+
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:  # type: ignore[override]
+        self._spawn_pinch(event.pos())
+
+    def _spawn_pinch(self, pos: QPoint) -> None:
+        lbl = _RotatableEmoji("\U0001f90c", self)
+        lbl.setStyleSheet("background: transparent; font-size: 48px;")
+        lbl.adjustSize()
+        lbl.move(pos - QPoint(lbl.width() // 2, lbl.height() // 2))
+        lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        lbl.show()
+
+        opacity = QGraphicsOpacityEffect(lbl)
+        lbl.setGraphicsEffect(opacity)
+
+        origin = lbl.pos()
+        seq = QSequentialAnimationGroup(lbl)
+
+        # Phase 1: rise out of the click point
+        rise = QPropertyAnimation(lbl, b"pos", lbl)
+        rise.setDuration(300)
+        rise.setStartValue(origin)
+        rise.setEndValue(origin + QPoint(0, -50))
+        rise.setEasingCurve(QEasingCurve.Type.OutCubic)
+        seq.addAnimation(rise)
+
+        # Phase 2:
+        for _ in range(2):
+            flick = QPropertyAnimation(lbl, b"rotation_", lbl)
+            flick.setDuration(200)
+            flick.setStartValue(0.0)
+            flick.setEndValue(-8.0)
+            flick.setEasingCurve(QEasingCurve.Type.OutCubic)
+            seq.addAnimation(flick)
+
+            recoil = QPropertyAnimation(lbl, b"rotation_", lbl)
+            recoil.setDuration(200)
+            recoil.setStartValue(-8.0)
+            recoil.setEndValue(0.0)
+            recoil.setEasingCurve(QEasingCurve.Type.InOutCubic)
+            seq.addAnimation(recoil)
+
+        # Phase 3:
+        end_group = QParallelAnimationGroup(lbl)
+
+        float_up = QPropertyAnimation(lbl, b"pos", lbl)
+        float_up.setDuration(300)
+        float_up.setStartValue(origin + QPoint(0, -50))
+        float_up.setEndValue(origin + QPoint(0, -120))
+        float_up.setEasingCurve(QEasingCurve.Type.InQuad)
+        end_group.addAnimation(float_up)
+
+        fade = QPropertyAnimation(opacity, b"opacity", lbl)
+        fade.setDuration(300)
+        fade.setStartValue(1.0)
+        fade.setEndValue(0.0)
+        fade.setEasingCurve(QEasingCurve.Type.InQuad)
+        end_group.addAnimation(fade)
+
+        seq.addAnimation(end_group)
+        seq.finished.connect(lbl.deleteLater)
+        seq.start()
+
+
+class _RotatableEmoji(QLabel):
+    """QLabel subclass with an animatable rotation around a custom origin."""
+
+    def __init__(self, text: str, parent: QWidget) -> None:
+        super().__init__(text, parent)
+        self._rotation = 0.0
+        self._origin = QPointF(0, 1)
+
+    def _get_rotation(self) -> float:
+        return self._rotation
+
+    def _set_rotation(self, angle: float) -> None:
+        self._rotation = angle
+        self.update()
+
+    rotation_ = Property(float, _get_rotation, _set_rotation)
+
+    def paintEvent(self, event: object) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        ox = self._origin.x() * self.width()
+        oy = self._origin.y() * self.height()
+        xf = QTransform()
+        xf.translate(ox, oy)
+        xf.rotate(self._rotation)
+        xf.translate(-ox, -oy)
+        painter.setTransform(xf)
+        super().paintEvent(event)  # type: ignore[arg-type]
         painter.end()
