@@ -13,7 +13,7 @@ from pymmcore_gui._qt.Qlementine import (  # type: ignore[attr-defined]
     QlementineStyle,
     SegmentedControl,
 )
-from pymmcore_gui._qt.QtCore import QSize, Qt, QTimer, Signal
+from pymmcore_gui._qt.QtCore import QSignalBlocker, QSize, Qt, QTimer, Signal
 from pymmcore_gui._qt.QtGui import QColor, QFont, QPalette
 from pymmcore_gui._qt.QtWidgets import (
     QApplication,
@@ -470,21 +470,19 @@ class StagesControlWidget(QWidget):
         xy_devs = list(self._mmc.getLoadedDevicesOfType(DeviceType.XYStage))
         z_devs = list(self._mmc.getLoadedDevicesOfType(DeviceType.Stage))
 
-        self._xy_combo.blockSignals(True)
-        self._xy_combo.clear()
-        self._xy_combo.addItems(xy_devs)
-        default_xy = self._mmc.getXYStageDevice()
-        if default_xy in xy_devs:
-            self._xy_combo.setCurrentText(default_xy)
-        self._xy_combo.blockSignals(False)
+        with QSignalBlocker(self._xy_combo):
+            self._xy_combo.clear()
+            self._xy_combo.addItems(xy_devs)
+            default_xy = self._mmc.getXYStageDevice()
+            if default_xy in xy_devs:
+                self._xy_combo.setCurrentText(default_xy)
 
-        self._z_combo.blockSignals(True)
-        self._z_combo.clear()
-        self._z_combo.addItems(z_devs)
-        default_z = self._mmc.getFocusDevice()
-        if default_z in z_devs:
-            self._z_combo.setCurrentText(default_z)
-        self._z_combo.blockSignals(False)
+        with QSignalBlocker(self._z_combo):
+            self._z_combo.clear()
+            self._z_combo.addItems(z_devs)
+            default_z = self._mmc.getFocusDevice()
+            if default_z in z_devs:
+                self._z_combo.setCurrentText(default_z)
 
         has_xy = len(xy_devs) > 0
         has_z = len(z_devs) > 0
