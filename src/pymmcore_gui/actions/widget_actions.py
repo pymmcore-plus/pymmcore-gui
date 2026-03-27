@@ -199,6 +199,10 @@ def create_stage_widget(parent: QWidget) -> StagesControlWidget:
     """Create the Stage Control widget."""
     from pymmcore_gui.widgets._stage_control import StagesControlWidget
 
+    # To switch back to the legacy (pymmcore-widgets) stage control, comment
+    # the line above and uncomment the line below:
+    # from pymmcore_gui.widgets._stage_control_legacy import StagesControlWidget
+
     return StagesControlWidget(parent=parent, mmcore=_get_core(parent))
 
 

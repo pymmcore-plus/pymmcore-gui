@@ -311,7 +311,7 @@ radix_slate_blue = {
     "menu_item_border_radius": 6.0,
     "menu_bar_item_border_radius": 4.0,
     "border_width": 1,
-    "control_height_large": 24,
+    "control_height_large": 28,
     "control_height_medium": 24,
     "control_height_small": 18,
     "control_default_width": 120,
