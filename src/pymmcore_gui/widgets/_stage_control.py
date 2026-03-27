@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import suppress
 from itertools import chain
 from typing import TYPE_CHECKING, ClassVar
 
@@ -94,9 +95,10 @@ class _PositionSpinBox(QDoubleSpinBox):
         self.setRange(-1e7, 1e7)
         self.setDecimals(2)
         self.setSuffix(" µm")
-        self.setFont(_mono_font())
+        self.setFont(_mono_font(12))
         self.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.setButtonSymbols(QDoubleSpinBox.ButtonSymbols.NoButtons)
+        self.setMinimumHeight(20)
         self.setKeyboardTracking(False)
         self.setReadOnly(True)
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
@@ -344,6 +346,15 @@ class StagesControlWidget(QWidget):
         self._build_ui()
         self._connect_signals()
         self._on_cfg_loaded()
+        self.destroyed.connect(self._disconnect)
+
+    def _disconnect(self) -> None:
+        self._poll_timer.stop()
+        self._disconnect_accumulators()
+        evts = self._mmc.events
+        evts.systemConfigurationLoaded.disconnect(self._on_cfg_loaded)
+        evts.XYStagePositionChanged.disconnect(self._on_xy_pos_changed)
+        evts.stagePositionChanged.disconnect(self._on_z_pos_changed)
 
     # ── UI construction ──────────────────────────────────────────────
 
@@ -499,29 +510,32 @@ class StagesControlWidget(QWidget):
             self._update_positions()
 
     def _setup_accumulators(self) -> None:
-        if self._xy_accum is not None:
-            self._xy_accum.moveFinished.disconnect(self._update_positions)
-            self._xy_accum = None
-        if self._z_accum is not None:
-            self._z_accum.moveFinished.disconnect(self._update_positions)
-            self._z_accum = None
+        self._disconnect_accumulators()
 
         xy_dev = self._current_xy_device()
         z_dev = self._current_z_device()
 
         if xy_dev:
-            try:
-                self._xy_accum = QStageMoveAccumulator.for_device(xy_dev, self._mmc)
-                self._xy_accum.moveFinished.connect(self._update_positions)
-            except Exception:
-                self._xy_accum = None
+            with suppress(Exception):
+                accum = QStageMoveAccumulator.for_device(xy_dev, self._mmc)
+                accum.moveFinished.connect(self._update_positions)
+                self._xy_accum = accum
 
         if z_dev:
-            try:
-                self._z_accum = QStageMoveAccumulator.for_device(z_dev, self._mmc)
-                self._z_accum.moveFinished.connect(self._update_positions)
-            except Exception:
-                self._z_accum = None
+            with suppress(Exception):
+                accum = QStageMoveAccumulator.for_device(z_dev, self._mmc)
+                accum.moveFinished.connect(self._update_positions)
+                self._z_accum = accum
+
+    def _disconnect_accumulators(self) -> None:
+        if self._xy_accum is not None:
+            with suppress(TypeError, RuntimeError):
+                self._xy_accum.moveFinished.disconnect(self._update_positions)
+            self._xy_accum = None
+        if self._z_accum is not None:
+            with suppress(TypeError, RuntimeError):
+                self._z_accum.moveFinished.disconnect(self._update_positions)
+            self._z_accum = None
 
     # ── Device helpers ───────────────────────────────────────────────
 
