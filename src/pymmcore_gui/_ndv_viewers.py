@@ -84,7 +84,7 @@ class NDVViewersManager(QObject):
         """Called when a new MDA sequence has been started."""
         self._is_mda_running = True
         self._view = self._runner.get_view()
-        self._active_mda_viewer = self._create_ndv_viewer(self._view, sequence)
+        self._active_mda_viewer = self._create_ndv_viewer(self._view, sequence, meta)
 
     def _on_frame_ready(
         self, frame: np.ndarray, event: useq.MDAEvent, meta: FrameMetaV1
@@ -123,9 +123,19 @@ class NDVViewersManager(QObject):
         """Called when a sequence has finished."""
         self._is_mda_running = False
 
-    def _create_ndv_viewer(self, view: Any, sequence: MDASequence) -> ndv.ArrayViewer:
+    def _create_ndv_viewer(
+        self,
+        view: Any,
+        sequence: MDASequence,
+        meta: SummaryMetaV1 | None = None,
+    ) -> ndv.ArrayViewer:
         """Create a new ndv viewer with no data."""
         ndv_viewer = MMArrayViewer(view)
+        ndv_viewer._mda_sequence = sequence
+        if meta is not None:
+            with suppress(Exception):
+                ndv_viewer._pixel_size_um = meta["image_infos"][0]["pixel_size_um"]
+
         # Duck-typed connection between an ome_writers.StreamView (currently not
         # publicly exported) and the ndv DataWrapper.
         if hasattr(view, "coords_changed") and hasattr(
