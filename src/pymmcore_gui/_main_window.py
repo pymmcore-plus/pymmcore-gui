@@ -39,6 +39,7 @@ from ._notification_manager import NotificationManager
 from ._settings import Settings
 from .actions import CoreAction, QCoreAction, WidgetAction, WidgetActionInfo
 from .actions._action_info import ActionInfo
+from .widgets._dithered_gradient import DitheredGradient
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
@@ -269,6 +270,9 @@ class MicroManagerGUI(QMainWindow):
         CDockManager.setConfigFlag(
             CDockManager.eConfigFlag.DockAreaHasCloseButton, False
         )
+        CDockManager.setConfigFlag(
+            CDockManager.eConfigFlag.RetainTabSizeWhenCloseButtonHidden, True
+        )
         CDockManager.setConfigFlag(CDockManager.eConfigFlag.OpaqueSplitterResize, True)
         CDockManager.setAutoHideConfigFlag(
             CDockManager.eAutoHideFlag.AutoHideFeatureEnabled, True
@@ -283,13 +287,7 @@ class MicroManagerGUI(QMainWindow):
 
         self._central = CDockWidget(self.dock_manager, "Viewers", self)
         self._central.setFeature(CDockWidget.DockWidgetFeature.NoTab, True)
-        blank = QWidget()
-        blank.setObjectName("blank")
-        blank.setStyleSheet(
-            "background-color: qlineargradient("
-            "x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #333, stop: 1 #111);"
-        )
-        self._central.setWidget(blank)
+        self._central.setWidget(DitheredGradient())
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
         # Adding a QOpenGLWidget (e.g. ndv canvas) to a window that uses raster
