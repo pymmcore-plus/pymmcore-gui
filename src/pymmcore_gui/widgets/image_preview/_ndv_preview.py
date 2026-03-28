@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import ndv
+import ndv.models
 from ndv.models import RingBuffer
 
+from pymmcore_gui._array_viewer import MMArrayViewer
 from pymmcore_gui._qt.QtWidgets import QApplication, QVBoxLayout, QWidget
 from pymmcore_gui.widgets.image_preview._preview_base import ImagePreviewBase
 
@@ -25,7 +26,7 @@ class NDVPreview(ImagePreviewBase):
         use_with_mda: bool = False,
     ):
         super().__init__(parent, mmcore, use_with_mda=use_with_mda)
-        self._viewer = ndv.ArrayViewer()
+        self._viewer = MMArrayViewer()
         self._buffer: RingBuffer | None = None
         self._core_dtype: tuple[str, tuple[int, ...]] | None = None
         self._is_rgb: bool = False

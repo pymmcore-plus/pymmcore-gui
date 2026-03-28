@@ -8,6 +8,7 @@ from weakref import WeakSet, WeakValueDictionary
 import ndv
 import useq
 
+from pymmcore_gui._array_viewer import MMArrayViewer
 from pymmcore_gui._qt.QtAds import CDockWidget
 from pymmcore_gui._qt.QtCore import QObject, QTimer, Signal
 from pymmcore_gui._qt.QtWidgets import QWidget
@@ -124,7 +125,7 @@ class NDVViewersManager(QObject):
 
     def _create_ndv_viewer(self, view: Any, sequence: MDASequence) -> ndv.ArrayViewer:
         """Create a new ndv viewer with no data."""
-        ndv_viewer = ndv.ArrayViewer(view)
+        ndv_viewer = MMArrayViewer(view)
         # Duck-typed connection between an ome_writers.StreamView (currently not
         # publicly exported) and the ndv DataWrapper.
         if hasattr(view, "coords_changed") and hasattr(
