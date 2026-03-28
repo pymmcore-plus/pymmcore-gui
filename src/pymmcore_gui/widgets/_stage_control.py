@@ -144,14 +144,17 @@ class _PositionBar(QWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        layout = QHBoxLayout(self)
+        layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 2, 4, 2)
-        layout.setSpacing(6)
+        layout.setSpacing(4)
 
         self._labels: dict[str, QLabel] = {}
         self._spins: dict[str, _PositionSpinBox] = {}
 
         for axis in ("X", "Y", "Z"):
+            row = QHBoxLayout()
+            row.setSpacing(6)
+
             lbl = QLabel(axis, self)
             lbl.setFont(_mono_font())
             _set_label_color(lbl, self.AXIS_COLORS[axis])
@@ -161,8 +164,9 @@ class _PositionBar(QWidget):
             spin.goToRequested.connect(lambda v, a=axis: self.goToRequested.emit(a, v))
             self._spins[axis] = spin
 
-            layout.addWidget(lbl)
-            layout.addWidget(spin, 1)
+            row.addWidget(lbl)
+            row.addWidget(spin, 1)
+            layout.addLayout(row)
 
     def set_position(self, axis: str, value: float) -> None:
         if axis in self._spins:
@@ -283,6 +287,8 @@ class _StepSizeBar(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(4)
 
+        layout.addStretch()
+
         lbl = QLabel("STEP", self)
         if qs := _qlementine_style():
             _set_label_color(
@@ -311,6 +317,8 @@ class _StepSizeBar(QWidget):
             )
         layout.addWidget(unit)
 
+        layout.addStretch()
+
     def _on_index_changed(self) -> None:
         data = self._seg.currentData()
         if data is not None:
@@ -333,7 +341,7 @@ class StagesControlWidget(QWidget):
         self, *, parent: QWidget | None = None, mmcore: CMMCorePlus | None = None
     ) -> None:
         super().__init__(parent=parent)
-        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         self._mmc = mmcore or CMMCorePlus.instance()
@@ -363,38 +371,27 @@ class StagesControlWidget(QWidget):
         root.setContentsMargins(6, 6, 6, 6)
         root.setSpacing(4)
 
-        # Header: device combos + poll
-        header = QHBoxLayout()
-        header.setSpacing(4)
-
+        # XY device row
+        xy_row = QHBoxLayout()
+        xy_row.setSpacing(4)
+        self._xy_lbl = QLabel("XY", self)
+        self._xy_lbl.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self._xy_combo = QComboBox(self)
         self._xy_combo.setToolTip("XY stage device")
-        self._xy_combo.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
+        xy_row.addWidget(self._xy_lbl)
+        xy_row.addWidget(self._xy_combo)
+        root.addLayout(xy_row)
+
+        # Z device row
+        z_row = QHBoxLayout()
+        z_row.setSpacing(4)
+        self._z_lbl = QLabel("Z", self)
+        self._z_lbl.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self._z_combo = QComboBox(self)
         self._z_combo.setToolTip("Z stage device")
-        self._z_combo.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
-        header.addWidget(self._xy_combo)
-        header.addWidget(self._z_combo)
-
-        self._snap_cb = QCheckBox("Snap on Click", self)
-        self._snap_cb.setToolTip("Snap image after each move")
-        header.addWidget(self._snap_cb)
-
-        header.addStretch()
-
-        self._poll_cb = QCheckBox("Poll", self)
-        self._poll_cb.setToolTip("Poll stage position periodically")
-        header.addWidget(self._poll_cb)
-
-        root.addLayout(header)
-
-        # Position bar (click a value to go to absolute position)
-        self._pos_bar = _PositionBar(self)
-        root.addWidget(self._pos_bar)
+        z_row.addWidget(self._z_lbl)
+        z_row.addWidget(self._z_combo)
+        root.addLayout(z_row)
 
         # Step size bar (above buttons)
         self._step_bar = _StepSizeBar(self)
@@ -443,6 +440,22 @@ class StagesControlWidget(QWidget):
         )
         root.addWidget(self._stop_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
+        # Position bar below stop button (vertical: X, Y, Z)
+        self._pos_bar = _PositionBar(self)
+        root.addWidget(self._pos_bar)
+
+        # Snap + Poll checkboxes at the bottom
+        checks_row = QHBoxLayout()
+        checks_row.setSpacing(15)
+        self._snap_cb = QCheckBox("Snap on Click", self)
+        self._snap_cb.setToolTip("Snap image after each move")
+        self._poll_cb = QCheckBox("Poll", self)
+        self._poll_cb.setToolTip("Poll stage position periodically")
+        checks_row.addWidget(self._snap_cb)
+        checks_row.addWidget(self._poll_cb)
+        checks_row.addStretch()
+        root.addLayout(checks_row)
+
         # Poll timer
         self._poll_timer = QTimer(self)
         self._poll_timer.setInterval(POLL_INTERVAL_MS)
@@ -486,7 +499,9 @@ class StagesControlWidget(QWidget):
 
         has_xy = len(xy_devs) > 0
         has_z = len(z_devs) > 0
+        self._xy_lbl.setVisible(len(xy_devs) > 1)
         self._xy_combo.setVisible(len(xy_devs) > 1)
+        self._z_lbl.setVisible(len(z_devs) > 1)
         self._z_combo.setVisible(len(z_devs) > 1)
         self._xy_pad.setVisible(has_xy)
         self._z_btns.setVisible(has_z)
