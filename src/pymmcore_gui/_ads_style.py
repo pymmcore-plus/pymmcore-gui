@@ -25,7 +25,8 @@ from pymmcore_gui._qt.Qlementine import (  # type: ignore[attr-defined]
     SelectionState,
     Theme,
 )
-from pymmcore_gui._qt.QtCore import QJsonDocument, QRectF, Qt
+from pymmcore_gui._qt.Qlementine import utils as qlem_utils
+from pymmcore_gui._qt.QtCore import QJsonDocument, QRect, QRectF, QSize, Qt
 from pymmcore_gui._qt.QtGui import QColor, QPainter, QPalette, QPen
 from pymmcore_gui._qt.QtWidgets import (
     QScrollArea,
@@ -97,6 +98,14 @@ class AdsAwareQlementineStyle(QlementineStyle):
             if w.objectName() == ADS_TITLE_BAR:
                 self._draw_title_bar(option, painter, w)
                 return
+        if (
+            element == QStyle.ControlElement.CE_ToolButtonLabel
+            and isinstance(option, QStyleOptionToolButton)
+            and option.toolButtonStyle == Qt.ToolButtonStyle.ToolButtonTextUnderIcon
+            and painter
+        ):
+            self._draw_tool_button_text_under_icon(option, painter, w)
+            return
         super().drawControl(element, option, painter, w)
 
     def drawComplexControl(
@@ -115,6 +124,31 @@ class AdsAwareQlementineStyle(QlementineStyle):
         ):
             option.features &= ~QStyleOptionToolButton.ToolButtonFeature.HasMenu
         super().drawComplexControl(control, option, painter, w)
+
+    def sizeFromContents(
+        self,
+        ct: QStyle.ContentsType,
+        opt: QStyleOption,
+        s: QSize,
+        /,
+        w: QWidget | None = None,
+    ) -> QSize:
+        if (
+            ct == QStyle.ContentsType.CT_ToolButton
+            and isinstance(opt, QStyleOptionToolButton)
+            and opt.toolButtonStyle == Qt.ToolButtonStyle.ToolButtonTextUnderIcon
+        ):
+            spacing = self.theme().spacing
+            icon_h = opt.iconSize.height()
+            icon_w = opt.iconSize.width()
+            fm = opt.fontMetrics
+            text_w = fm.horizontalAdvance(opt.text)
+            text_h = fm.height()
+            content_w = max(icon_w, text_w)
+            w_total = content_w + spacing * 2
+            h_total = spacing + icon_h + spacing // 2 + text_h + spacing
+            return QSize(w_total, h_total)
+        return super().sizeFromContents(ct, opt, s, w)  # type: ignore[no-any-return]
 
     # ---- Widget polishing ----
 
@@ -214,6 +248,69 @@ class AdsAwareQlementineStyle(QlementineStyle):
         )
         painter.restore()
 
+    def _draw_tool_button_text_under_icon(
+        self,
+        opt: QStyleOptionToolButton,
+        p: QPainter,
+        w: QWidget | None,
+    ) -> None:
+        """Draw a tool button label with icon above text (macOS-style)."""
+        rect = opt.rect
+        icon = opt.icon
+        icon_size = opt.iconSize if not icon.isNull() else QSize(0, 0)
+        spacing = self.theme().spacing
+
+        mouse = qlem_utils.getToolButtonMouseState(opt.state)
+        role = qlem_utils.getColorRole(opt.state, False)
+        checked = qlem_utils.getCheckState(opt.state)
+        fg = self.toolButtonForegroundColor(mouse, role)
+
+        p.save()
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        has_icon = not icon.isNull() and not icon_size.isEmpty()
+        has_text = bool(opt.text)
+        fm = opt.fontMetrics
+        text_h = fm.height()
+        gap = spacing // 2
+
+        # Vertical content height
+        content_h = 0
+        if has_icon:
+            content_h += icon_size.height()
+        if has_icon and has_text:
+            content_h += gap
+        if has_text:
+            content_h += text_h
+
+        y = rect.y() + (rect.height() - content_h) // 2
+
+        # Icon — centered horizontally
+        if has_icon:
+            pixmap = qlem_utils.getPixmap(icon, icon_size, mouse, checked, w)  # type: ignore[arg-type]
+            pixmap = qlem_utils.getColorizedPixmap(pixmap, fg)
+            pr = pixmap.devicePixelRatio()
+            pw = int(pixmap.width() / pr) if pr else 0
+            ph = int(pixmap.height() / pr) if pr else 0
+            px = rect.x() + (rect.width() - pw) // 2
+            p.drawPixmap(QRect(px, y, pw, ph), pixmap)
+            y += icon_size.height() + gap
+
+        # Text — centered horizontally
+        if has_text:
+            text_w = fm.horizontalAdvance(opt.text)
+            tx = rect.x() + (rect.width() - text_w) // 2
+            text_rect = QRect(tx, y, text_w, text_h)
+            p.setPen(fg)
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawText(
+                text_rect,
+                Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextSingleLine,
+                opt.text,
+            )
+
+        p.restore()
+
 
 def _set_widget_bg(widget: QWidget, color: QColor) -> None:
     pal = widget.palette()
@@ -311,9 +408,9 @@ radix_slate_blue = {
     "menu_item_border_radius": 6.0,
     "menu_bar_item_border_radius": 4.0,
     "border_width": 1,
-    "control_height_large": 32,
-    "control_height_medium": 28,
-    "control_height_small": 20,
+    "control_height_large": 28,
+    "control_height_medium": 24,
+    "control_height_small": 18,
     "control_default_width": 120,
     "dial_mark_length": 8,
     "dial_mark_thickness": 2,

@@ -7,7 +7,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Annotated, TypeVar, cast
 
 import pymmcore_widgets as pmmw
-from pymmcore_plus import CMMCorePlus
+from pymmcore_plus import CMMCorePlus, DeviceType
 
 from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea
 from pymmcore_gui._qt.QtCore import Qt
@@ -73,7 +73,17 @@ def create_property_browser(parent: QWidget) -> pmmw.PropertyBrowser:
     """Create a Property Browser widget."""
     from pymmcore_widgets import PropertyBrowser
 
-    return PropertyBrowser(parent=parent, mmcore=_get_core(parent))
+    return PropertyBrowser(
+        parent=parent,
+        mmcore=_get_core(parent),
+        exclude_device_types=(
+            DeviceType.PressurePump,
+            DeviceType.VolumetricPump,
+            DeviceType.Generic,
+            DeviceType.ImageProcessor,
+            DeviceType.SignalIO,
+        ),
+    )
 
 
 def create_mm_console(parent: QWidget) -> MMConsole:
@@ -198,6 +208,10 @@ def create_exception_log(parent: QWidget) -> ExceptionLog:
 def create_stage_widget(parent: QWidget) -> StagesControlWidget:
     """Create the Stage Control widget."""
     from pymmcore_gui.widgets._stage_control import StagesControlWidget
+
+    # To switch back to the legacy (pymmcore-widgets) stage control, comment
+    # the line above and uncomment the line below:
+    # from pymmcore_gui.widgets._stage_control_legacy import StagesControlWidget
 
     return StagesControlWidget(parent=parent, mmcore=_get_core(parent))
 
