@@ -65,10 +65,10 @@ constraint-dependencies = ["chardet<6"]
 
 [tool.uv.sources]
 pyside6-stubs = { git = "https://github.com/tlambert03/PySide6-stubs", rev = "v6.9.1" }
-pymmcore-plus = { git = "https://github.com/pymmcore-plus/pymmcore-plus", rev = "main"}
-ome-writers = { git = "https://github.com/pymmcore-plus/ome-writers", rev = "main"}
-pymmcore-widgets = { git = "https://github.com/pymmcore-plus/pymmcore-widgets", rev = "christina"}
-
+pymmcore-plus = { git = "https://github.com/pymmcore-plus/pymmcore-plus", rev = "main" }
+ome-writers = { git = "https://github.com/pymmcore-plus/ome-writers", rev = "main" }
+pymmcore-widgets = { git = "https://github.com/pymmcore-plus/pymmcore-widgets", rev = "christina" }
+ndv = { git = "https://github.com/pyapp-kit/ndv", rev = "christina" }
 
 
 [dependency-groups]
@@ -172,7 +172,6 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["PyQt6.*"]
 follow_imports = "skip"
-
 
 
 [tool.pyright]
