@@ -12,7 +12,6 @@ from pymmcore_gui.widgets.image_preview._preview_base import ImagePreviewBase
 if TYPE_CHECKING:
     import numpy as np
     from pymmcore_plus import CMMCorePlus
-    from pymmcore_plus.metadata import SummaryMetaV1
 
 
 BUFFER_SIZE = 1
@@ -27,7 +26,8 @@ class NDVPreview(ImagePreviewBase):
         use_with_mda: bool = False,
     ):
         super().__init__(parent, mmcore, use_with_mda=use_with_mda)
-        self._viewer = MMArrayViewer(meta=self._pixel_size_meta())
+        px = (self._mmc.getPixelSizeUm() or None) if self._mmc else None
+        self._viewer = MMArrayViewer(scales=({"x": px, "y": px} if px else {}))
         self._buffer: RingBuffer | None = None
         self._core_dtype: tuple[str, tuple[int, ...]] | None = None
         self._is_rgb: bool = False
@@ -101,15 +101,15 @@ class NDVPreview(ImagePreviewBase):
         if self._buffer is not None:
             self._apply_viewer_settings()
 
-    def _pixel_size_meta(self) -> SummaryMetaV1 | None:
-        px = (self._mmc.getPixelSizeUm() or None) if self._mmc else None
-        return {"image_infos": [{"pixel_size_um": px}]} if px else None  # type: ignore[return-value]
+    def _update_pixel_scales(self) -> None:
+        if self._mmc and (px := self._mmc.getPixelSizeUm()):
+            self._viewer.display_model.scales.update({"x": px, "y": px})
 
     def _on_system_config_loaded(self) -> None:
         self._setup_viewer()
-        self._viewer._meta = self._pixel_size_meta()
+        self._update_pixel_scales()
 
     def _on_roi_set(self) -> None:
         """Reconfigure the viewer when a Camera ROI is set."""
         self._setup_viewer()
-        self._viewer._meta = self._pixel_size_meta()
+        self._update_pixel_scales()

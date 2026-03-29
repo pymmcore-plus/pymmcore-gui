@@ -130,7 +130,7 @@ class NDVViewersManager(QObject):
         meta: SummaryMetaV1 | None = None,
     ) -> ndv.ArrayViewer:
         """Create a new ndv viewer with no data."""
-        ndv_viewer = MMArrayViewer(view, sequence=sequence, meta=meta)
+        ndv_viewer = MMArrayViewer(view, scales=_extract_scales(sequence, meta))
 
         # Duck-typed connection between an ome_writers.StreamView (currently not
         # publicly exported) and the ndv DataWrapper.
@@ -243,3 +243,22 @@ def _add_follow_lock_button(
 
     btn.toggled.connect(_toggled)
     btn_layout.addWidget(btn)
+
+
+def _extract_scales(
+    sequence: MDASequence | None = None, meta: SummaryMetaV1 | None = None
+) -> dict[str, float]:
+    """Build an axis-to-scale mapping from sequence and summary metadata."""
+    scales: dict[str, float] = {}
+    with suppress(Exception):
+        if meta:
+            if px := meta["image_infos"][0]["pixel_size_um"]:
+                scales["x"] = px
+                scales["y"] = px
+    with suppress(Exception):
+        if sequence and sequence.z_plan:
+            from useq import ZAboveBelow, ZRangeAround, ZTopBottom
+
+            if isinstance(sequence.z_plan, (ZTopBottom, ZRangeAround, ZAboveBelow)):
+                scales["z"] = sequence.z_plan.step
+    return scales

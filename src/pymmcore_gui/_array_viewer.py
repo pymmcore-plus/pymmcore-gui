@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import ndv
 import numpy as np
@@ -12,42 +12,19 @@ import tifffile
 from qtpy.QtWidgets import QFileDialog, QPushButton
 from superqt import QIconifyIcon
 
-if TYPE_CHECKING:
-    import useq
-    from ndv.models._viewer_model import ArrayViewerModelKwargs
-    from pymmcore_plus.metadata import SummaryMetaV1
-
-
-_VIEWER_OPTIONS: ArrayViewerModelKwargs = {"show_roi_button": False}
-
 
 class MMArrayViewer(ndv.ArrayViewer):
     """ArrayViewer subclass that hides the ROI button and adds a Save button."""
 
-    def __init__(
-        self,
-        data: Any = None,
-        /,
-        sequence: useq.MDASequence | None = None,
-        meta: SummaryMetaV1 | None = None,
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, data: Any = None, /, **kwargs: Any) -> None:
         # Merge our defaults into viewer_options
         opts = kwargs.pop("viewer_options", None) or {}
-        if isinstance(opts, dict):
-            opts = {**_VIEWER_OPTIONS, **opts}
+        opts.setdefault("show_roi_button", False)
         kwargs["viewer_options"] = opts
         super().__init__(data, **kwargs)
 
-        self._sequence: useq.MDASequence | None = sequence
-        self._meta: SummaryMetaV1 | None = meta
-
         with suppress(Exception):
             _add_save_button(self)
-
-        # Hide the ROI button since not linked to anything
-        with suppress(Exception):
-            self.widget().add_roi_btn.setVisible(False)
 
     def _save_data(self) -> None:
         """Save the current viewer data as an OME-TIFF file."""
@@ -73,29 +50,14 @@ class MMArrayViewer(ndv.ArrayViewer):
             if wrapper := self.data_wrapper:
                 sizes = {str(k): v for k, v in wrapper.sizes().items()}
 
-        pixel_size_um: float | None = None
-        with suppress(Exception):
-            if self._meta:
-                pixel_size_um = self._meta["image_infos"][0]["pixel_size_um"] or None
+        scales = self.display_model.scales
+        pixel_size_um = scales.get("x") or scales.get("y")
+        z_step_um = scales.get("z")
 
-        z_step_um: float | None = None
-        with suppress(Exception):
-            if self._sequence and self._sequence.z_plan:
-                from useq import ZAboveBelow, ZRangeAround, ZTopBottom
-
-                if isinstance(
-                    self._sequence.z_plan, (ZTopBottom, ZRangeAround, ZAboveBelow)
-                ):
-                    z_step_um = self._sequence.z_plan.step
-
-        # tifffile axes: sequence order (slowest→fastest, excluding p/g) + "YX".
-        # Empty string lets tifffile infer the axes from the array shape (snap case).
-        axes = (
-            "".join(a.upper() for a in str(self._sequence.used_axes) if a in "tcz")
-            + "YX"
-            if self._sequence
-            else ""
-        )
+        # tifffile axes: dimension order (slowest→fastest, excluding p/g) + "YX".
+        # Empty string lets tifffile infer axes from the array shape (snap case).
+        non_yx = [a for a in sizes if str(a).lower() in "tcz"]
+        axes = "".join(a.upper() for a in non_yx) + "YX" if non_yx else ""
 
         # Multi-position: save one file per position.
         if sizes.get("p", 0) > 1:
