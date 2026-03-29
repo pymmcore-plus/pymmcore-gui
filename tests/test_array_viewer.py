@@ -1,25 +1,3 @@
-"""Tests for the saving methods in pymmcore_gui._array_viewer.
-
-Axis-order conventions used throughout
----------------------------------------
-useq.MDASequence default axis_order is ``tpgcz``, meaning channels iterate
-before z when both are present.  ``str(sequence.used_axes)`` therefore returns:
-
-* 2 ch, 3-z stack (default)      → ``"cz"`` → tifffile axes ``"CZYX"``
-* 2 ch, 3-z stack (z-first)      → ``"zc"`` → tifffile axes ``"ZCYX"``
-
-Multi-position arrays
----------------------
-The ome-writer flattens both stage-positions (``p``) and grid-cells (``g``)
-into a single leading ``p`` dimension.  ``_save_multiposition`` splits that
-dimension back out, writing one OME-TIFF per position named:
-``<stem>_p000.ome.tif``, ``<stem>_p001.ome.tif``, …
-
-Sub-sequence positions are also flattened:  2 regular positions where the
-second carries a grid(2 rows × 1 col) sub-sequence become **3** virtual
-positions in ``p``.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -47,7 +25,7 @@ def _series_axes(path: str | Path) -> str:
 
 def _array_shape(path: str | Path) -> tuple[int, ...]:
     """Return the array shape when reading the given TIFF file."""
-    return tuple(tifffile.imread(str(path)).shape)  # type: ignore[return-value]
+    return tuple(tifffile.imread(str(path)).shape)
 
 
 def _ome_xml(path: str | Path) -> str:
@@ -82,7 +60,7 @@ _SAVE_AS_TIFF_CASES = [
         "CYX",
         id="2ch",
     ),
-    # 2-channel, 3-slice z-stack – default axis_order (c before z → "CZYX")
+    # 2-channel, 3-slice z-stack - default axis_order (c before z -> "CZYX")
     pytest.param(
         np.zeros((2, 3, _Y, _X), dtype=np.uint16),
         "CZYX",
@@ -92,7 +70,7 @@ _SAVE_AS_TIFF_CASES = [
         "CZYX",
         id="2ch-z3-default-czyx",
     ),
-    # 2-channel, 3-slice z-stack – z-before-c axis_order ("ZCYX")
+    # 2-channel, 3-slice z-stack - z-before-c axis_order ("ZCYX")
     pytest.param(
         np.zeros((3, 2, _Y, _X), dtype=np.uint16),
         "ZCYX",
@@ -159,7 +137,7 @@ _MULTIPOS_CASES = [
         (2, _Y, _X),
         id="2pos-2ch",
     ),
-    # 2 positions, 2 channels, 3 z-slices – default axis_order (c before z)
+    # 2 positions, 2 channels, 3 z-slices - default axis_order (c before z)
     pytest.param(
         np.zeros((2, 2, 3, _Y, _X), dtype=np.uint16),
         {"p": 2, "c": 2, "z": 3},
@@ -168,7 +146,7 @@ _MULTIPOS_CASES = [
         (2, 3, _Y, _X),
         id="2pos-2ch-z3-czyx",
     ),
-    # 2 positions, 2 channels, 3 z-slices – z-before-c axis_order
+    # 2 positions, 2 channels, 3 z-slices - z-before-c axis_order
     pytest.param(
         np.zeros((2, 3, 2, _Y, _X), dtype=np.uint16),
         {"p": 2, "z": 3, "c": 2},
@@ -177,7 +155,7 @@ _MULTIPOS_CASES = [
         (3, 2, _Y, _X),
         id="2pos-2ch-z3-zcyx",
     ),
-    # 4 positions from a 2×2 grid (g remapped to p by ome-writer), 2 channels
+    # 4 positions from a 2x2 grid (g remapped to p by ome-writer), 2 channels
     pytest.param(
         np.zeros((4, 2, _Y, _X), dtype=np.uint16),
         {"p": 4, "c": 2},
@@ -186,7 +164,7 @@ _MULTIPOS_CASES = [
         (2, _Y, _X),
         id="grid-2x2-2ch",
     ),
-    # 2 regular positions where pos-1 carries a sub-sequence grid(2r×1c):
+    # 2 regular positions where pos-1 carries a sub-sequence grid(2rx1c):
     # ome-writer flattens 1 + 2 = 3 virtual positions into p.
     pytest.param(
         np.zeros((3, 2, _Y, _X), dtype=np.uint16),

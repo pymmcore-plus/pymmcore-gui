@@ -12,6 +12,7 @@ from pymmcore_gui.widgets.image_preview._preview_base import ImagePreviewBase
 if TYPE_CHECKING:
     import numpy as np
     from pymmcore_plus import CMMCorePlus
+    from pymmcore_plus.metadata import SummaryMetaV1
 
 
 BUFFER_SIZE = 1
@@ -100,9 +101,9 @@ class NDVPreview(ImagePreviewBase):
         if self._buffer is not None:
             self._apply_viewer_settings()
 
-    def _pixel_size_meta(self) -> dict | None:
+    def _pixel_size_meta(self) -> SummaryMetaV1 | None:
         px = (self._mmc.getPixelSizeUm() or None) if self._mmc else None
-        return {"image_infos": [{"pixel_size_um": px}]} if px else None
+        return {"image_infos": [{"pixel_size_um": px}]} if px else None  # type: ignore[return-value]
 
     def _on_system_config_loaded(self) -> None:
         self._setup_viewer()
