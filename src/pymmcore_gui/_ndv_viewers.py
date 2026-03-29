@@ -130,11 +130,7 @@ class NDVViewersManager(QObject):
         meta: SummaryMetaV1 | None = None,
     ) -> ndv.ArrayViewer:
         """Create a new ndv viewer with no data."""
-        ndv_viewer = MMArrayViewer(view)
-        ndv_viewer._mda_sequence = sequence
-        if meta is not None:
-            with suppress(Exception):
-                ndv_viewer._pixel_size_um = meta["image_infos"][0]["pixel_size_um"]
+        ndv_viewer = MMArrayViewer(view, sequence=sequence, meta=meta)
 
         # Duck-typed connection between an ome_writers.StreamView (currently not
         # publicly exported) and the ndv DataWrapper.
