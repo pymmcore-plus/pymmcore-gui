@@ -99,7 +99,7 @@ class MMArrayViewer(ndv.ArrayViewer):
         )
 
         # Multi-position: save one file per position.
-        if "p" in sizes:
+        if sizes.get("p", 0) > 1:
             _save_multiposition(arr, sizes, path, pixel_size_um, z_step_um, axes)
         else:
             _save_as_tiff(arr, path, pixel_size_um, z_step_um, axes)
