@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import ndv
+import ndv.models
 from ndv.models import RingBuffer
 
+from pymmcore_gui._array_viewer import MMArrayViewer
 from pymmcore_gui._qt.QtWidgets import QApplication, QVBoxLayout, QWidget
 from pymmcore_gui.widgets.image_preview._preview_base import ImagePreviewBase
 
@@ -25,7 +26,8 @@ class NDVPreview(ImagePreviewBase):
         use_with_mda: bool = False,
     ):
         super().__init__(parent, mmcore, use_with_mda=use_with_mda)
-        self._viewer = ndv.ArrayViewer()
+        px = (self._mmc.getPixelSizeUm() or None) if self._mmc else None
+        self._viewer = MMArrayViewer(scales=({"x": px, "y": px} if px else {}))
         self._buffer: RingBuffer | None = None
         self._core_dtype: tuple[str, tuple[int, ...]] | None = None
         self._is_rgb: bool = False
@@ -99,9 +101,15 @@ class NDVPreview(ImagePreviewBase):
         if self._buffer is not None:
             self._apply_viewer_settings()
 
+    def _update_pixel_scales(self) -> None:
+        if self._mmc and (px := self._mmc.getPixelSizeUm()):
+            self._viewer.display_model.scales.update({"x": px, "y": px})
+
     def _on_system_config_loaded(self) -> None:
         self._setup_viewer()
+        self._update_pixel_scales()
 
     def _on_roi_set(self) -> None:
         """Reconfigure the viewer when a Camera ROI is set."""
         self._setup_viewer()
+        self._update_pixel_scales()
