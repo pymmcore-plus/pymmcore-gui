@@ -102,6 +102,10 @@ class MMArrayViewer(ndv.ArrayViewer):
         if sizes.get("p", 0) > 1:
             _save_multiposition(arr, sizes, path, pixel_size_um, z_step_um, axes)
         else:
+            # Squeeze out the p axis if present (size 1 by definition here).
+            if "p" in sizes:
+                p_idx = list(sizes).index("p")
+                arr = np.squeeze(arr, axis=p_idx)
             _save_as_tiff(arr, path, pixel_size_um, z_step_um, axes)
 
 
