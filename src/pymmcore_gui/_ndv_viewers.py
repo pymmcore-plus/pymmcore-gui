@@ -8,6 +8,7 @@ from weakref import WeakSet, WeakValueDictionary
 import ndv
 import useq
 
+from pymmcore_gui._array_viewer import MMArrayViewer
 from pymmcore_gui._qt.QtAds import CDockWidget
 from pymmcore_gui._qt.QtCore import QObject, QTimer, Signal
 from pymmcore_gui._qt.QtWidgets import QWidget
@@ -83,7 +84,7 @@ class NDVViewersManager(QObject):
         """Called when a new MDA sequence has been started."""
         self._is_mda_running = True
         self._view = self._runner.get_view()
-        self._active_mda_viewer = self._create_ndv_viewer(self._view, sequence)
+        self._active_mda_viewer = self._create_ndv_viewer(self._view, sequence, meta)
 
     def _on_frame_ready(
         self, frame: np.ndarray, event: useq.MDAEvent, meta: FrameMetaV1
@@ -122,9 +123,15 @@ class NDVViewersManager(QObject):
         """Called when a sequence has finished."""
         self._is_mda_running = False
 
-    def _create_ndv_viewer(self, view: Any, sequence: MDASequence) -> ndv.ArrayViewer:
+    def _create_ndv_viewer(
+        self,
+        view: Any,
+        sequence: MDASequence,
+        meta: SummaryMetaV1 | None = None,
+    ) -> ndv.ArrayViewer:
         """Create a new ndv viewer with no data."""
-        ndv_viewer = ndv.ArrayViewer(view)
+        ndv_viewer = MMArrayViewer(view, sequence=sequence, meta=meta)
+
         # Duck-typed connection between an ome_writers.StreamView (currently not
         # publicly exported) and the ndv DataWrapper.
         if hasattr(view, "coords_changed") and hasattr(
