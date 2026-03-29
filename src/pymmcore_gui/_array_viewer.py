@@ -43,9 +43,9 @@ class MMArrayViewer(ndv.ArrayViewer):
         self._meta: SummaryMetaV1 | None = meta
 
         with suppress(Exception):
-            self._save_btn = _add_save_button(self)
+            _add_save_button(self)
 
-        # Belt-and-suspenders: explicitly hide the ROI button widget
+        # Hide the ROI button since not linked to anything
         with suppress(Exception):
             self.widget().add_roi_btn.setVisible(False)
 
