@@ -88,11 +88,10 @@ class MMArrayViewer(ndv.ArrayViewer):
                 ):
                     z_step_um = self._sequence.z_plan.step
 
-        # tifffile axes: sequence order (slowest→fastest, excluding p) + "YX".
+        # tifffile axes: sequence order (slowest→fastest, excluding p/g) + "YX".
         # Empty string lets tifffile infer the axes from the array shape (snap case).
-        _to_axes = {"t": "T", "c": "C", "z": "Z"}
         axes = (
-            "".join(_to_axes[a] for a in str(self._sequence.used_axes) if a in _to_axes)
+            "".join(a.upper() for a in str(self._sequence.used_axes) if a in "tcz")
             + "YX"
             if self._sequence
             else ""
