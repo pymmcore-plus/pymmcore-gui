@@ -1783,8 +1783,8 @@ wheels = [
 
 [[package]]
 name = "ndv"
-version = "0.5.0rc9.dev28+ga2f662187"
-source = { git = "https://github.com/pyapp-kit/ndv?rev=christina#a2f66218707d25cbd839a765b661510b6308fe3c" }
+version = "0.5.0rc9.dev32+g78742a7df"
+source = { git = "https://github.com/pyapp-kit/ndv?rev=christina#78742a7df6e2a9c2dc2108f2b0b44af641920c30" }
 dependencies = [
     { name = "cmap" },
     { name = "ihist" },
@@ -2843,8 +2843,8 @@ test = [
 
 [[package]]
 name = "pymmcore-plus"
-version = "0.18.1.dev2+gb0375a3f9"
-source = { git = "https://github.com/pymmcore-plus/pymmcore-plus?rev=main#b0375a3f994467f822ae37caf7facf64a5797452" }
+version = "0.18.1.dev3+gc27286d6d"
+source = { git = "https://github.com/pymmcore-plus/pymmcore-plus?rev=main#c27286d6df64e2b7ab3937d082a00081ff3dfd37" }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -2867,8 +2867,8 @@ cli = [
 
 [[package]]
 name = "pymmcore-widgets"
-version = "0.12.2.dev23+g421e87608"
-source = { git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=christina#421e87608e796da1a79eb1ec33300290b427059d" }
+version = "0.12.2.dev24+g4e8fa68c6"
+source = { git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=christina#4e8fa68c6d48cc399cf59db4cd0d1e085565e7f2" }
 dependencies = [
     { name = "pymmcore-plus", extra = ["cli"] },
     { name = "pyopengl", marker = "sys_platform == 'darwin'" },
@@ -3431,7 +3431,7 @@ wheels = [
 
 [[package]]
 name = "requests"
-version = "2.33.0"
+version = "2.33.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "certifi" },
@@ -3439,9 +3439,9 @@ dependencies = [
     { name = "idna" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/34/64/8860370b167a9721e8956ae116825caff829224fbca0ca6e7bf8ddef8430/requests-2.33.0.tar.gz", hash = "sha256:c7ebc5e8b0f21837386ad0e1c8fe8b829fa5f544d8df3b2253bff14ef29d7652", size = 134232, upload-time = "2026-03-25T15:10:41.586Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5f/a4/98b9c7c6428a668bf7e42ebb7c79d576a1c3c1e3ae2d47e674b468388871/requests-2.33.1.tar.gz", hash = "sha256:18817f8c57c6263968bc123d237e3b8b08ac046f5456bd1e307ee8f4250d3517", size = 134120, upload-time = "2026-03-30T16:09:15.531Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/56/5d/c814546c2333ceea4ba42262d8c4d55763003e767fa169adc693bd524478/requests-2.33.0-py3-none-any.whl", hash = "sha256:3324635456fa185245e24865e810cecec7b4caf933d7eb133dcde67d48cee69b", size = 65017, upload-time = "2026-03-25T15:10:40.382Z" },
+    { url = "https://files.pythonhosted.org/packages/d7/8e/7540e8a2036f79a125c1d2ebadf69ed7901608859186c856fa0388ef4197/requests-2.33.1-py3-none-any.whl", hash = "sha256:4e6d1ef462f3626a1f0a0a9c42dd93c63bad33f9f1c1937509b8c5c8718ab56a", size = 64947, upload-time = "2026-03-30T16:09:13.83Z" },
 ]
 
 [[package]]

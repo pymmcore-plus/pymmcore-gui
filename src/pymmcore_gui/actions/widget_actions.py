@@ -12,7 +12,8 @@ from pymmcore_plus import CMMCorePlus, DeviceType
 from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea
 from pymmcore_gui._qt.QtCore import Qt
 from pymmcore_gui._qt.QtGui import QAction
-from pymmcore_gui._qt.QtWidgets import QDialog, QVBoxLayout, QWidget
+from pymmcore_gui._qt.QtWidgets import QApplication, QDialog, QVBoxLayout, QWidget
+from pymmcore_gui.widgets._measurement_table import MeasurementTable
 from pymmcore_gui.widgets._stage_explorer import _StageExplorer
 
 from ._action_info import ActionKey, WidgetActionInfo, _ensure_isinstance
@@ -47,12 +48,21 @@ class WidgetAction(ActionKey):
     STAGE_CONTROL = "pymmcore_gui.stage_control_widget"
     CONFIG_WIZARD = "pymmcore_gui.hardware_config_wizard"
     STAGE_EXPLORER = "pymmcore_gui.stage_explorer_widget"
+    STATS_TABLE = "pymmcore_gui.stats_table_widget"
 
 
 # ######################## Functions that create widgets #########################
 
 
-def _get_mm_main_window(obj: QObject) -> MicroManagerGUI | None:
+def get_mm_main_window(obj: QObject | None = None) -> MicroManagerGUI | None:
+    """Return the main Micro-Manager GUI window if obj is a child of it, else None."""
+    # finally, find any top-level windows that match
+    if obj is None:
+        for widget in QApplication.topLevelWidgets():
+            if widget.objectName() == "MicroManagerGUI":
+                return cast("MicroManagerGUI", widget)
+        return None
+
     if obj.objectName() == "MicroManagerGUI":
         return cast("MicroManagerGUI", obj)
     parent = obj.parent()
@@ -60,11 +70,12 @@ def _get_mm_main_window(obj: QObject) -> MicroManagerGUI | None:
         if parent.objectName() == "MicroManagerGUI":
             return cast("MicroManagerGUI", parent)
         parent = parent.parent()
+
     return None
 
 
 def _get_core(obj: QObject) -> CMMCorePlus:
-    if win := _get_mm_main_window(obj):
+    if win := get_mm_main_window(obj):
         return win.mmcore
     return CMMCorePlus.instance()
 
@@ -140,7 +151,7 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
 
     mda_widget = MDAWidget(parent=parent, mmcore=_get_core(parent))
 
-    main_window = _get_mm_main_window(parent)
+    main_window = get_mm_main_window(parent)
     if main_window:
         with contextlib.suppress(KeyError):
             stage_exp = main_window.get_widget(
@@ -229,7 +240,7 @@ def create_stage_explorer_widget(parent: QWidget) -> _StageExplorer:
     """Create the Stage Explorer widget."""
     stage_explorer = _StageExplorer(parent=parent, mmcore=_get_core(parent))
 
-    main_window = _get_mm_main_window(parent)
+    main_window = get_mm_main_window(parent)
     if main_window:
         with contextlib.suppress(KeyError):
             mda_wdg = main_window.get_widget(WidgetAction.MDA_WIDGET, create=False)
@@ -237,6 +248,11 @@ def create_stage_explorer_widget(parent: QWidget) -> _StageExplorer:
                 _setup_stage_mda_connections(stage_explorer, mda_wdg)
 
     return stage_explorer
+
+
+def create_stats_table(parent: QWidget) -> MeasurementTable:
+    """Create the MeasurementTable Table widget."""
+    return MeasurementTable(parent=parent)
 
 
 # ######################## WidgetAction Enum #########################
@@ -362,6 +378,15 @@ show_config_wizard = WidgetActionInfo(
     create_widget=create_config_wizard,
     dock_area=None,
     checkable=False,
+)
+
+show_stats_table = WidgetActionInfo(
+    key=WidgetAction.STATS_TABLE,
+    text="ROI Stats Table",
+    shortcut="Ctrl+Shift+T",
+    icon="mdi-light:table",
+    create_widget=create_stats_table,
+    scroll_mode=CDockWidget.eInsertMode.ForceNoScrollArea,
 )
 
 stage_explorer_widget = WidgetActionInfo(

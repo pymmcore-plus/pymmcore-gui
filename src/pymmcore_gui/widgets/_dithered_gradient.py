@@ -6,8 +6,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
-from qtpy.QtCore import (  # type: ignore[attr-defined]
-    Property,  # pyright: ignore[reportPrivateImportUsage]
+
+from pymmcore_gui._qt.Qlementine import QlementineStyle  # type: ignore[attr-defined]
+from pymmcore_gui._qt.QtCore import (
+    Property,
     QEasingCurve,
     QEvent,
     QParallelAnimationGroup,
@@ -17,14 +19,19 @@ from qtpy.QtCore import (  # type: ignore[attr-defined]
     QSequentialAnimationGroup,
     Qt,
 )
-from qtpy.QtGui import QColor, QContextMenuEvent, QImage, QPainter, QPixmap, QTransform
-from qtpy.QtWidgets import QGraphicsOpacityEffect, QLabel, QWidget
-
-from pymmcore_gui._qt.Qlementine import QlementineStyle  # type: ignore[attr-defined]
+from pymmcore_gui._qt.QtGui import (
+    QColor,
+    QContextMenuEvent,
+    QImage,
+    QPainter,
+    QPixmap,
+    QTransform,
+)
+from pymmcore_gui._qt.QtWidgets import QGraphicsOpacityEffect, QLabel, QWidget
 
 if TYPE_CHECKING:
-    from qtpy.QtCore import QSize
-    from qtpy.QtWidgets import QWidget as QWidgetType
+    from pymmcore_gui._qt.QtCore import QSize
+    from pymmcore_gui._qt.QtWidgets import QWidget as QWidgetType
 
 LOGO_PATH = Path(__file__).parent.parent / "resources" / "logo_trans.png"
 
@@ -197,7 +204,7 @@ class DitheredGradient(QWidget):
         painter.drawPixmap(0, 0, self._cache)
         painter.end()
 
-    def contextMenuEvent(self, event: QContextMenuEvent) -> None:  # type: ignore[override]
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
         self._spawn_pinch(event.pos())
 
     def _spawn_pinch(self, pos: QPoint) -> None:

@@ -59,6 +59,7 @@ if TYPE_CHECKING:
 
     from pymmcore_gui.widgets._about_widget import AboutWidget
     from pymmcore_gui.widgets._exception_log import ExceptionLog
+    from pymmcore_gui.widgets._measurement_table import MeasurementTable
     from pymmcore_gui.widgets._mm_console import MMConsole
     from pymmcore_gui.widgets._stage_control import StagesControlWidget
 
@@ -354,6 +355,8 @@ class MicroManagerGUI(QMainWindow):
     def get_widget(self, key: Literal[WidgetAction.PROP_BROWSER], create: bool = ...) -> PropertyBrowser: ...  # noqa: E501
     @overload
     def get_widget(self, key: Literal[WidgetAction.STAGE_CONTROL], create: bool = ...) -> StagesControlWidget: ...  # noqa: E501
+    @overload
+    def get_widget(self, key: Literal[WidgetAction.STATS_TABLE], create: bool = ...) -> MeasurementTable: ...  # noqa: E501
     # generic fallback
     @overload
     def get_widget(self, key: str, create: bool = ...) -> QWidget: ...
