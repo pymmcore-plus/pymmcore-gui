@@ -2664,7 +2664,7 @@ requires-dist = [
     { name = "ome-writers", extras = ["tensorstore", "tifffile"], specifier = ">=0.3.0" },
     { name = "pydantic-settings", specifier = ">=2.7.1" },
     { name = "pymmcore-plus", extras = ["cli"], specifier = ">=0.18.0" },
-    { name = "pymmcore-widgets", specifier = ">=0.12.0" },
+    { name = "pymmcore-widgets", git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=main" },
     { name = "pyqt6", specifier = "==6.9.1" },
     { name = "pyqt6ads", specifier = "==4.4.0.post2" },
     { name = "pyyaml", specifier = ">=6.0.2" },
@@ -2737,8 +2737,8 @@ cli = [
 
 [[package]]
 name = "pymmcore-widgets"
-version = "0.12.0"
-source = { registry = "https://pypi.org/simple" }
+version = "0.12.2.dev2+g4062f688a"
+source = { git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=main#4062f688a0bf50bce851e15dc3bc0c6af50ce16e" }
 dependencies = [
     { name = "pymmcore-plus", extra = ["cli"] },
     { name = "pyopengl", marker = "sys_platform == 'darwin'" },
@@ -2747,10 +2747,6 @@ dependencies = [
     { name = "superqt", extra = ["cmap", "iconify", "quantity"] },
     { name = "useq-schema" },
     { name = "vispy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e9/97/ac1f3951731cf37ebc3f6b2d859a7324a59e0ffdf031f31eba6840ec558c/pymmcore_widgets-0.12.0.tar.gz", hash = "sha256:fc1a34374ea96e51c859616ac4017d552aa8ab7eab72ad3bbd90aebcdcf27994", size = 270766, upload-time = "2026-03-15T19:13:55.233Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9a/ba/ec5909d32e2d0ec4e7de8380ae0ddb627bbd4031039d5685f302021d7584/pymmcore_widgets-0.12.0-py3-none-any.whl", hash = "sha256:fe7e157c4c6aef1b2f10e68c8abc5ab181a70e21564aa14aa2ed7b45aff21471", size = 292392, upload-time = "2026-03-15T19:13:53.68Z" },
 ]
 
 [[package]]
