@@ -11,6 +11,8 @@ else:
         from PyQt6.QtCore import *
 
         Signal = pyqtSignal
+        Property = pyqtProperty
+        SignalInstance = pyqtBoundSignal
 
     except ImportError:  # pragma: no cover
         try:
