@@ -12,7 +12,7 @@ from pymmcore_plus import CMMCorePlus
 from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea, SideBarLocation
 from pymmcore_gui._qt.QtCore import Qt
 from pymmcore_gui._qt.QtGui import QAction
-from pymmcore_gui._qt.QtWidgets import QDialog, QVBoxLayout, QWidget
+from pymmcore_gui._qt.QtWidgets import QDialog, QHeaderView, QVBoxLayout, QWidget
 from pymmcore_gui.widgets._stage_explorer import _StageExplorer
 
 from ._action_info import ActionKey, WidgetActionInfo, _ensure_isinstance
@@ -112,6 +112,11 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
         ) -> None:
             super().__init__(parent=parent, mmcore=mmcore)
             self._hide_tiff_sequence()
+            # Temporary, we should fix it in poymmcore_widgets. Doing it here just to
+            # see the ROI names sent by the StageExplorer to the MDAWidget
+            if h := self.stage_positions._table.horizontalHeader():
+                h.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)  # type: ignore[call-overload]
+                h.setMinimumSectionSize(75)
 
         def _hide_tiff_sequence(self) -> None:
             """Remove the 'tiff-sequence' option from the save widget's writer combo."""
