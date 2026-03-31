@@ -76,7 +76,7 @@ def load_demo_config(action: QCoreAction, checked: bool) -> None:
 
 def load_sys_config_dialog(action: QCoreAction, checked: bool) -> None:
     """Open a dialog to load a system configuration."""
-    from qtpy.QtWidgets import QFileDialog
+    from pymmcore_gui._qt.QtWidgets import QFileDialog
 
     (path, _filter) = QFileDialog.getOpenFileName(
         None,
@@ -90,7 +90,7 @@ def load_sys_config_dialog(action: QCoreAction, checked: bool) -> None:
 
 def save_sys_config_dialog(action: QCoreAction, checked: bool) -> None:
     """Open a dialog to save a system configuration."""
-    from qtpy.QtWidgets import QFileDialog
+    from pymmcore_gui._qt.QtWidgets import QFileDialog
 
     (path, _filter) = QFileDialog.getSaveFileName(
         None,

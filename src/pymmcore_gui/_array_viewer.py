@@ -9,8 +9,30 @@ from typing import Any
 import ndv
 import numpy as np
 import tifffile
-from qtpy.QtWidgets import QFileDialog, QPushButton
 from superqt import QIconifyIcon
+
+from pymmcore_gui._qt.QtCore import QEvent, QObject, Qt
+from pymmcore_gui._qt.QtWidgets import QFileDialog, QPushButton
+from pymmcore_gui.actions.widget_actions import WidgetAction, get_mm_main_window
+
+
+class _KeyFilter(QObject):
+    def __init__(self, viewer: MMArrayViewer) -> None:
+        super().__init__()
+        self._viewer = viewer
+
+    def eventFilter(self, obj: QObject | None, event: QEvent | None) -> bool:
+        if event is None or obj is None:
+            return False
+
+        if event.type() == QEvent.Type.KeyPress and event.key() == Qt.Key.Key_M:
+            if main_win := get_mm_main_window():
+                with suppress(KeyError):
+                    table = main_win.get_widget(WidgetAction.STATS_TABLE)
+                    if (data := self._viewer._get_roi_data()) is not None:
+                        table.add_stats(data)
+            return True
+        return False
 
 
 class MMArrayViewer(ndv.ArrayViewer):
@@ -19,9 +41,13 @@ class MMArrayViewer(ndv.ArrayViewer):
     def __init__(self, data: Any = None, /, **kwargs: Any) -> None:
         # Merge our defaults into viewer_options
         opts = kwargs.pop("viewer_options", None) or {}
-        opts.setdefault("show_roi_button", False)
+        opts.setdefault("show_roi_button", True)
         kwargs["viewer_options"] = opts
         super().__init__(data, **kwargs)
+
+        self._key_filter = _KeyFilter(self)
+        widget = self.widget()
+        widget.installEventFilter(self._key_filter)
 
         with suppress(Exception):
             _add_save_button(self)
@@ -68,6 +94,31 @@ class MMArrayViewer(ndv.ArrayViewer):
                 p_idx = list(sizes).index("p")
                 arr = np.squeeze(arr, axis=p_idx)
             _save_as_tiff(arr, path, pixel_size_um, z_step_um, axes)
+
+    def _get_roi_data(self) -> np.ndarray | None:
+        """Extract the data under the current ROI bounding box."""
+        if self.data is None or (roi := self.roi) is None:
+            return None
+        bbox = roi.bounding_box
+        if bbox == ((0, 0), (0, 0)):
+            return None
+
+        try:
+            resolved = self._resolved
+        except AttributeError:
+            return None
+
+        (x0, y0), (x1, y1) = bbox
+        x0i, y0i = max(int(np.floor(x0)), 0), max(int(np.floor(y0)), 0)
+        x1i, y1i = int(np.ceil(x1)), int(np.ceil(y1))
+
+        nd_index = dict(resolved.current_index)
+        nd_index[resolved.visible_axes[-2]] = slice(y0i, y1i)
+        nd_index[resolved.visible_axes[-1]] = slice(x0i, x1i)
+
+        ndim = len(self.data.shape)
+        idx = tuple(nd_index[i] for i in range(ndim))
+        return self.data[idx]  # type: ignore[no-any-return]
 
 
 def _add_save_button(viewer: MMArrayViewer) -> QPushButton:
