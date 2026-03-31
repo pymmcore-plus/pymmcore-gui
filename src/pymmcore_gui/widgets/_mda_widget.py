@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pymmcore_widgets import MDAWidget
+from pymmcore_widgets.mda._save_widget import OME_TIFF
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -28,6 +29,7 @@ class _MDAWidget(MDAWidget):
             if combo.itemText(i) == "tiff-sequence":
                 combo.removeItem(i)
                 break
+        combo.setCurrentText(OME_TIFF)
 
     def prepare_mda(self) -> bool | str | Path | None:
         output = super().prepare_mda()
