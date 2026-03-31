@@ -44,7 +44,7 @@ class _StageExplorer(StageExplorer):
         for label in ("ROIs with Grid Sub-Sequence", "List of Single Positions"):
             act = self._send_mode_group.addAction(label)
             act.setCheckable(True)
-        self._send_mode_group.actions()[0].setChecked(True)
+        self._send_mode_group.actions()[1].setChecked(True)
         send_menu.addActions(self._send_mode_group.actions())
         self._send_to_mda_action.triggered.connect(self._on_send_to_mda)
         btn = self._toolbar.widgetForAction(
