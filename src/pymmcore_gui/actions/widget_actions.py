@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Annotated, TypeVar, cast
 
 import pymmcore_widgets as pmmw
 from pymmcore_plus import CMMCorePlus, DeviceType
+from pymmcore_widgets.mda._save_widget import OME_TIFF
 
 from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea
 from pymmcore_gui._qt.QtCore import Qt
@@ -142,6 +143,7 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
                 if combo.itemText(i) == "tiff-sequence":
                     combo.removeItem(i)
                     break
+            combo.setCurrentText(OME_TIFF)
 
         def prepare_mda(self) -> bool | str | Path | None:
             output = super().prepare_mda()
