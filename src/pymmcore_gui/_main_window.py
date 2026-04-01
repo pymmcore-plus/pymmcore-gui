@@ -428,6 +428,12 @@ class MicroManagerGUI(QMainWindow):
             # Set the action checked since the widget is now “open.”
             action.setChecked(True)
 
+        elif key in self._dock_widgets:
+            dock = self._dock_widgets[key]
+            if dock.isClosed():
+                dock.toggleView(True)
+            dock.raise_()
+
         return self._action_widgets[key]
 
     def get_dock_widget(self, key: str) -> CDockWidget:
