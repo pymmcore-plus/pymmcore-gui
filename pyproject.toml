@@ -36,6 +36,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
+    "ezdxf>=1.4.3",
     "ndv[vispy]>=0.5.0rc4",
     "ome-writers[tensorstore,tifffile]>=0.3.0",
     "pydantic-settings>=2.7.1",

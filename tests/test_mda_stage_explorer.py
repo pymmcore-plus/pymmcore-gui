@@ -5,6 +5,7 @@ import useq
 
 from pymmcore_gui import MicroManagerGUI
 from pymmcore_gui.actions import WidgetAction
+from pymmcore_gui.widgets._chip_dxf import ChipCurve, ChipOverlayData
 from pymmcore_gui.widgets._mda_stage_explorer import MDALinkedStageExplorer
 
 
@@ -84,3 +85,26 @@ def test_stage_explorer_tracks_active_mda_position_from_frame_ready(qtbot) -> No
 
     explorer._on_mda_finished(useq.MDASequence())
     assert explorer._active_row is None
+
+
+def test_stage_explorer_calibrates_chip_overlay_by_translation(qtbot) -> None:
+    gui = MicroManagerGUI()
+    qtbot.addWidget(gui)
+
+    explorer = gui.get_widget(WidgetAction.STAGE_EXPLORER)
+    assert isinstance(explorer, MDALinkedStageExplorer)
+
+    explorer._chip_overlay_data = ChipOverlayData(
+        curves=[
+            ChipCurve(
+                points=np.array([[0.0, 0.0], [100.0, 0.0], [100.0, 50.0]], dtype=float)
+            )
+        ],
+        reference_points=[(0.0, 0.0), (100.0, 50.0)],
+        source=None,  # type: ignore[arg-type]
+    )
+    explorer._chip_selected_reference = (0.0, 0.0)
+    explorer._mmc.setXYPosition(250.0, 400.0)
+    explorer._set_chip_reference_to_current_stage()
+
+    np.testing.assert_allclose(explorer._chip_stage_offset_um, np.array([250.0, 400.0]))
