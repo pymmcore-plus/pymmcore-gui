@@ -317,5 +317,4 @@ stage_explorer_widget = WidgetActionInfo(
     icon="mdi:map-search",
     create_widget=create_stage_explorer_widget,
     dock_area=DockWidgetArea.LeftDockWidgetArea,
-    floatable=False,
 )
