@@ -14,7 +14,7 @@ from pymmcore_widgets import ConfigWizard
 from superqt import QIconifyIcon
 
 from pymmcore_gui._qt.QtAds import CDockManager, CDockWidget, SideBarLocation
-from pymmcore_gui._qt.QtCore import Qt
+from pymmcore_gui._qt.QtCore import QEvent, Qt
 from pymmcore_gui._qt.QtGui import (
     QAction,
     QCloseEvent,
@@ -34,12 +34,14 @@ from pymmcore_gui._qt.QtWidgets import (
     QWidget,
 )
 
+from ._io import SUPPORTED_EXTENSIONS
 from ._ndv_viewers import NDVViewersManager
 from ._notification_manager import NotificationManager
 from ._settings import Settings
 from .actions import CoreAction, QCoreAction, WidgetAction, WidgetActionInfo
 from .actions._action_info import ActionInfo
 from .widgets._dithered_gradient import DitheredGradient
+from .widgets._drop_overlay import DropOverlay, has_supported_files
 from .widgets._toolbars import OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
@@ -290,6 +292,11 @@ class MicroManagerGUI(QMainWindow):
         self._central.setFeature(CDockWidget.DockWidgetFeature.NoTab, True)
         self._central.setWidget(DitheredGradient())
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
+
+        # Drag-and-drop overlay for opening files
+        self._drop_overlay = DropOverlay(self)
+        self._drop_overlay.fileDropped.connect(self._on_file_dropped)
+        self.setAcceptDrops(True)
 
         # Adding a QOpenGLWidget (e.g. ndv canvas) to a window that uses raster
         # rendering forces Qt to destroy and recreate the native window with an
@@ -613,6 +620,58 @@ class MicroManagerGUI(QMainWindow):
 
     def _on_previewer_created(self, dock_widget: CDockWidget) -> None:
         self.dock_manager.addDockWidgetTabToArea(dock_widget, self._central_dock_area)
+
+    def dragEnterEvent(self, event: QEvent) -> None:
+        print(
+            f"dragEnterEvent called, has mimeData: {hasattr(event, 'mimeData')}"
+        )  # DEBUG
+        if hasattr(event, "mimeData"):
+            print(f"  supported: {has_supported_files(event.mimeData())}")  # DEBUG
+            print(f"  urls: {event.mimeData().urls()}")  # DEBUG
+        if hasattr(event, "mimeData") and has_supported_files(event.mimeData()):
+            self._drop_overlay.show_overlay()
+            event.acceptProposedAction()  # type: ignore[union-attr]
+        else:
+            super().dragEnterEvent(event)  # type: ignore[arg-type]
+
+    def dragLeaveEvent(self, event: QEvent) -> None:
+        self._drop_overlay.hide_overlay()
+        super().dragLeaveEvent(event)  # type: ignore[arg-type]
+
+    def dropEvent(self, event: QEvent) -> None:
+        self._drop_overlay.hide_overlay()
+        if hasattr(event, "mimeData") and event.mimeData():
+            for url in event.mimeData().urls():
+                path = url.toLocalFile().rstrip("/")
+                if any(path.lower().endswith(ext) for ext in SUPPORTED_EXTENSIONS):
+                    self._on_file_dropped(path)
+                    event.acceptProposedAction()  # type: ignore[union-attr]
+                    return
+        super().dropEvent(event)  # type: ignore[arg-type]
+
+    def _on_file_dropped(self, path: str) -> None:
+        from ._array_viewer import MMArrayViewer
+        from ._io import imread
+
+        file_path = Path(path)
+        try:
+            data = imread(file_path)
+        except Exception as e:
+            self.nm.show_error_message(str(e))
+            return
+
+        viewer = MMArrayViewer(data)
+        q_viewer = cast("QWidget", viewer.widget())
+        name = file_path.name
+        q_viewer.setObjectName(f"file-{name}")
+        q_viewer.setWindowTitle(name)
+        q_viewer.setWindowFlags(Qt.WindowType.Dialog)
+
+        dw = CDockWidget(self.dock_manager, name, self)
+        dw._viewer = viewer  # type: ignore[attr-defined]  # prevent GC
+        dw.setWidget(q_viewer)
+        dw.setFeature(dw.DockWidgetFeature.DockWidgetFloatable, False)
+        self.dock_manager.addDockWidgetTabToArea(dw, self._central_dock_area)
 
     def _on_exception(self, exc: BaseException) -> None:
         """Show a notification when an exception is raised."""
