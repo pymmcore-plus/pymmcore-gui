@@ -14,7 +14,7 @@ from pymmcore_widgets import ConfigWizard
 from superqt import QIconifyIcon
 
 from pymmcore_gui._qt.QtAds import CDockManager, CDockWidget, SideBarLocation
-from pymmcore_gui._qt.QtCore import Qt
+from pymmcore_gui._qt.QtCore import QSize, Qt
 from pymmcore_gui._qt.QtGui import (
     QAction,
     QCloseEvent,
@@ -40,7 +40,7 @@ from ._settings import Settings
 from .actions import CoreAction, QCoreAction, WidgetAction, WidgetActionInfo
 from .actions._action_info import ActionInfo
 from .widgets._dithered_gradient import DitheredGradient
-from .widgets._toolbars import OCToolBar, ShuttersToolbar
+from .widgets._toolbars import CameraControlToolbar, OCToolBar, ShuttersToolbar
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -177,10 +177,7 @@ class MicroManagerGUI(QMainWindow):
     # Toolbars are a mapping of strings to either a list of ActionKeys or a callable
     # that takes a CMMCorePlus instance and QMainWindow and returns a QToolBar.
     TOOLBARS: Mapping[str, ToolDictValue] = {
-        Toolbar.CAMERA_ACTIONS: [
-            CoreAction.SNAP,
-            CoreAction.TOGGLE_LIVE,
-        ],
+        Toolbar.CAMERA_ACTIONS: CameraControlToolbar,
         Toolbar.OPTICAL_CONFIGS: OCToolBar,
         Toolbar.SHUTTERS: ShuttersToolbar,
         Toolbar.WIDGETS: [
@@ -242,7 +239,6 @@ class MicroManagerGUI(QMainWindow):
         # Status bar -----------------------------------------
 
         self._status_bar = QStatusBar(self)
-        self._status_bar.setMaximumHeight(26)
         self.setStatusBar(self._status_bar)
 
         self.bell_button = QPushButton(QIconifyIcon("codicon:bell"), None)
@@ -478,6 +474,7 @@ class MicroManagerGUI(QMainWindow):
             self.addToolBar(tb)
         else:
             tb = self.addToolBar(name)
+            tb.setIconSize(QSize(28, 28))
             for action in tb_entry:
                 if action is None:
                     tb.addSeparator()

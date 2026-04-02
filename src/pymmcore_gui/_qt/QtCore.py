@@ -11,6 +11,7 @@ else:
         from PyQt6.QtCore import *
 
         Signal = pyqtSignal
+        Slot = pyqtSlot
         Property = pyqtProperty
         SignalInstance = pyqtBoundSignal
 
