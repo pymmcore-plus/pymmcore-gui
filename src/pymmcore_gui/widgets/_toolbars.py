@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, cast
 from pymmcore_plus import CMMCorePlus, DeviceType
 from pymmcore_widgets import ShuttersWidget
 
-from pymmcore_gui._qt.Qlementine import SegmentedControl
+from pymmcore_gui._qt.Qlementine import SegmentedControl  # type: ignore[attr-defined]
 from pymmcore_gui._qt.QtCore import QSize
 from pymmcore_gui._qt.QtWidgets import QToolBar, QWidget, QWidgetAction
 from pymmcore_gui.actions import CoreAction
