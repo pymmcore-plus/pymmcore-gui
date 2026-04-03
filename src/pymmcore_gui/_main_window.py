@@ -625,21 +625,15 @@ class MicroManagerGUI(QMainWindow):
         self.dock_manager.addDockWidgetTabToArea(dock_widget, self._central_dock_area)
 
     def dragEnterEvent(self, event: QEvent) -> None:
-        print(
-            f"dragEnterEvent called, has mimeData: {hasattr(event, 'mimeData')}"
-        )  # DEBUG
-        if hasattr(event, "mimeData"):
-            print(f"  supported: {has_supported_files(event.mimeData())}")  # DEBUG
-            print(f"  urls: {event.mimeData().urls()}")  # DEBUG
         if hasattr(event, "mimeData") and has_supported_files(event.mimeData()):
             self._drop_overlay.show_overlay()
-            event.acceptProposedAction()  # type: ignore[union-attr]
+            event.acceptProposedAction()
         else:
-            super().dragEnterEvent(event)  # type: ignore[arg-type]
+            super().dragEnterEvent(event)
 
     def dragLeaveEvent(self, event: QEvent) -> None:
         self._drop_overlay.hide_overlay()
-        super().dragLeaveEvent(event)  # type: ignore[arg-type]
+        super().dragLeaveEvent(event)
 
     def dropEvent(self, event: QEvent) -> None:
         self._drop_overlay.hide_overlay()
@@ -648,9 +642,9 @@ class MicroManagerGUI(QMainWindow):
                 path = url.toLocalFile().rstrip("/")
                 if any(path.lower().endswith(ext) for ext in SUPPORTED_EXTENSIONS):
                     self._on_file_dropped(path)
-                    event.acceptProposedAction()  # type: ignore[union-attr]
+                    event.acceptProposedAction()
                     return
-        super().dropEvent(event)  # type: ignore[arg-type]
+        super().dropEvent(event)
 
     def _on_file_dropped(self, path: str) -> None:
         from ._array_viewer import MMArrayViewer
@@ -671,7 +665,7 @@ class MicroManagerGUI(QMainWindow):
         q_viewer.setWindowFlags(Qt.WindowType.Dialog)
 
         dw = CDockWidget(self.dock_manager, name, self)
-        dw._viewer = viewer  # type: ignore[attr-defined]  # prevent GC
+        dw._viewer = viewer  # pyright: ignore reportAttributeAccessIssue]
         dw.setWidget(q_viewer)
         dw.setFeature(dw.DockWidgetFeature.DockWidgetFloatable, False)
         self.dock_manager.addDockWidgetTabToArea(dw, self._central_dock_area)

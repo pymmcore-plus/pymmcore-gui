@@ -137,105 +137,78 @@ def _is_zarr_directory(path: Path) -> bool:
 
 
 def _read_ome_zarr(path: Path, *, series: int = 0, level: int = 0) -> xr.DataArray:
-    import tensorstore as ts
     import xarray as xr
     import yaozarrs
+    from yaozarrs import v05
 
     group = yaozarrs.open_group(str(path))
-    subpath, ome_meta = _navigate_zarr(group, series=series, level=level)
+    meta = group.ome_metadata()
 
-    full_path = str(path) + subpath if subpath != "/" else str(path)
-    driver = "zarr3" if Path(full_path, "zarr.json").exists() else "zarr"
-    store = ts.open(
-        {
-            "driver": driver,
-            "kvstore": {"driver": "file", "path": full_path},
-        }
-    ).result()
+    if isinstance(meta, v05.Bf2Raw):
+        return _read_bf2raw(group, level=level)
+    if isinstance(meta, v05.Image):
+        return _read_multiscale(group, meta, level=level)
 
-    dims, coords, ndv_display = _extract_ome_metadata(ome_meta, series, level)
+    # Fallback: try reading as a plain multiscale at the given path
+    store = group[str(level)].to_tensorstore()  # type: ignore[union-attr]
+    dims = tuple(f"dim_{i}" for i in range(store.ndim))
+    return xr.DataArray(store, dims=dims)
 
-    if not dims:
-        dims = tuple(f"dim_{i}" for i in range(store.ndim))
+
+def _read_bf2raw(group: Any, *, level: int = 0) -> xr.DataArray:
+    """Read a Bioformats2Raw layout, stacking all series into a 'P' dim."""
+    import xarray as xr
+    from yaozarrs import v05
+
+    series_meta = group["OME"].ome_metadata()
+    if not isinstance(series_meta, v05.Series):
+        raise ValueError("Bf2Raw layout missing OME/Series metadata")
+
+    arrays: list[xr.DataArray] = []
+    for series_path in series_meta.series:
+        sub = group[series_path]
+        img_meta = sub.ome_metadata()
+        if not isinstance(img_meta, v05.Image):
+            continue
+        arrays.append(_read_multiscale(sub, img_meta, level=level))
+
+    if not arrays:
+        raise ValueError("No image series found in Bf2Raw layout")
+    if len(arrays) == 1:
+        return arrays[0]
+    return xr.concat(arrays, dim="P")
+
+
+def _read_multiscale(group: Any, meta: Any, *, level: int = 0) -> xr.DataArray:
+    """Read a single multiscale Image group."""
+    import xarray as xr
+
+    ms = meta.multiscales[0]
+    ds = ms.datasets[min(level, len(ms.datasets) - 1)]
+    store = group[ds.path].to_tensorstore()
+
+    axes = ms.axes or []
+    dims = (
+        tuple(ax.name.upper() if len(ax.name) == 1 else ax.name for ax in axes)
+        if axes
+        else tuple(f"dim_{i}" for i in range(store.ndim))
+    )
 
     attrs: dict[str, object] = {}
-    if ndv_display:
-        attrs["ndv_display"] = ndv_display
-
-    return xr.DataArray(store, dims=dims, coords=coords or None, attrs=attrs)
-
-
-def _navigate_zarr(
-    group: Any, *, series: int = 0, level: int = 0
-) -> tuple[str, dict[str, Any] | None]:
-    """Navigate zarr group to find the target array and OME metadata."""
-    try:
-        ome = group.ome_metadata()
-    except Exception:
-        ome = None
-
-    # Bioformats2Raw layout: nested series groups
-    if ome is None:
-        try:
-            sub_group = group.open_group(str(series))
-            ome = sub_group.ome_metadata()
-            prefix = f"/{series}"
-        except Exception:
-            prefix = ""
-    else:
-        prefix = ""
-
-    if ome is not None:
-        multiscales = getattr(ome, "multiscales", []) or []
-        if multiscales:
-            ms = multiscales[series] if series < len(multiscales) else multiscales[0]
-            datasets = getattr(ms, "datasets", []) or []
-            if level < len(datasets):
-                ds_path = getattr(datasets[level], "path", "0") or "0"
-            elif datasets:
-                ds_path = getattr(datasets[0], "path", "0") or "0"
-            else:
-                ds_path = "0"
-            return f"{prefix}/{ds_path}", ome
-
-    return f"{prefix}/{level}", None
-
-
-def _extract_ome_metadata(
-    ome: dict[str, Any] | None, series: int, level: int
-) -> tuple[tuple[str, ...], dict[str, Any], dict[str, object]]:
-    """Extract dims, coords, and display hints from OME metadata."""
-    dims: tuple[str, ...] = ()
-    coords: dict[str, Any] = {}
     ndv_display: dict[str, object] = {}
-
-    if ome is None:
-        return dims, coords, ndv_display
-
-    multiscales = getattr(ome, "multiscales", []) or []
-    if not multiscales:
-        return dims, coords, ndv_display
-
-    ms = multiscales[series] if series < len(multiscales) else multiscales[0]
-
-    axes = getattr(ms, "axes", []) or []
-    if axes:
-        dims = tuple(ax.name.upper() if len(ax.name) == 1 else ax.name for ax in axes)
-
-    omero = getattr(ome, "omero", None)
-    if omero:
-        channels = getattr(omero, "channels", []) or []
+    if meta.omero:
         colors: dict[int, str] = {}
-        for i, ch in enumerate(channels):
-            color = getattr(ch, "color", None)
-            if color:
-                cmap_name = _hex_color_to_cmap(color)
+        for i, ch in enumerate(meta.omero.channels):
+            if ch.color:
+                cmap_name = _hex_color_to_cmap(ch.color)
                 if cmap_name:
                     colors[i] = cmap_name
         if colors:
             ndv_display["channel_colors"] = colors
+    if ndv_display:
+        attrs["ndv_display"] = ndv_display
 
-    return dims, coords, ndv_display
+    return xr.DataArray(store, dims=dims, attrs=attrs)
 
 
 def _hex_color_to_cmap(color: str) -> str | None:
