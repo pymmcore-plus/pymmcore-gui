@@ -1,11 +1,29 @@
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from pymmcore_plus import CMMCorePlus, DeviceType
 from pymmcore_widgets import ShuttersWidget
 
+from pymmcore_gui._qt.Qlementine import SegmentedControl  # type: ignore[attr-defined]
+from pymmcore_gui._qt.QtCore import QSize
 from pymmcore_gui._qt.QtWidgets import QToolBar, QWidget, QWidgetAction
+from pymmcore_gui.actions import CoreAction
+from pymmcore_gui.widgets._exposure import ExposureWidget
+
+if TYPE_CHECKING:
+    from pymmcore_gui._main_window import MicroManagerGUI
+
+
+class CameraControlToolbar(QToolBar):
+    """Toolbar with snap, live, and exposure controls."""
+
+    def __init__(self, mmc: CMMCorePlus, parent: MicroManagerGUI) -> None:
+        super().__init__("Camera Actions", parent)
+        self.setIconSize(QSize(32, 32))
+        self.addAction(parent.get_action(CoreAction.SNAP))
+        self.addAction(parent.get_action(CoreAction.TOGGLE_LIVE))
+        self.addWidget(ExposureWidget(parent=self, mmcore=mmc))
 
 
 class OCToolBar(QToolBar):
@@ -18,6 +36,10 @@ class OCToolBar(QToolBar):
     def __init__(self, mmc: CMMCorePlus, parent: QWidget | None = None) -> None:
         super().__init__("Optical Configs", parent)
         self.mmc = mmc
+        self._seg = SegmentedControl()
+        self._seg.currentIndexChanged.connect(self._on_seg_changed)  # pyright: ignore[reportAttributeAccessIssue]
+        self.addWidget(self._seg)
+
         mmc.events.systemConfigurationLoaded.connect(self._refresh)
         mmc.events.configGroupChanged.connect(self._refresh)
         mmc.events.channelGroupChanged.connect(self._refresh)
@@ -27,11 +49,18 @@ class OCToolBar(QToolBar):
         mmc.events.configDeleted.connect(self._refresh)
         self._refresh()
 
+    def _on_seg_changed(self) -> None:
+        """Apply the selected config when the segment changes."""
+        if preset := self._seg.currentData():
+            if ch_group := self.mmc.getChannelGroup():
+                self.mmc.setConfig(ch_group, preset)
+
     def _on_config_set(self, group: str, config: str) -> None:
-        """Update the checked action when a new config is set."""
+        """Update the selected segment when a config is set externally."""
         if group == self.mmc.getChannelGroup():
-            for action in self.actions():
-                action.setChecked(action.text() == config)
+            idx = self._seg.findItemIndex(config)
+            if idx >= 0:
+                self._seg.setCurrentIndex(idx)
 
     def _on_property_changed(self, device: str, property: str, value: str) -> None:
         """Refresh the widget when the ChannelGroup property is changed."""
@@ -40,21 +69,25 @@ class OCToolBar(QToolBar):
 
     def _refresh(self) -> None:
         """Clear and refresh with all settings in current channel group."""
-        self.clear()
-        mmc = self.mmc
-        if not (ch_group := mmc.getChannelGroup()):
-            return
+        self._seg.currentIndexChanged.disconnect(self._on_seg_changed)  # pyright: ignore[reportAttributeAccessIssue]
+        try:
+            while self._seg.itemCount() > 0:
+                self._seg.removeItem(0)
 
-        current = mmc.getCurrentConfig(ch_group)
-        for preset_name in mmc.getAvailableConfigs(ch_group):
-            if not (action := self.addAction(preset_name)):
-                continue
-            action.setCheckable(True)
-            action.setChecked(preset_name == current)
+            mmc = self.mmc
+            if not (ch_group := mmc.getChannelGroup()):
+                return
 
-            @action.triggered.connect
-            def _(checked: bool, pname: str = preset_name) -> None:
-                mmc.setConfig(ch_group, pname)
+            current = mmc.getCurrentConfig(ch_group)
+            current_idx = 0
+            for preset_name in mmc.getAvailableConfigs(ch_group):
+                idx = self._seg.addItem(preset_name, itemData=preset_name)
+                if preset_name == current:
+                    current_idx = idx
+            if self._seg.itemCount() > 0:
+                self._seg.setCurrentIndex(current_idx)
+        finally:
+            self._seg.currentIndexChanged.connect(self._on_seg_changed)  # pyright: ignore[reportAttributeAccessIssue]
 
 
 class ShuttersToolbar(QToolBar):
