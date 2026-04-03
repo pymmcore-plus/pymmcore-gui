@@ -113,7 +113,7 @@ def run(
         help="Use dark theme.",
     ),
     qstyle: Literal["qlementine", "fusion", "native"] = typer.Option(
-        "native",
+        "qlementine",
         "--qstyle",
         help="The QStyle to use for the application.  Default is 'native'.",
     ),

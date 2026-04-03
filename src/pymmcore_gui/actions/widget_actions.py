@@ -8,11 +8,18 @@ from typing import TYPE_CHECKING, Annotated, TypeVar, cast
 
 import pymmcore_widgets as pmmw
 from pymmcore_plus import CMMCorePlus, DeviceType
+from pymmcore_widgets.mda._save_widget import OME_TIFF
 
 from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea
 from pymmcore_gui._qt.QtCore import Qt
 from pymmcore_gui._qt.QtGui import QAction
-from pymmcore_gui._qt.QtWidgets import QApplication, QDialog, QVBoxLayout, QWidget
+from pymmcore_gui._qt.QtWidgets import (
+    QApplication,
+    QDialog,
+    QHeaderView,
+    QVBoxLayout,
+    QWidget,
+)
 from pymmcore_gui.widgets._measurement_table import MeasurementTable
 from pymmcore_gui.widgets._stage_explorer import _StageExplorer
 
@@ -135,6 +142,12 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
             super().__init__(parent=parent, mmcore=mmcore)
             self._hide_tiff_sequence()
 
+            # Temporary, we should fix it in poymmcore_widgets. Doing it here just to
+            # see the ROI names sent by the StageExplorer to the MDAWidget
+            if h := self.stage_positions._table.horizontalHeader():
+                h.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)  # type: ignore[call-overload]
+                h.setMinimumSectionSize(75)
+
         def _hide_tiff_sequence(self) -> None:
             """Remove the 'tiff-sequence' option from the save widget's writer combo."""
             combo = self.save_info._writer_combo
@@ -142,6 +155,7 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
                 if combo.itemText(i) == "tiff-sequence":
                     combo.removeItem(i)
                     break
+            combo.setCurrentText(OME_TIFF)
 
         def prepare_mda(self) -> bool | str | Path | None:
             output = super().prepare_mda()
