@@ -26,13 +26,11 @@ class _KeyFilter(QObject):
             return False
 
         if event.type() == QEvent.Type.KeyPress and event.key() == Qt.Key.Key_M:
-            try:
-                if main_win := get_mm_main_window():
+            if main_win := get_mm_main_window():
+                with suppress(KeyError):
                     table = main_win.get_widget(WidgetAction.STATS_TABLE)
                     if (data := self._viewer._get_roi_data()) is not None:
                         table.add_stats(data)
-            except Exception:
-                pass
             return True
         return False
 
