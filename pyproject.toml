@@ -50,6 +50,8 @@ dependencies = [
     "sentry-sdk>=2.20.0",
     "superqt[cmap,iconify]>=0.7.1",
     "tqdm>=4.67.1",
+    "xarray>=2025.6.1",
+    "yaozarrs>=0.3.0",
 ]
 
 # TO USE pymmcore-nano, you need to add pymmcore-nano to dependencies
