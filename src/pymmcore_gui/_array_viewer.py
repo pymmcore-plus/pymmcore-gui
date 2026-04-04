@@ -48,6 +48,11 @@ class MMArrayViewer(ndv.ArrayViewer):
         self._key_filter = _KeyFilter(self)
         widget = self.widget()
         widget.installEventFilter(self._key_filter)
+        # Also install on the canvas widget which has focus and receives key
+        # events first.  Without this, vispy may process the event (and
+        # potentially crash) before it propagates to the parent widget's filter.
+        if canvas := getattr(widget, "_canvas_widget", None):
+            canvas.installEventFilter(self._key_filter)
 
         with suppress(Exception):
             _add_save_button(self)
@@ -108,17 +113,23 @@ class MMArrayViewer(ndv.ArrayViewer):
         except AttributeError:
             return None
 
+        if len(resolved.visible_axes) < 2:
+            return None
+
         (x0, y0), (x1, y1) = bbox
         x0i, y0i = max(int(np.floor(x0)), 0), max(int(np.floor(y0)), 0)
         x1i, y1i = int(np.ceil(x1)), int(np.ceil(y1))
+        if x1i <= x0i or y1i <= y0i:
+            return None
 
         nd_index = dict(resolved.current_index)
         nd_index[resolved.visible_axes[-2]] = slice(y0i, y1i)
         nd_index[resolved.visible_axes[-1]] = slice(x0i, x1i)
 
         ndim = len(self.data.shape)
-        idx = tuple(nd_index[i] for i in range(ndim))
-        return self.data[idx]  # type: ignore[no-any-return]
+        idx = tuple(nd_index.get(i, slice(None)) for i in range(ndim))
+        arr = np.asarray(self.data[idx])
+        return arr if arr.size > 0 else None
 
 
 def _add_save_button(viewer: MMArrayViewer) -> QPushButton:
