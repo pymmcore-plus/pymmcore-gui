@@ -466,14 +466,14 @@ wheels = [
 
 [[package]]
 name = "click"
-version = "8.3.1"
+version = "8.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3d/fa/656b739db8587d7b5dfa22e22ed02566950fbfbcdc20311993483657a5c0/click-8.3.1.tar.gz", hash = "sha256:12ff4785d337a1bb490bb7e9c2b1ee5da3112e94a8622f26a6c77f5d2fc6842a", size = 295065, upload-time = "2025-11-15T20:45:42.706Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/57/75/31212c6bf2503fdf920d87fee5d7a86a2e3bcf444984126f13d8e4016804/click-8.3.2.tar.gz", hash = "sha256:14162b8b3b3550a7d479eafa77dfd3c38d9dc8951f6f69c78913a8f9a7540fd5", size = 302856, upload-time = "2026-04-03T19:14:45.118Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/98/78/01c019cdb5d6498122777c1a43056ebb3ebfeef2076d9d026bfe15583b2b/click-8.3.1-py3-none-any.whl", hash = "sha256:981153a64e25f12d547d3426c367a4857371575ee7ad18df2a6183ab0545b2a6", size = 108274, upload-time = "2025-11-15T20:45:41.139Z" },
+    { url = "https://files.pythonhosted.org/packages/e4/20/71885d8b97d4f3dde17b1fdb92dbd4908b00541c5a3379787137285f602e/click-8.3.2-py3-none-any.whl", hash = "sha256:1924d2c27c5653561cd2cae4548d1406039cb79b858b747cfea24924bbc1616d", size = 108379, upload-time = "2026-04-03T19:14:43.505Z" },
 ]
 
 [[package]]
@@ -2879,8 +2879,8 @@ cli = [
 
 [[package]]
 name = "pymmcore-widgets"
-version = "0.12.2.dev32+g3f1fc2204"
-source = { git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=christina#3f1fc2204b6ffffe1ad02c4eef887fede6e4ace6" }
+version = "0.12.2.dev35+g0bf17c606"
+source = { git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=christina#0bf17c6061f3a4b740bb023b9642b390ede6901c" }
 dependencies = [
     { name = "pymmcore-plus", extra = ["cli"] },
     { name = "pyopengl", marker = "sys_platform == 'darwin'" },
@@ -3939,14 +3939,14 @@ wheels = [
 
 [[package]]
 name = "types-pygments"
-version = "2.19.0.20260402"
+version = "2.20.0.20260405"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "types-docutils" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/a8/5834c55d900ce31b31367eedb82e664347dfa551a957b74a0ce0cd9f4f9a/types_pygments-2.19.0.20260402.tar.gz", hash = "sha256:bd26e1f662c9a3b8ea56668ddc099b809ffd54931bee97b15853bc4a8e5d4250", size = 18808, upload-time = "2026-04-02T04:21:13.058Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/28/7a11c06b290e370eca368dd59d9738a79657a7518f5a4021b1e187c1a16d/types_pygments-2.20.0.20260405.tar.gz", hash = "sha256:f06fe34d6457044ce7587a5a6cf73e6bc5c769c933cd9edf033379bcd7ed2897", size = 19342, upload-time = "2026-04-05T04:27:06.184Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f7/f2/b23659df4219fc4f39a45ede527cc209d961c7ff957678536a7a9d9ac9c5/types_pygments-2.19.0.20260402-py3-none-any.whl", hash = "sha256:5b0d863cec1c43ba38c946fb6e89d389c1cf287806f72360336fba4482f8daeb", size = 25672, upload-time = "2026-04-02T04:21:11.916Z" },
+    { url = "https://files.pythonhosted.org/packages/fe/51/dabb479c2cda4fbed99a0f2045aee2bb91487c50c654a7ad6dfa327c5b82/types_pygments-2.20.0.20260405-py3-none-any.whl", hash = "sha256:79dc975f7a9c6cbfdcc32f3d31b7eb507d39a41031c3b2124f16fc2e42326954", size = 26688, upload-time = "2026-04-05T04:27:05.215Z" },
 ]
 
 [[package]]
