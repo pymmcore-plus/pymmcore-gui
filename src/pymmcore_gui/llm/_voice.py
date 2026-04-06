@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pymmcore_gui._qt.QtCore import QObject, Signal
 
@@ -34,7 +34,7 @@ _vad_model = None
 _whisper_model = None
 
 
-def _get_oww_model():  # type: ignore[no-untyped-def]
+def _get_oww_model() -> Any:
     global _oww_model
     if _oww_model is None:
         import urllib.request
@@ -42,7 +42,10 @@ def _get_oww_model():  # type: ignore[no-untyped-def]
 
         from openwakeword.model import Model
 
-        pkg_dir = Path(__import__("openwakeword").__file__).parent
+        oww_file = __import__("openwakeword").__file__
+        if oww_file is None:
+            raise RuntimeError("Cannot locate openwakeword package")
+        pkg_dir = Path(oww_file).parent
         model_dir = pkg_dir / "resources" / "models"
         model_dir.mkdir(parents=True, exist_ok=True)
 
@@ -64,19 +67,21 @@ def _get_oww_model():  # type: ignore[no-untyped-def]
     return _oww_model
 
 
-def _get_vad_model():  # type: ignore[no-untyped-def]
+def _get_vad_model() -> Any:
     global _vad_model
     if _vad_model is None:
         import torch
 
-        model, _utils = torch.hub.load(
-            "snakers4/silero-vad", "silero_vad", trust_repo=True
+        model, _utils = torch.hub.load(  # pyright: ignore[reportGeneralTypeIssues]
+            "snakers4/silero-vad",
+            "silero_vad",
+            trust_repo=True,  # pyright: ignore[reportArgumentType]
         )
         _vad_model = model
     return _vad_model
 
 
-def _get_whisper_model():  # type: ignore[no-untyped-def]
+def _get_whisper_model() -> Any:
     global _whisper_model
     if _whisper_model is None:
         from faster_whisper import WhisperModel

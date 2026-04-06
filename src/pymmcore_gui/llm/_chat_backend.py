@@ -72,6 +72,7 @@ class ChatSession(QObject):
     response_finished = Signal()  # assistant turn is complete
     error_occurred = Signal(str)  # error message
     session_ready = Signal()  # client connected and ready
+    status_changed = Signal(str)  # startup progress text
     rate_limit_updated = Signal(dict)  # rate limit info dict
 
     def __init__(self, parent: QObject | None = None) -> None:
@@ -156,6 +157,7 @@ class ChatSession(QObject):
     async def _connect(self) -> None:
         """Connect the ClaudeSDKClient."""
         try:
+            self.status_changed.emit("Connecting to Claude...")
             logger.debug("Connecting to Claude (hw=%s)...", self._hardware_enabled)
             core = CMMCorePlus.instance()
             system_prompt = build_system_prompt(core)
@@ -173,8 +175,9 @@ class ChatSession(QObject):
                 allowed_tools=["mcp__microscope__*"],
                 max_turns=25,
             )
-            self._client = ClaudeSDKClient(options)
-            await self._client.connect()
+            client = ClaudeSDKClient(options)
+            await client.connect()
+            self._client = client
             self._connected = True
             logger.debug("Connected to Claude successfully")
             self.session_ready.emit()

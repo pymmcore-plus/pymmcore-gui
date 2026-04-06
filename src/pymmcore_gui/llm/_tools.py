@@ -11,7 +11,7 @@ import concurrent.futures
 import json
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import useq
 from pymmcore_plus import CMMCorePlus
@@ -21,6 +21,8 @@ from pymmcore_gui._qt.QtCore import QObject, Signal
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+_T = TypeVar("_T")
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +49,9 @@ class _MainThreadInvoker(QObject):
 _invoker = _MainThreadInvoker()
 
 
-def call_in_main_thread(func: Callable[..., Any], *args: Any) -> Any:
+def call_in_main_thread(func: Callable[..., _T], *args: Any) -> _T:
     """Run *func* on the Qt main thread (blocking the caller)."""
-    future: concurrent.futures.Future[Any] = concurrent.futures.Future()
+    future: concurrent.futures.Future[_T] = concurrent.futures.Future()
 
     def _run() -> None:
         try:

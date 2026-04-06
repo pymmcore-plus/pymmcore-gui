@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from pymmcore_gui._qt.QtCore import Qt
+from typing import Any
+
+from pymmcore_gui._qt.QtCore import QObject, Qt
 from pymmcore_gui._qt.QtGui import QFont, QKeyEvent
 from pymmcore_gui._qt.QtWidgets import (
     QApplication,
@@ -199,13 +201,13 @@ class LLMChatWidget(QWidget):
     def __init__(
         self,
         parent: QWidget | None = None,
-        session_factory: type | None = None,
+        session_factory: type[QObject] | None = None,
     ) -> None:
         super().__init__(parent)
         if session_factory is None:
             raise ValueError("session_factory is required")
-        self._session = session_factory(self)
-        self._voice: VoiceListener | None = None
+        self._session: QObject = session_factory(self)
+        self._voice: Any = None
         self._tool_cards: dict[str, _ToolCallCard] = {}
         self._current_assistant_bubble: _MessageBubble | None = None
         self._thinking_label: QLabel | None = None
@@ -323,6 +325,8 @@ class LLMChatWidget(QWidget):
         s.response_finished.connect(self._on_response_finished)
         s.error_occurred.connect(self._on_error)
         s.rate_limit_updated.connect(self._on_rate_limit)
+        if hasattr(s, "status_changed"):
+            s.status_changed.connect(self._on_status_changed)
 
     # ------------------------------------------------------------------
     # Widget lifecycle
@@ -345,6 +349,9 @@ class LLMChatWidget(QWidget):
     # ------------------------------------------------------------------
     # Slots
     # ------------------------------------------------------------------
+
+    def _on_status_changed(self, status: str) -> None:
+        self._input.setPlaceholderText(status)
 
     def _on_session_ready(self) -> None:
         self._input.setEnabled(True)
@@ -429,12 +436,13 @@ class LLMChatWidget(QWidget):
                 )
                 self._listen_toggle.setChecked(False)
                 return
-            if self._voice is None:
+            if self._voice is None and VoiceListener is not None:
                 self._voice = VoiceListener(self)
                 self._voice.command_received.connect(self._on_voice_command)
                 self._voice.status_changed.connect(self._on_voice_status)
                 self._voice.error_occurred.connect(self._on_voice_error)
-            self._voice.start()
+            if self._voice is not None:
+                self._voice.start()
             self._update_listen_style(True)
         else:
             if self._voice is not None:

@@ -32,14 +32,14 @@ def _tooldef_to_ollama(td: ToolDef) -> dict[str, Any]:
         schema = {"type": "object", "properties": {}}
     else:
         properties = {}
-        for name, typ in params.items():
-            if typ is str:
+        for name, ptype in params.items():
+            if ptype is str:
                 properties[name] = {"type": "string"}
-            elif typ is int:
+            elif ptype is int:
                 properties[name] = {"type": "integer"}
-            elif typ is float:
+            elif ptype is float:
                 properties[name] = {"type": "number"}
-            elif typ is bool:
+            elif ptype is bool:
                 properties[name] = {"type": "boolean"}
             else:
                 properties[name] = {"type": "string"}
@@ -71,6 +71,7 @@ class OllamaChatSession(QObject):
     response_finished = Signal()
     error_occurred = Signal(str)
     session_ready = Signal()
+    status_changed = Signal(str)  # startup progress text
     rate_limit_updated = Signal(dict)  # never emitted, but keeps interface
 
     def __init__(
@@ -111,6 +112,7 @@ class OllamaChatSession(QObject):
             import ollama
 
             # Try to connect; if not running, start it
+            self.status_changed.emit("Connecting to ollama...")
             if not self._ensure_ollama_running():
                 self.error_occurred.emit(
                     "Could not find or start ollama.\n\n"
@@ -123,10 +125,24 @@ class OllamaChatSession(QObject):
                 ollama.show(self._model)
             except Exception:
                 logger.info("Pulling model %s (first run)...", self._model)
+                self.status_changed.emit(f"Downloading model {self._model}...")
                 ollama.pull(self._model)
 
             self._rebuild_tools()
             system_prompt = build_system_prompt(CMMCorePlus.instance())
+
+            # Warm up: send a trivial message with full system prompt + tools
+            # so the model is loaded and the prompt is cached.
+            self.status_changed.emit("Loading model into memory...")
+            ollama.chat(
+                model=self._model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": "hi"},
+                ],
+                tools=self._tools,
+                keep_alive="10m",
+            )
             self._messages = [{"role": "system", "content": system_prompt}]
             self._ready = True
             logger.debug(
@@ -231,7 +247,7 @@ class OllamaChatSession(QObject):
 
                 for tc in msg.tool_calls:
                     name = tc.function.name
-                    args = tc.function.arguments
+                    args = dict(tc.function.arguments)
                     tool_id = f"{name}_{id(tc)}"
                     input_json = json.dumps(args, indent=2)
                     self.tool_use_started.emit(tool_id, name, input_json)

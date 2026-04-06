@@ -182,6 +182,18 @@ module = ["qtconsole.*", "pydevd.*", "pygfx.*", "rendercanvas.*", "pytestqt.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
+module = [
+    "claude_code_sdk.*",
+    "ollama.*",
+    "openwakeword.*",
+    "faster_whisper.*",
+    "sounddevice.*",
+    "torch.*",
+]
+ignore_missing_imports = true
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
 module = ["PyQt6.*"]
 follow_imports = "skip"
 

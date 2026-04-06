@@ -24,14 +24,14 @@ def _to_json_schema(params: dict[str, Any]) -> dict[str, Any]:
         return {"type": "object", "properties": {}}
     # Simple {name: type} mapping
     properties = {}
-    for name, typ in params.items():
-        if typ is str:
+    for name, ptype in params.items():
+        if ptype is str:
             properties[name] = {"type": "string"}
-        elif typ is int:
+        elif ptype is int:
             properties[name] = {"type": "integer"}
-        elif typ is float:
+        elif ptype is float:
             properties[name] = {"type": "number"}
-        elif typ is bool:
+        elif ptype is bool:
             properties[name] = {"type": "boolean"}
         else:
             properties[name] = {"type": "string"}
