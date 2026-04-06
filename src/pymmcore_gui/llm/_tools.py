@@ -189,6 +189,28 @@ def _create_mda_sequence(args: dict[str, Any]) -> str:
     return json.dumps(summary, indent=2)
 
 
+def _setup_mda_widget(args: dict[str, Any]) -> str:
+    """Populate the MDA widget with a sequence (but don't run it)."""
+    try:
+        seq = useq.MDASequence.model_validate(args)
+    except Exception as e:
+        return f"Validation error: {e}"
+
+    def _setup() -> str:
+        from contextlib import suppress
+
+        from pymmcore_gui.actions.widget_actions import WidgetAction, get_mm_main_window
+
+        if main_win := get_mm_main_window():
+            with suppress(KeyError):
+                widget = main_win.get_widget(WidgetAction.MDA_WIDGET)
+                widget.setValue(seq)
+                return "MDA widget populated with sequence."
+        return "Could not find MDA widget."
+
+    return call_in_main_thread(_setup)
+
+
 def _run_mda_sequence(args: dict[str, Any]) -> str:
     try:
         seq = useq.MDASequence.model_validate(args)
@@ -196,6 +218,16 @@ def _run_mda_sequence(args: dict[str, Any]) -> str:
         return f"Validation error: {e}"
 
     def _run() -> str:
+        from contextlib import suppress
+
+        from pymmcore_gui.actions.widget_actions import WidgetAction, get_mm_main_window
+
+        # Also populate the MDA widget so the user can see what's running
+        if main_win := get_mm_main_window():
+            with suppress(KeyError):
+                widget = main_win.get_widget(WidgetAction.MDA_WIDGET)
+                widget.setValue(seq)
+
         CMMCorePlus.instance().run_mda(seq, output="memory")
         return json.dumps(
             {
@@ -422,6 +454,13 @@ READONLY_TOOLS: list[ToolDef] = [
 ]
 
 WRITE_TOOLS: list[ToolDef] = [
+    _td(
+        "setup_mda_widget",
+        "Populate the MDA widget with a sequence without running it.",
+        _setup_mda_widget,
+        MDA_SCHEMA,
+        readonly=_w,
+    ),
     _td(
         "create_mda_sequence",
         "Preview an MDA sequence.",
