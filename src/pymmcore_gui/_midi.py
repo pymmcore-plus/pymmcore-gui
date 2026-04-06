@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import threading
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, ClassVar
 
-import mido
+import mido  # type: ignore[import-untyped]
 from pymmcore_midi._core_connect import connect_knob_to_property
 from pymmcore_midi._device import Buttons, Knobs, MidiDevice
 from pymmcore_midi._xtouch import XTouchMini
@@ -23,11 +23,11 @@ class _XTouchMiniWindows(MidiDevice):
     2. rtmidi callbacks don't fire, so we poll in a background thread.
     """
 
-    DEVICE_NAME: str = ""  # set dynamically below
+    DEVICE_NAME: ClassVar[str] = ""  # set dynamically below
 
     def __init__(self) -> None:
-        input_names = mido.get_input_names()
-        output_names = mido.get_output_names()
+        input_names: list[str] = mido.get_input_names()  # pyright: ignore[reportAttributeAccessIssue]
+        output_names: list[str] = mido.get_output_names()  # pyright: ignore[reportAttributeAccessIssue]
 
         base = "X-TOUCH MINI"
         in_name = _find_port(input_names, base)
@@ -39,8 +39,8 @@ class _XTouchMiniWindows(MidiDevice):
                 f"Inputs: {input_names}, Outputs: {output_names}"
             )
 
-        self._input: mido.ports.BaseInput = mido.open_input(in_name)
-        self._output: mido.ports.BaseOutput = mido.open_output(out_name)
+        self._input: Any = mido.open_input(in_name)  # pyright: ignore[reportAttributeAccessIssue]
+        self._output: Any = mido.open_output(out_name)  # pyright: ignore[reportAttributeAccessIssue]
         self._input.callback = None  # broken on Windows rtmidi
 
         self.device_name = in_name
@@ -69,17 +69,15 @@ def _find_port(names: list[str], base: str) -> str | None:
 
 def _get_device() -> MidiDevice:
     """Create an X-TOUCH MINI device, using Windows workaround if needed."""
-    available_inputs = set(mido.get_input_names())
-    base_name = XTouchMini.DEVICE_NAME  # "X-TOUCH MINI"
+    available_inputs: set[str] = set(mido.get_input_names())  # pyright: ignore[reportAttributeAccessIssue]
+    base_name: str = XTouchMini.DEVICE_NAME  # "X-TOUCH MINI"
 
     if base_name in available_inputs:
         return XTouchMini()
 
     in_name = _find_port(list(available_inputs), base_name)
     if not in_name:
-        raise OSError(
-            f"No X-TOUCH MINI found. Available inputs: {available_inputs}"
-        )
+        raise OSError(f"No X-TOUCH MINI found. Available inputs: {available_inputs}")
     _XTouchMiniWindows.DEVICE_NAME = in_name
     return _XTouchMiniWindows()
 
@@ -87,7 +85,7 @@ def _get_device() -> MidiDevice:
 def connect_midi(core: CMMCorePlus) -> Callable[[], None]:
     """Connect an X-TOUCH MINI to core. Returns a disconnect function."""
     device = _get_device()
-    disconnecters: list[Callable] = []
+    disconnects: list[Callable[[], None]] = []
 
     # --- Buttons 8-11: Channel config group (BF, DAPI, FITC, TRITC) ---
     channel_group = core.getChannelGroup()
@@ -102,13 +100,8 @@ def connect_midi(core: CMMCorePlus) -> Callable[[], None]:
 
     if channel_group:
         for btn_id, cfg_name in config_buttons.items():
-
-            def _select(name: str = cfg_name) -> None:
-                core.setConfig(channel_group, name)
-
-            device.button[btn_id].pressed.connect(_select)
-            disconnecters.append(
-                lambda b=btn_id, s=_select: device.button[b].pressed.disconnect(s)
+            _connect_config_button(
+                device, core, channel_group, btn_id, cfg_name, disconnects
             )
 
         # Set initial LED state
@@ -122,15 +115,13 @@ def connect_midi(core: CMMCorePlus) -> Callable[[], None]:
                 _update_channel_leds(config)
 
         core.events.configSet.connect(_on_config_set)
-        disconnecters.append(
-            lambda: core.events.configSet.disconnect(_on_config_set)
-        )
+        disconnects.append(lambda: core.events.configSet.disconnect(_on_config_set))
 
     # --- Knob 8: Exposure on camera device ---
     cam = core.getCameraDevice()
     if cam:
         dc = connect_knob_to_property(device.knob[8], core, cam, "Exposure")
-        disconnecters.append(dc)
+        disconnects.append(dc)
 
     # --- Button 23 (record): Snap ---
     def safe_snap() -> None:
@@ -138,7 +129,7 @@ def connect_midi(core: CMMCorePlus) -> Callable[[], None]:
             core.snap()
 
     device.button[23].pressed.connect(safe_snap)
-    disconnecters.append(lambda: device.button[23].pressed.disconnect(safe_snap))
+    disconnects.append(lambda: device.button[23].pressed.disconnect(safe_snap))
 
     # --- Button 22 (play): Toggle live ---
     def toggle_live() -> None:
@@ -148,7 +139,7 @@ def connect_midi(core: CMMCorePlus) -> Callable[[], None]:
             core.startContinuousSequenceAcquisition()
 
     device.button[22].pressed.connect(toggle_live)
-    disconnecters.append(lambda: device.button[22].pressed.disconnect(toggle_live))
+    disconnects.append(lambda: device.button[22].pressed.disconnect(toggle_live))
 
     # --- Button 21 (stop): Stop live ---
     def stop_live() -> None:
@@ -156,7 +147,7 @@ def connect_midi(core: CMMCorePlus) -> Callable[[], None]:
             core.stopSequenceAcquisition()
 
     device.button[21].pressed.connect(stop_live)
-    disconnecters.append(lambda: device.button[21].pressed.disconnect(stop_live))
+    disconnects.append(lambda: device.button[21].pressed.disconnect(stop_live))
 
     # --- LED feedback: light play button while live is running ---
     play_btn = device.button[22]
@@ -169,17 +160,32 @@ def connect_midi(core: CMMCorePlus) -> Callable[[], None]:
 
     core.events.continuousSequenceAcquisitionStarted.connect(_live_started)
     core.events.sequenceAcquisitionStopped.connect(_live_stopped)
-    disconnecters.append(
+    disconnects.append(
         lambda: core.events.continuousSequenceAcquisitionStarted.disconnect(
             _live_started
         )
     )
-    disconnecters.append(
+    disconnects.append(
         lambda: core.events.sequenceAcquisitionStopped.disconnect(_live_stopped)
     )
 
     def disconnect() -> None:
-        for d in disconnecters:
+        for d in disconnects:
             d()
 
     return disconnect
+
+
+def _connect_config_button(
+    device: MidiDevice,
+    core: CMMCorePlus,
+    channel_group: str,
+    btn_id: int,
+    cfg_name: str,
+    disconnects: list[Callable[[], None]],
+) -> None:
+    def _select() -> None:
+        core.setConfig(channel_group, cfg_name)
+
+    device.button[btn_id].pressed.connect(_select)
+    disconnects.append(lambda: device.button[btn_id].pressed.disconnect(_select))
