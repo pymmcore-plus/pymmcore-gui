@@ -5,9 +5,14 @@ from typing import TYPE_CHECKING, cast
 from pymmcore_plus import CMMCorePlus, DeviceType
 from pymmcore_widgets import ShuttersWidget
 
-from pymmcore_gui._qt.Qlementine import SegmentedControl  # type: ignore[attr-defined]
 from pymmcore_gui._qt.QtCore import QSize
-from pymmcore_gui._qt.QtWidgets import QToolBar, QWidget, QWidgetAction
+from pymmcore_gui._qt.QtWidgets import (
+    QButtonGroup,
+    QToolBar,
+    QToolButton,
+    QWidget,
+    QWidgetAction,
+)
 from pymmcore_gui.actions import CoreAction
 from pymmcore_gui.widgets._exposure import ExposureWidget
 
@@ -36,9 +41,10 @@ class OCToolBar(QToolBar):
     def __init__(self, mmc: CMMCorePlus, parent: QWidget | None = None) -> None:
         super().__init__("Optical Configs", parent)
         self.mmc = mmc
-        self._seg = SegmentedControl()
-        self._seg.currentIndexChanged.connect(self._on_seg_changed)  # pyright: ignore[reportAttributeAccessIssue]
-        self.addWidget(self._seg)
+        self._button_group = QButtonGroup(self)
+        self._button_group.setExclusive(True)
+        self._buttons: dict[str, QToolButton] = {}
+        self._button_group.buttonClicked.connect(self._on_button_clicked)
 
         mmc.events.systemConfigurationLoaded.connect(self._refresh)
         mmc.events.configGroupChanged.connect(self._refresh)
@@ -49,45 +55,41 @@ class OCToolBar(QToolBar):
         mmc.events.configDeleted.connect(self._refresh)
         self._refresh()
 
-    def _on_seg_changed(self) -> None:
-        """Apply the selected config when the segment changes."""
-        if preset := self._seg.currentData():
-            if ch_group := self.mmc.getChannelGroup():
-                self.mmc.setConfig(ch_group, preset)
+    def _on_button_clicked(self, button: QToolButton) -> None:
+        if ch_group := self.mmc.getChannelGroup():
+            self.mmc.setConfig(ch_group, button.text())
 
     def _on_config_set(self, group: str, config: str) -> None:
-        """Update the selected segment when a config is set externally."""
         if group == self.mmc.getChannelGroup():
-            idx = self._seg.findItemIndex(config)
-            if idx >= 0:
-                self._seg.setCurrentIndex(idx)
+            if btn := self._buttons.get(config):
+                btn.setChecked(True)
 
     def _on_property_changed(self, device: str, property: str, value: str) -> None:
-        """Refresh the widget when the ChannelGroup property is changed."""
         if device == "Core" and property == "ChannelGroup":
             self._refresh()
 
     def _refresh(self) -> None:
-        """Clear and refresh with all settings in current channel group."""
-        self._seg.currentIndexChanged.disconnect(self._on_seg_changed)  # pyright: ignore[reportAttributeAccessIssue]
-        try:
-            while self._seg.itemCount() > 0:
-                self._seg.removeItem(0)
+        for btn in self._buttons.values():
+            self._button_group.removeButton(btn)
+            btn.deleteLater()
+        self._buttons.clear()
+        for action in self.actions():
+            self.removeAction(action)
 
-            mmc = self.mmc
-            if not (ch_group := mmc.getChannelGroup()):
-                return
+        mmc = self.mmc
+        if not (ch_group := mmc.getChannelGroup()):
+            return
 
-            current = mmc.getCurrentConfig(ch_group)
-            current_idx = 0
-            for preset_name in mmc.getAvailableConfigs(ch_group):
-                idx = self._seg.addItem(preset_name, itemData=preset_name)
-                if preset_name == current:
-                    current_idx = idx
-            if self._seg.itemCount() > 0:
-                self._seg.setCurrentIndex(current_idx)
-        finally:
-            self._seg.currentIndexChanged.connect(self._on_seg_changed)  # pyright: ignore[reportAttributeAccessIssue]
+        current = mmc.getCurrentConfig(ch_group)
+        for preset_name in mmc.getAvailableConfigs(ch_group):
+            btn = QToolButton(self)
+            btn.setText(preset_name)
+            btn.setCheckable(True)
+            if preset_name == current:
+                btn.setChecked(True)
+            self._button_group.addButton(btn)
+            self._buttons[preset_name] = btn
+            self.addWidget(btn)
 
 
 class ShuttersToolbar(QToolBar):

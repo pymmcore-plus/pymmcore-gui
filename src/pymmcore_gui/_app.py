@@ -212,6 +212,17 @@ def create_mmgui(
                     stacklevel=2,
                 )
 
+    try:
+        from ._midi import connect_midi
+
+        connect_midi(win.mmcore)
+    except Exception as e:  # pragma: no cover
+        warnings.warn(
+            f"Failed to connect MIDI devices: {e}",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+
     if install_sys_excepthook:
         _install_excepthook()
     if install_sentry:
