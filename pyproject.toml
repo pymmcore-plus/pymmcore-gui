@@ -71,6 +71,18 @@ pymmcore-widgets = { git = "https://github.com/pymmcore-plus/pymmcore-widgets", 
 ndv = { git = "https://github.com/pyapp-kit/ndv", rev = "christina" }
 
 
+[project.optional-dependencies]
+ollama = ["ollama>=0.4"]
+claude = ["claude-code-sdk>=0.0.25"]
+voice = [
+    "openwakeword",
+    "faster-whisper",
+    "silero-vad",
+    "sounddevice",
+    "torch",
+    "onnxruntime",
+]
+
 [dependency-groups]
 # should only be used after manually uninstalling PyQt6 and PyQt6Ads
 # uv sync --group pyside --no-install-package PyQt6 --no-install-package PyQt6Ads
@@ -168,6 +180,18 @@ plugins = ["pydantic.mypy"]
 [[tool.mypy.overrides]]
 module = ["qtconsole.*", "pydevd.*", "pygfx.*", "rendercanvas.*", "pytestqt.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "claude_code_sdk.*",
+    "ollama.*",
+    "openwakeword.*",
+    "faster_whisper.*",
+    "sounddevice.*",
+    "torch.*",
+]
+ignore_missing_imports = true
+follow_imports = "skip"
 
 [[tool.mypy.overrides]]
 module = ["PyQt6.*"]

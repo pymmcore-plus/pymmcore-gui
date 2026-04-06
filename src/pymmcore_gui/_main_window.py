@@ -187,6 +187,7 @@ class MicroManagerGUI(QMainWindow):
             WidgetAction.CAMERA_ROI,
             WidgetAction.PROP_BROWSER,
             WidgetAction.CONSOLE,
+            WidgetAction.LLM_CHAT,
         ],
     }
     # Menus are a mapping of strings to either a list of ActionKeys or a callable

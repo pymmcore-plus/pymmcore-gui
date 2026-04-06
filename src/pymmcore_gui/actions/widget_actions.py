@@ -56,6 +56,7 @@ class WidgetAction(ActionKey):
     CONFIG_WIZARD = "pymmcore_gui.hardware_config_wizard"
     STAGE_EXPLORER = "pymmcore_gui.stage_explorer_widget"
     STATS_TABLE = "pymmcore_gui.stats_table_widget"
+    LLM_CHAT = "pymmcore_gui.llm_chat"
 
 
 # ######################## Functions that create widgets #########################
@@ -410,6 +411,23 @@ stage_explorer_widget = WidgetActionInfo(
     create_widget=create_stage_explorer_widget,
     dock_area=DockWidgetArea.LeftDockWidgetArea,
     floatable=False,
+)
+
+
+def create_llm_chat(parent: QWidget) -> QWidget:
+    """Create the LLM chat widget."""
+    from pymmcore_gui.llm import create_llm_chat
+
+    return create_llm_chat(parent)
+
+
+show_llm_chat = WidgetActionInfo(
+    key=WidgetAction.LLM_CHAT,
+    text="Christina",
+    shortcut="Ctrl+Shift+A",
+    icon="mdi:robot-outline",
+    create_widget=create_llm_chat,
+    dock_area=DockWidgetArea.RightDockWidgetArea,
 )
 
 
