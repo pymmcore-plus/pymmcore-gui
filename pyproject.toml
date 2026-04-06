@@ -71,6 +71,9 @@ pymmcore-widgets = { git = "https://github.com/pymmcore-plus/pymmcore-widgets", 
 ndv = { git = "https://github.com/pyapp-kit/ndv", rev = "christina" }
 
 
+[project.optional-dependencies]
+llm = ["claude-code-sdk>=0.0.25"]
+
 [dependency-groups]
 # should only be used after manually uninstalling PyQt6 and PyQt6Ads
 # uv sync --group pyside --no-install-package PyQt6 --no-install-package PyQt6Ads
