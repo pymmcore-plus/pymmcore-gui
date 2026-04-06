@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import json
 import logging
+import shutil
+import subprocess
 import threading
+import time
 from typing import Any
 
 from pymmcore_plus import CMMCorePlus
@@ -97,16 +100,80 @@ class OllamaChatSession(QObject):
     def start_session(self) -> None:
         if self._ready:
             return
-        self._rebuild_tools()
-        system_prompt = build_system_prompt(CMMCorePlus.instance())
-        self._messages = [{"role": "system", "content": system_prompt}]
-        self._ready = True
-        logger.info(
-            "Ollama session ready (model=%s, hardware=%s)",
-            self._model,
-            self._hardware_enabled,
+        thread = threading.Thread(
+            target=self._init_session, daemon=True, name="ollama-init"
         )
-        self.session_ready.emit()
+        thread.start()
+
+    def _init_session(self) -> None:
+        """Ensure ollama is running, model is available, and initialize."""
+        try:
+            import ollama
+
+            # Try to connect; if not running, start it
+            if not self._ensure_ollama_running():
+                self.error_occurred.emit(
+                    "Could not find or start ollama.\n\n"
+                    "Install it from https://ollama.com"
+                )
+                return
+
+            # Check if model exists, pull if not
+            try:
+                ollama.show(self._model)
+            except Exception:
+                logger.info("Pulling model %s (first run)...", self._model)
+                ollama.pull(self._model)
+
+            self._rebuild_tools()
+            system_prompt = build_system_prompt(CMMCorePlus.instance())
+            self._messages = [{"role": "system", "content": system_prompt}]
+            self._ready = True
+            logger.debug(
+                "Ollama session ready (model=%s, hardware=%s)",
+                self._model,
+                self._hardware_enabled,
+            )
+            self.session_ready.emit()
+        except Exception as e:
+            logger.exception("Ollama init failed")
+            self.error_occurred.emit(str(e))
+
+    @staticmethod
+    def _ensure_ollama_running() -> bool:
+        """Check if ollama is reachable; if not, try to start it."""
+        import urllib.request
+
+        url = "http://localhost:11434/api/tags"
+
+        # Already running?
+        try:
+            urllib.request.urlopen(url, timeout=2)
+            return True
+        except Exception:
+            pass
+
+        # Try to start it
+        ollama_bin = shutil.which("ollama")
+        if not ollama_bin:
+            return False
+
+        logger.debug("Starting ollama serve...")
+        subprocess.Popen(
+            [ollama_bin, "serve"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+        # Wait for it
+        for _ in range(30):
+            time.sleep(0.5)
+            try:
+                urllib.request.urlopen(url, timeout=2)
+                return True
+            except Exception:
+                pass
+        return False
 
     def send_message(self, text: str) -> None:
         if not self._ready:

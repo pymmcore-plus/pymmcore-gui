@@ -72,11 +72,6 @@ ndv = { git = "https://github.com/pyapp-kit/ndv", rev = "christina" }
 
 
 [project.optional-dependencies]
-local-llm = [
-    "llama-cpp-python[server]>=0.3",
-    "openai>=1.0",
-    "huggingface-hub>=0.20",
-]
 ollama = ["ollama>=0.4"]
 claude = ["claude-code-sdk>=0.0.25"]
 voice = [

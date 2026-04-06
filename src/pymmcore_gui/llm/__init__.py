@@ -18,16 +18,6 @@ if not _logger.handlers:
     _logger.setLevel(logging.INFO)
 
 
-def _has_local() -> bool:
-    try:
-        import llama_cpp  # noqa: F401
-        import openai  # noqa: F401
-
-        return True
-    except ImportError:
-        return False
-
-
 def _has_ollama() -> bool:
     try:
         import ollama  # noqa: F401
@@ -49,18 +39,12 @@ def _has_claude() -> bool:
 def create_llm_chat(parent: QWidget) -> QWidget:
     """Create the LLM chat widget.
 
-    Backend priority: local (llama.cpp) > ollama > claude-code-sdk > fallback.
+    Backend priority: ollama (local) > claude-code-sdk > fallback.
     """
     from pymmcore_gui.llm._chat_widget import LLMChatWidget
 
-    if _has_local():
-        _logger.info("Using local llama.cpp backend")
-        from pymmcore_gui.llm._local_backend import LocalChatSession
-
-        return LLMChatWidget(parent=parent, session_factory=LocalChatSession)
-
     if _has_ollama():
-        _logger.info("Using ollama backend")
+        _logger.info("Using ollama backend (local)")
         from pymmcore_gui.llm._ollama_backend import OllamaChatSession
 
         return LLMChatWidget(parent=parent, session_factory=OllamaChatSession)

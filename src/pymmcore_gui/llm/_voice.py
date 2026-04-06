@@ -54,7 +54,7 @@ def _get_oww_model():  # type: ignore[no-untyped-def]
         for fname, url in needed.items():
             dest = model_dir / fname
             if not dest.exists():
-                logger.info("Downloading %s...", fname)
+                logger.debug("Downloading %s...", fname)
                 urllib.request.urlretrieve(url, dest)
 
         _oww_model = Model(
@@ -185,14 +185,14 @@ class VoiceListener(QObject):
         try:
             import sounddevice as sd
 
-            logger.info("Loading voice models...")
+            logger.debug("Loading voice models...")
             self.status_changed.emit("loading models...")
             oww = _get_oww_model()
             _get_vad_model()
             _get_whisper_model()
 
             self.status_changed.emit("listening")
-            logger.info("Voice listener ready, waiting for wake word...")
+            logger.debug("Voice listener ready, waiting for wake word...")
 
             stream = sd.InputStream(
                 samplerate=SAMPLE_RATE,
@@ -221,7 +221,7 @@ class VoiceListener(QObject):
 
     def _handle_wake(self) -> None:
 
-        logger.info("Wake word detected!")
+        logger.debug("Wake word detected!")
         self.status_changed.emit("recording...")
 
         audio = _record_until_silence()
@@ -235,7 +235,7 @@ class VoiceListener(QObject):
         self.status_changed.emit("listening")
 
         if text:
-            logger.info("Transcribed: %s", text)
+            logger.debug("Transcribed: %s", text)
             self.command_received.emit(text)
         else:
             logger.debug("Empty transcription")

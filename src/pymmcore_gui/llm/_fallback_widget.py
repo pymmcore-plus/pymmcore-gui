@@ -15,14 +15,15 @@ class LLMFallbackWidget(QWidget):
         label = QLabel(
             "<h3>Christina</h3>"
             "<p>No LLM backend is installed. Install one of:</p>"
-            "<p><b>Local (recommended, fully self-contained):</b></p>"
-            "<pre>pip install pymmcore-gui[local-llm]</pre>"
-            "<p>Downloads a ~4 GB model on first use.</p>"
-            "<p><b>Ollama (local, requires ollama app):</b></p>"
+            "<p><b>Local (recommended):</b></p>"
             "<pre>pip install pymmcore-gui[ollama]</pre>"
+            "<p>Then install the <a href='https://ollama.com'>ollama</a> "
+            "app and start it. The model will be downloaded automatically "
+            "on first use.</p>"
             "<p><b>Cloud (Claude, requires Max subscription):</b></p>"
             "<pre>pip install pymmcore-gui[claude]</pre>"
         )
         label.setWordWrap(True)
+        label.setOpenExternalLinks(True)
         label.setAlignment(Qt.AlignmentFlag.AlignTop)
         layout.addWidget(label)

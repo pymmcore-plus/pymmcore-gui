@@ -70,7 +70,7 @@ def create_microscope_server(*, hardware_enabled: bool = True) -> McpSdkServerCo
     """Create an in-process MCP server with the appropriate tool set."""
     tools = get_tools(hardware_enabled=hardware_enabled)
     mcp_tools = [_tooldef_to_mcp(td) for td in tools]
-    logger.info(
+    logger.debug(
         "Creating MCP server (hardware=%s) with %d tools: %s",
         hardware_enabled,
         len(mcp_tools),

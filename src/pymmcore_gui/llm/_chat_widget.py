@@ -295,6 +295,8 @@ class LLMChatWidget(QWidget):
 
         self._input = _ChatInput()
         self._input.set_send_callback(self._on_send)
+        self._input.setEnabled(False)
+        self._input.setPlaceholderText("Starting...")
         input_layout.addWidget(self._input, stretch=1)
 
         self._send_btn = QPushButton("Send")
@@ -345,7 +347,10 @@ class LLMChatWidget(QWidget):
     # ------------------------------------------------------------------
 
     def _on_session_ready(self) -> None:
+        self._input.setEnabled(True)
+        self._input.setPlaceholderText("Type a message...")
         self._send_btn.setEnabled(True)
+        self._input.setFocus()
         self._add_system_message("Christina is ready. How can I help?")
 
     def _on_send(self) -> None:

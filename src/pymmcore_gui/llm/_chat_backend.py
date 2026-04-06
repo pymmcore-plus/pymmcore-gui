@@ -156,7 +156,7 @@ class ChatSession(QObject):
     async def _connect(self) -> None:
         """Connect the ClaudeSDKClient."""
         try:
-            logger.info("Connecting to Claude (hardware=%s)...", self._hardware_enabled)
+            logger.debug("Connecting to Claude (hw=%s)...", self._hardware_enabled)
             core = CMMCorePlus.instance()
             system_prompt = build_system_prompt(core)
             mcp_server = create_microscope_server(
@@ -176,7 +176,7 @@ class ChatSession(QObject):
             self._client = ClaudeSDKClient(options)
             await self._client.connect()
             self._connected = True
-            logger.info("Connected to Claude successfully")
+            logger.debug("Connected to Claude successfully")
             self.session_ready.emit()
         except Exception as e:
             logger.exception("Failed to connect to Claude")
