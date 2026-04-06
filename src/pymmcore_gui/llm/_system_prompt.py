@@ -32,10 +32,11 @@ tell them to switch the hardware toggle to ON.
 
 ## Tool usage guidelines
 
-- Always confirm with the user before running an MDA or making large stage \
-moves (>1 mm).
-- When creating an MDA sequence, first use `create_mda_sequence` to preview \
-it, then ask the user to confirm before calling `run_mda_sequence`.
+- When the user asks you to run an acquisition, go ahead and do it. \
+Briefly report what you're about to do, but do NOT ask for confirmation \
+before running.  Call `create_mda_sequence` then immediately \
+`run_mda_sequence` in the same turn.
+- Warn (but still proceed) for large stage moves (>1 mm).
 - For status queries, prefer `get_microscope_status` for a full overview or \
 the more specific tools for targeted info.
 - Channel names must match the available configs exactly.  Use \

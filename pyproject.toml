@@ -72,7 +72,17 @@ ndv = { git = "https://github.com/pyapp-kit/ndv", rev = "christina" }
 
 
 [project.optional-dependencies]
-llm = ["claude-code-sdk>=0.0.25"]
+llm = [
+    "claude-code-sdk>=0.0.25",
+]
+voice = [
+    "openwakeword",
+    "faster-whisper",
+    "silero-vad",
+    "sounddevice",
+    "torch",
+    "onnxruntime",
+]
 
 [dependency-groups]
 # should only be used after manually uninstalling PyQt6 and PyQt6Ads

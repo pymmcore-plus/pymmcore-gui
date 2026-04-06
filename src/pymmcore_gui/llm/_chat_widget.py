@@ -21,6 +21,14 @@ from pymmcore_gui._qt.QtWidgets import (
 
 from ._chat_backend import ChatSession
 
+try:
+    from ._voice import VoiceListener
+
+    _HAS_VOICE = True
+except ImportError:
+    _HAS_VOICE = False
+    VoiceListener = None  # type: ignore[assignment,misc]
+
 
 class _MessageBubble(QFrame):
     """A single message bubble (user or assistant)."""
@@ -193,6 +201,7 @@ class LLMChatWidget(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._session = ChatSession(self)
+        self._voice: VoiceListener | None = None
         self._tool_cards: dict[str, _ToolCallCard] = {}
         self._current_assistant_bubble: _MessageBubble | None = None
         self._thinking_label: QLabel | None = None
@@ -224,11 +233,29 @@ class LLMChatWidget(QWidget):
         self._rate_label.setVisible(False)
         header_layout.addWidget(self._rate_label)
 
+        # Voice listen toggle
+        self._listen_toggle = QToolButton()
+        self._listen_toggle.setCheckable(True)
+        self._listen_toggle.setChecked(False)
+        self._listen_toggle.setText("Voice")
+        self._listen_toggle.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
+        self._listen_toggle.setToolTip("Toggle voice activation")
+        self._listen_toggle.toggled.connect(self._on_listen_toggle)
+        self._update_listen_style(False)
+        header_layout.addWidget(self._listen_toggle)
+
+        # Voice status (hidden until listening)
+        self._voice_status = QLabel()
+        self._voice_status.setStyleSheet("color: gray; font-size: 10px;")
+        self._voice_status.setVisible(False)
+        header_layout.addWidget(self._voice_status)
+
         # Hardware toggle
         self._toggle = QToolButton()
         self._toggle.setCheckable(True)
         self._toggle.setChecked(True)
         self._toggle.setText("Hardware Enabled")
+        self._toggle.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
         self._toggle.setToolTip("Toggle hardware control")
         self._toggle.toggled.connect(self._on_toggle)
         self._update_toggle_style(True)
@@ -304,6 +331,8 @@ class LLMChatWidget(QWidget):
         # Keep session alive when hidden so context is preserved
 
     def closeEvent(self, event: object) -> None:
+        if self._voice is not None:
+            self._voice.stop()
         self._session.stop_session()
         super().closeEvent(event)  # type: ignore[arg-type]
 
@@ -383,6 +412,46 @@ class LLMChatWidget(QWidget):
                 self._rate_label.setText("")
         self._rate_label.setVisible(bool(self._rate_label.text()))
 
+    def _on_listen_toggle(self, checked: bool) -> None:
+        if checked:
+            if not _HAS_VOICE:
+                self._add_system_message(
+                    "Voice deps not installed. pip install pymmcore-gui[voice]"
+                )
+                self._listen_toggle.setChecked(False)
+                return
+            if self._voice is None:
+                self._voice = VoiceListener(self)
+                self._voice.command_received.connect(self._on_voice_command)
+                self._voice.status_changed.connect(self._on_voice_status)
+                self._voice.error_occurred.connect(self._on_voice_error)
+            self._voice.start()
+            self._update_listen_style(True)
+        else:
+            if self._voice is not None:
+                self._voice.stop()
+            self._update_listen_style(False)
+            self._voice_status.setVisible(False)
+
+    def _on_voice_command(self, text: str) -> None:
+        """Handle transcribed speech — inject into chat and send."""
+        self._add_user_message(text)
+        self._current_assistant_bubble = None
+        self._set_responding(True)
+        self._show_thinking()
+        self._session.send_message(text)
+
+    def _on_voice_status(self, status: str) -> None:
+        if status:
+            self._voice_status.setText(status)
+            self._voice_status.setVisible(True)
+        else:
+            self._voice_status.setVisible(False)
+
+    def _on_voice_error(self, message: str) -> None:
+        self._add_system_message(f"Voice error: {message}")
+        self._listen_toggle.setChecked(False)
+
     def _on_toggle(self, checked: bool) -> None:
         self._update_toggle_style(checked)
         self._session.set_hardware_enabled(checked)
@@ -417,6 +486,21 @@ class LLMChatWidget(QWidget):
             self._thinking_label.setParent(None)
             self._thinking_label.deleteLater()
             self._thinking_label = None
+
+    def _update_listen_style(self, active: bool) -> None:
+        if active:
+            self._listen_toggle.setText("Voice On")
+            self._listen_toggle.setStyleSheet(
+                "QToolButton { background-color: #2d6d8a; color: white; "
+                "border-radius: 4px; padding: 2px 8px; }"
+            )
+        else:
+            self._listen_toggle.setText("Voice")
+            self._listen_toggle.setStyleSheet(
+                "QToolButton { background-color: rgba(255,255,255,0.08); "
+                "color: rgba(255,255,255,0.6); "
+                "border-radius: 4px; padding: 2px 8px; }"
+            )
 
     def _update_toggle_style(self, enabled: bool) -> None:
         if enabled:
