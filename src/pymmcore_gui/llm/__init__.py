@@ -8,9 +8,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pymmcore_gui._qt.QtWidgets import QWidget
 
-# Enable debug logging for the LLM subsystem.
-# Set PYMMCORE_GUI_LLM_DEBUG=1 in the environment, or call
-#   logging.getLogger("pymmcore_gui.llm").setLevel(logging.DEBUG)
 _logger = logging.getLogger(__name__)
 if not _logger.handlers:
     _handler = logging.StreamHandler()
@@ -21,17 +18,60 @@ if not _logger.handlers:
     _logger.setLevel(logging.INFO)
 
 
-def create_llm_chat(parent: QWidget) -> QWidget:
-    """Create the LLM chat widget, or a fallback if dependencies are missing."""
+def _has_local() -> bool:
     try:
-        from claude_code_sdk import __version__ as _sdk_version
+        import llama_cpp  # noqa: F401
+        import openai  # noqa: F401
+
+        return True
     except ImportError:
-        _logger.warning("claude-code-sdk not installed — using fallback widget")
-        from pymmcore_gui.llm._fallback_widget import LLMFallbackWidget
+        return False
 
-        return LLMFallbackWidget(parent=parent)
 
-    _logger.info("claude-code-sdk v%s available", _sdk_version)
+def _has_ollama() -> bool:
+    try:
+        import ollama  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
+
+def _has_claude() -> bool:
+    try:
+        import claude_code_sdk  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
+
+def create_llm_chat(parent: QWidget) -> QWidget:
+    """Create the LLM chat widget.
+
+    Backend priority: local (llama.cpp) > ollama > claude-code-sdk > fallback.
+    """
     from pymmcore_gui.llm._chat_widget import LLMChatWidget
 
-    return LLMChatWidget(parent=parent)
+    if _has_local():
+        _logger.info("Using local llama.cpp backend")
+        from pymmcore_gui.llm._local_backend import LocalChatSession
+
+        return LLMChatWidget(parent=parent, session_factory=LocalChatSession)
+
+    if _has_ollama():
+        _logger.info("Using ollama backend")
+        from pymmcore_gui.llm._ollama_backend import OllamaChatSession
+
+        return LLMChatWidget(parent=parent, session_factory=OllamaChatSession)
+
+    if _has_claude():
+        _logger.info("Using claude-code-sdk backend")
+        from pymmcore_gui.llm._chat_backend import ChatSession
+
+        return LLMChatWidget(parent=parent, session_factory=ChatSession)
+
+    _logger.warning("No LLM backend available")
+    from pymmcore_gui.llm._fallback_widget import LLMFallbackWidget
+
+    return LLMFallbackWidget(parent=parent)

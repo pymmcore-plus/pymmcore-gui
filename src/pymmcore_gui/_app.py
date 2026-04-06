@@ -317,10 +317,10 @@ def _print_exception(
     exc_value: BaseException,
     exc_traceback: TracebackType | None,
 ) -> None:
-    try:
-        rich_print_exception(exc_type, exc_value, exc_traceback)
-    except ImportError:
-        traceback.print_exception(exc_type, value=exc_value, tb=exc_traceback)
+    # try:
+    #     rich_print_exception(exc_type, exc_value, exc_traceback)
+    # except ImportError:
+    traceback.print_exception(exc_type, value=exc_value, tb=exc_traceback)
 
 
 # This log list is used by the ExceptionLog widget

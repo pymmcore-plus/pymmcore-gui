@@ -19,8 +19,6 @@ from pymmcore_gui._qt.QtWidgets import (
     QWidget,
 )
 
-from ._chat_backend import ChatSession
-
 try:
     from ._voice import VoiceListener
 
@@ -198,9 +196,15 @@ class _ChatInput(QTextEdit):
 class LLMChatWidget(QWidget):
     """Main chat widget with message display, input, and ON/OFF toggle."""
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+        session_factory: type | None = None,
+    ) -> None:
         super().__init__(parent)
-        self._session = ChatSession(self)
+        if session_factory is None:
+            raise ValueError("session_factory is required")
+        self._session = session_factory(self)
         self._voice: VoiceListener | None = None
         self._tool_cards: dict[str, _ToolCallCard] = {}
         self._current_assistant_bubble: _MessageBubble | None = None
