@@ -1960,6 +1960,23 @@ wheels = [
 ]
 
 [[package]]
+name = "mido"
+version = "1.3.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/23/14/cfda3fe61ce4c0f50a9f707ae02b46cb53211732b2cd4522bf06272848f4/mido-1.3.3.tar.gz", hash = "sha256:1aecb30b7f282404f17e43768cbf74a6a31bf22b3b783bdd117a1ce9d22cb74c", size = 124288, upload-time = "2024-10-25T15:05:21.847Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fd/28/45deb15c11859d2f10702b32e71de9328a9fa494f989626916db39a9617f/mido-1.3.3-py3-none-any.whl", hash = "sha256:01033c9b10b049e4436fca2762194ca839b09a4334091dd3c34e7f4ae674fd8a", size = 54614, upload-time = "2024-10-25T15:05:20.349Z" },
+]
+
+[package.optional-dependencies]
+ports-rtmidi = [
+    { name = "python-rtmidi" },
+]
+
+[[package]]
 name = "ml-dtypes"
 version = "0.5.4"
 source = { registry = "https://pypi.org/simple" }
@@ -3373,15 +3390,15 @@ wheels = [
 
 [[package]]
 name = "pydantic-extra-types"
-version = "2.11.1"
+version = "2.11.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/66/71/dba38ee2651f84f7842206adbd2233d8bbdb59fb85e9fa14232486a8c471/pydantic_extra_types-2.11.1.tar.gz", hash = "sha256:46792d2307383859e923d8fcefa82108b1a141f8a9c0198982b3832ab5ef1049", size = 172002, upload-time = "2026-03-16T08:08:03.92Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/41/d3/3be31542180c0300b6860129ff1e3a428f3ef580727616ce22462626129b/pydantic_extra_types-2.11.2.tar.gz", hash = "sha256:3a2b83b61fe920925688e7838b59caa90a45637d1dbba2b1364b8d1f7ff72a0a", size = 203929, upload-time = "2026-04-05T20:50:51.556Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/17/c1/3226e6d7f5a4f736f38ac11a6fbb262d701889802595cdb0f53a885ac2e0/pydantic_extra_types-2.11.1-py3-none-any.whl", hash = "sha256:1722ea2bddae5628ace25f2aa685b69978ef533123e5638cfbddb999e0100ec1", size = 79526, upload-time = "2026-03-16T08:08:02.533Z" },
+    { url = "https://files.pythonhosted.org/packages/92/a4/7b6ab05c18d6c6e682382a0f0235301684452c4131a869f45961d1d032c9/pydantic_extra_types-2.11.2-py3-none-any.whl", hash = "sha256:683b8943252543e49760f89733b1519bc62f31d1a287ebbdc5a7b7959fb4acfd", size = 82851, upload-time = "2026-04-05T20:50:50.036Z" },
 ]
 
 [[package]]
@@ -3513,6 +3530,7 @@ dependencies = [
     { name = "ndv", extra = ["vispy"] },
     { name = "ome-writers", extra = ["tensorstore", "tifffile"] },
     { name = "pydantic-settings" },
+    { name = "pymmcore-midi" },
     { name = "pymmcore-plus", extra = ["cli"] },
     { name = "pymmcore-widgets" },
     { name = "pyqt6" },
@@ -3590,6 +3608,7 @@ requires-dist = [
     { name = "onnxruntime", marker = "extra == 'voice'" },
     { name = "openwakeword", marker = "extra == 'voice'" },
     { name = "pydantic-settings", specifier = ">=2.7.1" },
+    { name = "pymmcore-midi", specifier = ">=0.1.0" },
     { name = "pymmcore-plus", extras = ["cli"], git = "https://github.com/pymmcore-plus/pymmcore-plus?rev=main" },
     { name = "pymmcore-widgets", git = "https://github.com/pymmcore-plus/pymmcore-widgets?rev=christina" },
     { name = "pyqt6", specifier = "==6.9.1" },
@@ -3640,6 +3659,19 @@ test = [
     { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "pytest-order", specifier = ">=1.3.0" },
     { name = "pytest-qt", specifier = ">=4.4.0" },
+]
+
+[[package]]
+name = "pymmcore-midi"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "mido", extra = ["ports-rtmidi"] },
+    { name = "psygnal" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/af/72/c74ffb32882bfae1466df260a6ee6b1a7d88dbdd07c45f500a6e37159f15/pymmcore_midi-0.1.0.tar.gz", hash = "sha256:6444483b6ee1d56f7490688d761f6a0a4f8f678c6b9146377acfa607e28d71f0", size = 12243, upload-time = "2023-10-24T21:17:45.44Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c9/0f/e7c5d97488348f0a4ab28e04f741fbe52867916b9927ae804659dbb634ab/pymmcore_midi-0.1.0-py3-none-any.whl", hash = "sha256:a099eefc5ddb6212807a90b23e208186be8ea9b8f601d8233130eac741ea9819", size = 9527, upload-time = "2023-10-24T21:17:44.148Z" },
 ]
 
 [[package]]
@@ -4048,6 +4080,29 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/8a/45/e23b5dc14ddb9918ae4a625379506b17b6f8fc56ca1d82db62462f59aea6/python_multipart-0.0.24.tar.gz", hash = "sha256:9574c97e1c026e00bc30340ef7c7d76739512ab4dfd428fec8c330fa6a5cc3c8", size = 37695, upload-time = "2026-04-05T20:49:13.829Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a3/73/89930efabd4da63cea44a3f438aeb753d600123570e6d6264e763617a9ce/python_multipart-0.0.24-py3-none-any.whl", hash = "sha256:9b110a98db707df01a53c194f0af075e736a770dc5058089650d70b4a182f950", size = 24420, upload-time = "2026-04-05T20:49:12.555Z" },
+]
+
+[[package]]
+name = "python-rtmidi"
+version = "1.5.8"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/dd/ee/0f91965dcc471714c69df21e5ca3d94dc81411b7dee2d31ff1184bea07c9/python_rtmidi-1.5.8.tar.gz", hash = "sha256:7f9ade68b068ae09000ecb562ae9521da3a234361ad5449e83fc734544d004fa", size = 368130, upload-time = "2023-11-20T21:55:02.192Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/46/9c/95c0a6a43bd24a17568e1e31008b1fab7e9a2e54c0ed7301e8d5cc9fa109/python_rtmidi-1.5.8-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:efc07413b30b0039c0d35abe25a81d740c7405124eb58eed141a8f24388e6fe0", size = 148826, upload-time = "2023-11-20T21:54:20.658Z" },
+    { url = "https://files.pythonhosted.org/packages/bf/9b/8e452d6edc2c04e3407f542d3185c66ffc2d39c8811cf2b117653a0a4d63/python_rtmidi-1.5.8-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:844bd12840c9d4e03dfc89b2cd57c55dcbf5ed7246504d69c6c661732249b19c", size = 145363, upload-time = "2023-11-20T21:54:23.023Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/48/aa1d4924f7aa238a192d69aa565b315af0037f684c9475e8b860c679a655/python_rtmidi-1.5.8-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:8bbaf7c7164471712a93ac60c8f9ed146b336a294a5103223bbaf8f10709a0bf", size = 293253, upload-time = "2023-11-20T21:54:24.899Z" },
+    { url = "https://files.pythonhosted.org/packages/bf/24/32dc239047a56f44d8d8090d55010f85a38ed959ffe517c2e87a2aa34190/python_rtmidi-1.5.8-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:878ce085dfb65c0974810a7e919f73708cbb4c0430c7924b78f25aea1dd4ebee", size = 304051, upload-time = "2023-11-20T21:54:26.82Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/0c/cf771eca1b64610e627ca1e67be8390ecdf5e0e1914efbdd9d50ac4c5986/python_rtmidi-1.5.8-cp310-cp310-win_amd64.whl", hash = "sha256:f2138005c6bd3d8b9af05df383679f6d0827d16056e68a941110732310dcb7dd", size = 132157, upload-time = "2023-11-20T21:54:30.059Z" },
+    { url = "https://files.pythonhosted.org/packages/4b/0c/23be16b75c90946784b8d233e61db14cf0482def5396821a1ae0bdcd2739/python_rtmidi-1.5.8-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:30d117193dcad8af67c600c405f53eb096e4ff84849760be14c97270af334922", size = 150205, upload-time = "2023-11-20T21:54:31.849Z" },
+    { url = "https://files.pythonhosted.org/packages/4b/12/37d41151b08a292719f05dbeae15475537f8aa291cda34c6634b35916dff/python_rtmidi-1.5.8-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:4e234dca7f9d783dd3f1e9c9c5c2f295f02b7af3085301d6eed3b428cf49d327", size = 146737, upload-time = "2023-11-20T21:54:33.299Z" },
+    { url = "https://files.pythonhosted.org/packages/53/5e/b866491545135c699bfbed62f54b93c4d6587afc2bba6e2cbbe898570c32/python_rtmidi-1.5.8-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:271d625c489fffb39b3edc5aba67f7c8e29a04a0a0f056ce19e5a888a08b4c59", size = 294847, upload-time = "2023-11-20T21:54:35.017Z" },
+    { url = "https://files.pythonhosted.org/packages/a0/79/1ddb4fb1bdb1a8b8bd62007ca4980344a53b7f29633a7bca1088eed964ce/python_rtmidi-1.5.8-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:46bbf32c8a4bf6c8f0df1c02a68689d0757f13cb7a69f27ccbbed3d7b2365918", size = 305433, upload-time = "2023-11-20T21:54:36.322Z" },
+    { url = "https://files.pythonhosted.org/packages/13/ff/2c55797dbf020d462132d1bc5b34d596b400fa197e2a259b8dd2ea2e5954/python_rtmidi-1.5.8-cp311-cp311-win_amd64.whl", hash = "sha256:cfea32c91752fa7aecfe3d6827535c190ba0e646a9accd6604f4fc70cf4b780f", size = 132937, upload-time = "2023-11-20T21:54:38.3Z" },
+    { url = "https://files.pythonhosted.org/packages/51/27/887b0378e0a907489a07bdeb808fa5ed349675245c6ee14d9f6d00304f96/python_rtmidi-1.5.8-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:5443634597eb340cdec0734f76267a827c2d366f00a6f9195141c78828016ac2", size = 158861, upload-time = "2023-11-20T21:54:39.549Z" },
+    { url = "https://files.pythonhosted.org/packages/4d/ec/57cecde253daab896ce53778520cd41eb062641862ebdb0ee6f97511b1d9/python_rtmidi-1.5.8-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:29d9c9d9f82ce679fecad7bb4cb79f3a24574ea84600e377194b4cc1baacec0e", size = 153416, upload-time = "2023-11-20T21:54:40.835Z" },
+    { url = "https://files.pythonhosted.org/packages/6f/5b/dc19c53d9d512b74dc2cca3725591cc612b9465645695a0696352a8c8b54/python_rtmidi-1.5.8-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:25f5a5db7be98911c41ca5bebb262fcf9a7c89600b88fd3c207ceafd3101e721", size = 305696, upload-time = "2023-11-20T21:54:42.037Z" },
+    { url = "https://files.pythonhosted.org/packages/f6/92/5a60f56dfb2740e644e932233928947423cd2101895319b331f84527eb31/python_rtmidi-1.5.8-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:cec30924e305f55284594ccf35a71dee7216fd308dfa2dec1b3ed03e6f243803", size = 315579, upload-time = "2023-11-20T21:54:43.339Z" },
+    { url = "https://files.pythonhosted.org/packages/93/46/6af077d262f521ea2bf1ab60b8aad72f34fe6dd55af739176605369d449c/python_rtmidi-1.5.8-cp312-cp312-win_amd64.whl", hash = "sha256:052c89933cae4fca354012d8ca7248f4f9e1e3f062471409d48415a7f7d7e59e", size = 129755, upload-time = "2023-11-20T21:54:44.935Z" },
 ]
 
 [[package]]
@@ -5366,14 +5421,14 @@ wheels = [
 
 [[package]]
 name = "types-pygments"
-version = "2.20.0.20260405"
+version = "2.20.0.20260406"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "types-docutils" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ad/28/7a11c06b290e370eca368dd59d9738a79657a7518f5a4021b1e187c1a16d/types_pygments-2.20.0.20260405.tar.gz", hash = "sha256:f06fe34d6457044ce7587a5a6cf73e6bc5c769c933cd9edf033379bcd7ed2897", size = 19342, upload-time = "2026-04-05T04:27:06.184Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/08/bd/d17c28a4c65c556bc4c4bc8f363aa2fbfc91b397e3c0019839d74d9ead31/types_pygments-2.20.0.20260406.tar.gz", hash = "sha256:d3ed7ecd7c34a382459d28ce624b87e1dee03d6844e43aa7590ef4b8c7c9dfce", size = 19486, upload-time = "2026-04-06T04:33:59.632Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fe/51/dabb479c2cda4fbed99a0f2045aee2bb91487c50c654a7ad6dfa327c5b82/types_pygments-2.20.0.20260405-py3-none-any.whl", hash = "sha256:79dc975f7a9c6cbfdcc32f3d31b7eb507d39a41031c3b2124f16fc2e42326954", size = 26688, upload-time = "2026-04-05T04:27:05.215Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/00/dca7518e6f99ce0f235ec1c6512593ee4bd25109ae1c912bf9ee836a26e1/types_pygments-2.20.0.20260406-py3-none-any.whl", hash = "sha256:6bb0c79874c304977e1c097f7007140e16fe78c443329154db803d7910d945b3", size = 27278, upload-time = "2026-04-06T04:33:58.744Z" },
 ]
 
 [[package]]

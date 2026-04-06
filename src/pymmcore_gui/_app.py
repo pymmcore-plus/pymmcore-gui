@@ -79,7 +79,7 @@ class MMQApplication(QApplication):
             if os.name == "nt":
                 import ctypes
 
-                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)  # type: ignore
+                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
             elif sys.platform.startswith("darwin"):
                 _set_osx_app_name(APP_NAME)
 
@@ -211,6 +211,17 @@ def create_mmgui(
                     RuntimeWarning,
                     stacklevel=2,
                 )
+
+    try:
+        from ._midi import connect_midi
+
+        connect_midi(win.mmcore)
+    except Exception as e:  # pragma: no cover
+        warnings.warn(
+            f"Failed to connect MIDI devices: {e}",
+            RuntimeWarning,
+            stacklevel=2,
+        )
 
     if install_sys_excepthook:
         _install_excepthook()
