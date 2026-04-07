@@ -33,7 +33,7 @@ def gh_link(
     line_no: int | tuple[int, int] | None = None,
     root: str = GH_REPO_URL,
     treeish: str | None = None,
-    check_404: bool = True,
+    check_404: bool = False,
 ) -> str:
     """Return a link to the root, file, or line number on the github repository.
 
@@ -51,7 +51,7 @@ def gh_link(
         The git treeish of the version to link to (such as "main", "v0.1.0", or a
         commit hash). If None, the treeish is determined from the current version.
     check_404 : bool
-        If True, check if the link is 404 and fallback to the main url. Default is True.
+        If True, check if the link is 404 and fallback to the main url.
     """
     href = root
     href = f"{root}/tree/{treeish or get_treeish()}"
