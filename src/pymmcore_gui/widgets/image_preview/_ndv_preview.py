@@ -13,7 +13,9 @@ if TYPE_CHECKING:
     from pymmcore_plus import CMMCorePlus
 
 
-BUFFER_SIZE = 100
+# Live preview only needs the most recent frame. Keep the local viewer buffer
+# tiny to avoid large memory usage on high-resolution cameras.
+BUFFER_SIZE = 1
 
 
 class NDVPreview(ImagePreviewBase):
