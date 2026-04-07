@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from math import hypot, pi
 from pathlib import Path
 from typing import TYPE_CHECKING
+import warnings
 
-import ezdxf
 import numpy as np
 
 if TYPE_CHECKING:
@@ -28,6 +28,15 @@ class ChipOverlayData:
 def load_chip_overlay_data(path: str | Path) -> ChipOverlayData:
     """Load a DXF file and extract a 2D XY projection for overlay display."""
     src = Path(path)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="'.*' deprecated - use '.*'",
+            category=DeprecationWarning,
+            module="pyparsing.*",
+        )
+        import ezdxf
+
     doc = ezdxf.readfile(src)
     curves: list[ChipCurve] = []
     ref_points: list[tuple[float, float]] = []
