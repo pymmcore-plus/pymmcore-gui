@@ -3,10 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import hypot, pi
 from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING
 
 import ezdxf
 import numpy as np
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 @dataclass(slots=True)
@@ -36,10 +39,14 @@ def load_chip_overlay_data(path: str | Path) -> ChipOverlayData:
             curves.extend(c)
             ref_points.extend(pts)
 
-    return ChipOverlayData(curves=curves, reference_points=_unique_points(ref_points), source=src)
+    return ChipOverlayData(
+        curves=curves, reference_points=_unique_points(ref_points), source=src
+    )
 
 
-def _curves_from_acis_lines(lines: Iterable[str]) -> tuple[list[ChipCurve], list[tuple[float, float]]]:
+def _curves_from_acis_lines(
+    lines: Iterable[str],
+) -> tuple[list[ChipCurve], list[tuple[float, float]]]:
     curves: list[ChipCurve] = []
     points: list[tuple[float, float]] = []
 
@@ -48,7 +55,9 @@ def _curves_from_acis_lines(lines: Iterable[str]) -> tuple[list[ChipCurve], list
         if text.startswith("straight-curve"):
             segment = _parse_straight_curve(text)
             if segment is not None:
-                curves.append(ChipCurve(points=np.asarray(segment, dtype=float), closed=False))
+                curves.append(
+                    ChipCurve(points=np.asarray(segment, dtype=float), closed=False)
+                )
                 points.extend((tuple(segment[0]), tuple(segment[-1])))
         elif text.startswith("ellipse-curve"):
             ellipse = _parse_ellipse_curve(text)
@@ -127,7 +136,9 @@ def _sample_reference_points(points: np.ndarray) -> list[tuple[float, float]]:
     return [tuple(points[i]) for i in idxs]
 
 
-def _unique_points(points: Iterable[tuple[float, float]], precision: int = 3) -> list[tuple[float, float]]:
+def _unique_points(
+    points: Iterable[tuple[float, float]], precision: int = 3
+) -> list[tuple[float, float]]:
     seen: set[tuple[float, float]] = set()
     out: list[tuple[float, float]] = []
     for x, y in points:

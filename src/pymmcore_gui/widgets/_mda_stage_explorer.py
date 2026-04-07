@@ -6,22 +6,26 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
-import useq
 from pymmcore_widgets import StageExplorer
 from pymmcore_widgets.control._stage_explorer._stage_position_marker import (
     StagePositionMarker,
 )
-from pymmcore_widgets.control._stage_explorer._stage_viewer import get_vispy_scene_bounds
+from pymmcore_widgets.control._stage_explorer._stage_viewer import (
+    get_vispy_scene_bounds,
+)
 from vispy.color import Color
-from vispy.scene.visuals import Line, Markers
-from vispy.scene.visuals import Text
+from vispy.scene.visuals import Line, Markers, Text
 
-from pymmcore_gui._qt.QtCore import QTimer, Qt
+from pymmcore_gui._qt.QtCore import Qt, QTimer
 from pymmcore_gui._qt.QtWidgets import QFileDialog
-
-from pymmcore_gui.widgets._chip_dxf import ChipCurve, ChipOverlayData, load_chip_overlay_data
+from pymmcore_gui.widgets._chip_dxf import (
+    ChipCurve,
+    ChipOverlayData,
+    load_chip_overlay_data,
+)
 
 if TYPE_CHECKING:
+    import useq
     from vispy.app.canvas import MouseEvent
 
     from pymmcore_gui.actions.widget_actions import MDAWidget
@@ -80,7 +84,9 @@ class MDALinkedStageExplorer(StageExplorer):
         self._pick_chip_ref_action.setCheckable(True)
         self._pick_chip_ref_action.toggled.connect(self._set_pick_chip_reference_mode)
         self._set_chip_ref_action = self._toolbar.addAction("Set Ref To Stage")
-        self._set_chip_ref_action.triggered.connect(self._set_chip_reference_to_current_stage)
+        self._set_chip_ref_action.triggered.connect(
+            self._set_chip_reference_to_current_stage
+        )
         self._clear_chip_ref_action = self._toolbar.addAction("Reset Chip Ref")
         self._clear_chip_ref_action.triggered.connect(self._reset_chip_reference)
         self._set_chip_controls_enabled(False)
@@ -142,7 +148,9 @@ class MDALinkedStageExplorer(StageExplorer):
             name_item = table.item(row, name_col)
             name = name_item.text() if name_item and name_item.text() else f"P{row + 1}"
             enabled = True
-            if name_item is not None and bool(name_item.flags() & Qt.ItemFlag.ItemIsUserCheckable):
+            if name_item is not None and bool(
+                name_item.flags() & Qt.ItemFlag.ItemIsUserCheckable
+            ):
                 enabled = name_item.checkState() != Qt.CheckState.Unchecked
 
             positions.append(
@@ -310,10 +318,12 @@ class MDALinkedStageExplorer(StageExplorer):
         if self._chip_selected_reference is None:
             return
         point = np.array(
-            [[
-                self._chip_selected_reference[0] + self._chip_stage_offset_um[0],
-                self._chip_selected_reference[1] + self._chip_stage_offset_um[1],
-            ]],
+            [
+                [
+                    self._chip_selected_reference[0] + self._chip_stage_offset_um[0],
+                    self._chip_selected_reference[1] + self._chip_stage_offset_um[1],
+                ]
+            ],
             dtype=float,
         )
         self._chip_reference_marker = Markers(
@@ -344,8 +354,13 @@ class MDALinkedStageExplorer(StageExplorer):
     def _set_pick_chip_reference_mode(self, checked: bool) -> None:
         self._calibration_pick_mode = checked
 
-    def _nearest_chip_reference(self, world_x: float, world_y: float) -> tuple[float, float] | None:
-        if self._chip_overlay_data is None or not self._chip_overlay_data.reference_points:
+    def _nearest_chip_reference(
+        self, world_x: float, world_y: float
+    ) -> tuple[float, float] | None:
+        if (
+            self._chip_overlay_data is None
+            or not self._chip_overlay_data.reference_points
+        ):
             return None
 
         target = np.array([world_x, world_y], dtype=float) - self._chip_stage_offset_um
@@ -363,7 +378,10 @@ class MDALinkedStageExplorer(StageExplorer):
             return
         x, y = self._mmc.getXYPosition()
         self._chip_stage_offset_um = np.array(
-            [x - self._chip_selected_reference[0], y - self._chip_selected_reference[1]],
+            [
+                x - self._chip_selected_reference[0],
+                y - self._chip_selected_reference[1],
+            ],
             dtype=float,
         )
         self._rebuild_chip_overlay()
@@ -380,9 +398,12 @@ class MDALinkedStageExplorer(StageExplorer):
             return
 
         selected_rows = {
-            idx.row() for idx in self._mda_widget.stage_positions.table().selectedIndexes()
+            idx.row()
+            for idx in self._mda_widget.stage_positions.table().selectedIndexes()
         }
-        self._selected_row = next(iter(selected_rows), None) if len(selected_rows) == 1 else None
+        self._selected_row = (
+            next(iter(selected_rows), None) if len(selected_rows) == 1 else None
+        )
         self._update_overlay_styles()
 
     def _update_overlay_styles(self) -> None:
@@ -406,7 +427,11 @@ class MDALinkedStageExplorer(StageExplorer):
                 symbol="++",
                 face_color=Color(color),
                 edge_color=Color(color),
-                size=max(min(self._mmc.getImageWidth() or 1, self._mmc.getImageHeight() or 1) / 12, 6),
+                size=max(
+                    min(self._mmc.getImageWidth() or 1, self._mmc.getImageHeight() or 1)
+                    / 12,
+                    6,
+                ),
                 edge_width=2,
             )
             label.color = Color(color)
@@ -434,7 +459,9 @@ class MDALinkedStageExplorer(StageExplorer):
         nearest = self._nearest_position(float(event.x_pos), float(event.y_pos))
         return nearest.row if nearest is not None else None
 
-    def _nearest_position(self, world_x: float, world_y: float) -> MDAStagePosition | None:
+    def _nearest_position(
+        self, world_x: float, world_y: float
+    ) -> MDAStagePosition | None:
         if not self._mda_positions:
             return None
         fov_w, fov_h = self._fov_w_h()
@@ -479,7 +506,9 @@ class MDALinkedStageExplorer(StageExplorer):
 
     def _on_mouse_double_click(self, event: MouseEvent) -> None:
         if self._mda_widget is not None and self._show_mda_positions.isChecked():
-            world_x, world_y = self._stage_viewer.view.camera.transform.imap(event.pos)[:2]
+            world_x, world_y = self._stage_viewer.view.camera.transform.imap(event.pos)[
+                :2
+            ]
             pos = self._nearest_position(float(world_x), float(world_y))
             if pos is not None and self._stage_controller is not None:
                 self._stage_controller.move_absolute((pos.x, pos.y))

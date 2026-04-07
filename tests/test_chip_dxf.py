@@ -10,9 +10,7 @@ from pymmcore_gui.widgets._chip_dxf import (
 
 
 def test_parse_straight_curve_projects_to_xy() -> None:
-    line = (
-        "straight-curve $-1 -1 $-1 10 20 0 1 0 0 F 0 F 30 #"
-    )
+    line = "straight-curve $-1 -1 $-1 10 20 0 1 0 0 F 0 F 30 #"
     segment = _parse_straight_curve(line)
 
     assert segment is not None
@@ -20,9 +18,7 @@ def test_parse_straight_curve_projects_to_xy() -> None:
 
 
 def test_parse_ellipse_curve_creates_xy_circle_samples() -> None:
-    line = (
-        "ellipse-curve $-1 -1 $-1 100 200 0 0 0 1 50 0 0 1 I I #"
-    )
+    line = "ellipse-curve $-1 -1 $-1 100 200 0 0 0 1 50 0 0 1 I I #"
     curve = _parse_ellipse_curve(line, samples=8)
 
     assert curve is not None
