@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import TYPE_CHECKING, Annotated, TypeVar, cast
+from typing import TYPE_CHECKING, Annotated, Any, TypeVar, cast
 
 import pymmcore_widgets as pmmw
 from pymmcore_plus import CMMCorePlus
@@ -143,7 +143,7 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
             events.sequenceFinished.connect(self._on_sequence_finished)
 
         @property
-        def statusRequested(self):
+        def statusRequested(self) -> Any:
             return self._status_emitter.statusRequested
 
         def _hide_tiff_sequence(self) -> None:
