@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from math import hypot, pi
 from pathlib import Path
 from typing import TYPE_CHECKING
-import warnings
 
 import numpy as np
 
@@ -129,6 +129,9 @@ def _parse_point(line: str) -> tuple[float, float] | None:
 
 
 def _extract_numeric_tokens(text: str) -> list[float]:
+    if "$-1" in text:
+        text = text.rsplit("$-1", maxsplit=1)[-1]
+
     out: list[float] = []
     for token in text.replace("#", " ").split():
         try:
