@@ -120,8 +120,10 @@ class MDAPositionMapWidget(QWidget):
             self._status.setText("No MDA positions to display.")
             return
 
+        footprint = footprints[0]
         self._status.setText(
-            f"{len(footprints)} position(s). FOV: {footprints[0].width_um:.1f} x {footprints[0].height_um:.1f} um"
+            f"{len(footprints)} position(s). "
+            f"FOV: {footprint.width_um:.1f} x {footprint.height_um:.1f} um"
         )
 
         for footprint in footprints:
