@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import numpy as np
 import useq
@@ -159,6 +160,41 @@ def test_stage_explorer_calibrates_chip_overlay_by_translation(
     np.testing.assert_allclose(explorer._chip_stage_offset_um, np.array([250.0, 400.0]))
 
 
+def test_stage_explorer_loads_and_toggles_chip_overlay(qtbot, monkeypatch) -> None:
+    gui = MicroManagerGUI()
+    qtbot.addWidget(gui)
+
+    explorer = gui.get_widget(WidgetAction.STAGE_EXPLORER)
+    assert isinstance(explorer, MDALinkedStageExplorer)
+
+    overlay = ChipOverlayData(
+        curves=[
+            ChipCurve(
+                points=np.array([[0.0, 0.0], [100.0, 0.0], [100.0, 50.0]], dtype=float),
+                closed=True,
+            )
+        ],
+        reference_points=[(0.0, 0.0)],
+        source=None,  # type: ignore[arg-type]
+    )
+    monkeypatch.setattr(
+        "pymmcore_gui.widgets._mda_stage_explorer.load_chip_overlay_data",
+        lambda path: overlay,
+    )
+
+    explorer.load_chip_overlay("chip.dxf")
+
+    assert explorer._chip_overlay_data is overlay
+    assert explorer._chip_curves_visuals
+    assert explorer._toggle_chip_overlay_action.isEnabled()
+
+    explorer._set_chip_overlay_visible(False)
+    assert explorer._chip_curves_visuals == []
+
+    explorer._set_chip_overlay_visible(True)
+    assert explorer._chip_curves_visuals
+
+
 def test_stage_explorer_chip_reference_helpers(qtbot) -> None:
     gui = MicroManagerGUI()
     qtbot.addWidget(gui)
@@ -187,6 +223,27 @@ def test_stage_explorer_chip_reference_helpers(qtbot) -> None:
     explorer._reset_chip_reference()
     assert explorer._chip_selected_reference is None
     np.testing.assert_allclose(explorer._chip_stage_offset_um, np.zeros(2))
+
+
+def test_stage_explorer_rebuilds_chip_reference_visual(qtbot) -> None:
+    gui = MicroManagerGUI()
+    qtbot.addWidget(gui)
+
+    explorer = gui.get_widget(WidgetAction.STAGE_EXPLORER)
+    assert isinstance(explorer, MDALinkedStageExplorer)
+
+    explorer._chip_overlay_data = ChipOverlayData(
+        curves=[],
+        reference_points=[(10.0, 20.0)],
+        source=None,  # type: ignore[arg-type]
+    )
+    explorer._chip_selected_reference = (10.0, 20.0)
+    explorer._chip_stage_offset_um = np.array([2.0, 3.0], dtype=float)
+
+    explorer._rebuild_chip_overlay()
+
+    assert explorer._chip_reference_marker is not None
+    assert explorer._chip_reference_label is not None
 
 
 def test_stage_explorer_mouse_press_selects_position(qtbot, monkeypatch) -> None:
@@ -230,3 +287,31 @@ def test_stage_explorer_mouse_press_picks_chip_reference(qtbot, monkeypatch) -> 
 
     assert explorer._chip_selected_reference == (10.0, 20.0)
     assert not explorer._pick_chip_ref_action.isChecked()
+
+
+def test_stage_explorer_double_click_moves_to_nearest_mda_position(
+    qtbot, monkeypatch
+) -> None:
+    gui = MicroManagerGUI()
+    qtbot.addWidget(gui)
+
+    explorer = gui.get_widget(WidgetAction.STAGE_EXPLORER)
+    mda_widget = gui.get_widget(WidgetAction.MDA_WIDGET)
+    assert isinstance(explorer, MDALinkedStageExplorer)
+    assert mda_widget is not None
+
+    controller = SimpleNamespace(move_absolute=Mock(), snap_on_finish=False)
+    explorer._stage_controller = controller
+    monkeypatch.setattr(
+        explorer._stage_viewer.view.camera.transform,
+        "imap",
+        lambda pos: (100.0, 200.0, 0.0),
+    )
+    explorer._mda_positions = [
+        SimpleNamespace(row=0, x=100.0, y=200.0, name="P1", enabled=True)
+    ]
+
+    explorer._on_mouse_double_click(SimpleNamespace(pos=(0, 0)))
+
+    controller.move_absolute.assert_called_once_with((100.0, 200.0))
+    assert controller.snap_on_finish == explorer._snap_on_double_click
