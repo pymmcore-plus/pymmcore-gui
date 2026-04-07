@@ -39,6 +39,7 @@ from ._notification_manager import NotificationManager
 from ._settings import Settings
 from .actions import CoreAction, QCoreAction, WidgetAction, WidgetActionInfo
 from .actions._action_info import ActionInfo
+from .widgets._core_status_bar import CoreStatusBar
 from .widgets._dithered_gradient import DitheredGradient
 from .widgets._toolbars import CameraControlToolbar, OCToolBar, ShuttersToolbar
 
@@ -241,6 +242,9 @@ class MicroManagerGUI(QMainWindow):
 
         self._status_bar = QStatusBar(self)
         self.setStatusBar(self._status_bar)
+
+        self._core_status = CoreStatusBar(self._mmc, self)
+        self._status_bar.addWidget(self._core_status, 1)
 
         self.bell_button = QPushButton(QIconifyIcon("codicon:bell"), None)
         self.bell_button.setFixedWidth(20)
