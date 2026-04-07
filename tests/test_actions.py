@@ -46,6 +46,10 @@ def test_mda_widget_status_line(qtbot) -> None:
     qtbot.addWidget(win)
     mda = win.get_widget(WidgetAction.MDA_WIDGET)
 
+    def wait_status(predicate) -> str:
+        qtbot.waitUntil(lambda: predicate(mda._status_label.text()))
+        return mda._status_label.text()
+
     sequence = useq.MDASequence(
         stage_positions=[
             useq.Position(x=0.0, y=0.0, name="P1"),
@@ -59,29 +63,29 @@ def test_mda_widget_status_line(qtbot) -> None:
     assert mda._status_label.text() == "Idle"
     mda._on_sequence_started(sequence, {})
     assert mda._frame_total == 4
-    assert mda._status_label.text() == "Frame 0/4 | Step: Preparing"
+    assert wait_status(lambda text: text == "Frame 0/4 | Step: Preparing")
 
     mda._on_event_started(event)
-    assert "Pos 1/2" in mda._status_label.text()
-    assert "T 1/2" in mda._status_label.text()
-    assert "Channel DAPI" in mda._status_label.text()
-    assert mda._status_label.text().endswith("Step: Acquiring")
+    status = wait_status(lambda text: text.endswith("Step: Acquiring"))
+    assert "Pos 1/2" in status
+    assert "T 1/2" in status
+    assert "Channel DAPI" in status
 
     mda._on_frame_ready(object(), event, {})
-    assert mda._status_label.text().startswith("Frame 1/4")
+    assert wait_status(lambda text: text.startswith("Frame 1/4"))
 
     mda._on_awaiting_event(event, 1.25)
-    assert "Step: Waiting next frame" in mda._status_label.text()
-    assert "Next: 1.2 s" in mda._status_label.text()
+    status = wait_status(lambda text: "Step: Waiting next frame" in text)
+    assert "Next: 1.2 s" in status
 
     mda._on_pause_toggled(True)
-    assert "Step: Paused" in mda._status_label.text()
+    assert "Step: Paused" in wait_status(lambda text: "Step: Paused" in text)
 
     af_event = useq.MDAEvent(index={"p": 0}, action=useq.HardwareAutofocus())
     mda._on_event_started(af_event)
-    assert "Step: Autofocus" in mda._status_label.text()
+    assert "Step: Autofocus" in wait_status(lambda text: "Step: Autofocus" in text)
 
     mda._on_sequence_canceled(sequence)
-    assert "Step: Canceled" in mda._status_label.text()
+    assert "Step: Canceled" in wait_status(lambda text: "Step: Canceled" in text)
     mda._on_sequence_finished(sequence)
-    assert "Step: Canceled" in mda._status_label.text()
+    assert "Step: Canceled" in wait_status(lambda text: "Step: Canceled" in text)
