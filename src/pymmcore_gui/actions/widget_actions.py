@@ -10,7 +10,7 @@ from pymmcore_plus import CMMCorePlus
 from useq import AcquireImage, HardwareAutofocus, MDAEvent, MDASequence
 
 from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea, SideBarLocation
-from pymmcore_gui._qt.QtCore import Qt, Signal
+from pymmcore_gui._qt.QtCore import QObject, Qt, Signal
 from pymmcore_gui._qt.QtGui import QAction
 from pymmcore_gui._qt.QtWidgets import QDialog, QLabel, QVBoxLayout, QWidget
 
@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from pymmcore_gui._main_window import MicroManagerGUI
-    from pymmcore_gui._qt.QtCore import QObject
     from pymmcore_gui.widgets._exception_log import ExceptionLog
     from pymmcore_gui.widgets._mm_console import MMConsole
     from pymmcore_gui.widgets._stage_control import StagesControlWidget
@@ -28,6 +27,10 @@ if TYPE_CHECKING:
 QWidgetType = Annotated[QWidget, _ensure_isinstance(QWidget)]
 
 CT = TypeVar("CT", bound=Callable[[QWidget], QWidget])
+
+
+class _MDAStatusEmitter(QObject):
+    statusRequested = Signal(str)
 
 
 class WidgetAction(ActionKey):
@@ -106,13 +109,12 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
     class MDAWidget(pmmw.MDAWidget):
         """MDAWidget subclass: defaults to in-memory output and hides tiff-sequence."""
 
-        statusRequested = Signal(str)
-
         def __init__(
             self, parent: QWidget | None = None, mmcore: CMMCorePlus | None = None
         ) -> None:
             super().__init__(parent=parent, mmcore=mmcore)
             self._hide_tiff_sequence()
+            self._status_emitter = _MDAStatusEmitter(self)
             self._active_sequence: MDASequence | None = None
             self._frame_total = 0
             self._frame_index = 0
@@ -139,6 +141,10 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
             events.sequencePauseToggled.connect(self._on_pause_toggled)
             events.sequenceCanceled.connect(self._on_sequence_canceled)
             events.sequenceFinished.connect(self._on_sequence_finished)
+
+        @property
+        def statusRequested(self):
+            return self._status_emitter.statusRequested
 
         def _hide_tiff_sequence(self) -> None:
             """Remove the 'tiff-sequence' option from the save widget's writer combo."""
