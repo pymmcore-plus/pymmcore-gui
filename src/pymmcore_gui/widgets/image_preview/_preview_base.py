@@ -82,8 +82,11 @@ class ImagePreviewBase(QWidget):
     def timerEvent(self, a0: QTimerEvent) -> None:
         if (core := self._mmc) and core.getRemainingImageCount() > 0:
             try:
-                img = core.fixImage(core.getLastImage())
-                self.append(img)
+                latest = None
+                while core.getRemainingImageCount() > 0:
+                    latest = core.popNextImage()
+                if latest is not None:
+                    self.append(latest)
             except Exception as e:
                 warnings.warn(
                     f"Failed to get image from core: {e}", RuntimeWarning, stacklevel=2
