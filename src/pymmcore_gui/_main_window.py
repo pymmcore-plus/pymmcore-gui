@@ -340,6 +340,7 @@ class MicroManagerGUI(QMainWindow):
                 return widget
 
             self._action_widgets[key] = widget
+            self._link_related_widgets(key, widget)
 
             action = self.get_action(key)
             dock = CDockWidget(self.dock_manager, info.text, self)
@@ -410,6 +411,16 @@ class MicroManagerGUI(QMainWindow):
         else:
             settings.last_config = None
         settings.flush()
+
+    def _link_related_widgets(self, key: str, widget: QWidget) -> None:
+        if key == WidgetAction.MDA_WIDGET:
+            if explorer := self._action_widgets.get(WidgetAction.STAGE_EXPLORER):
+                if hasattr(explorer, "set_mda_widget"):
+                    explorer.set_mda_widget(widget)
+        elif key == WidgetAction.STAGE_EXPLORER:
+            if mda_widget := self._action_widgets.get(WidgetAction.MDA_WIDGET):
+                if hasattr(widget, "set_mda_widget"):
+                    widget.set_mda_widget(mda_widget)
 
     def _add_toolbar(self, name: str, tb_entry: ToolDictValue) -> None:
         if callable(tb_entry):
