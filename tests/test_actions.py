@@ -1,9 +1,17 @@
+from __future__ import annotations
+
+from collections.abc import Callable
+from datetime import timedelta
+from typing import Any, TypeAlias, cast
+
 import pytest
 import useq
 
 from pymmcore_gui import MicroManagerGUI
 from pymmcore_gui._qt.QtWidgets import QMenu, QWidget
 from pymmcore_gui.actions import ActionInfo, CoreAction, WidgetAction, WidgetActionInfo
+
+StatusTrigger: TypeAlias = Callable[[], None]
 
 
 def test_action_registry() -> None:
@@ -41,51 +49,54 @@ def test_actions_in_menus() -> None:
     assert any(a.text() == text for a in window_menu.actions())
 
 
-def test_mda_widget_status_line(qtbot) -> None:
+def test_mda_widget_status_line(qtbot: Any) -> None:
     win = MicroManagerGUI()
     qtbot.addWidget(win)
-    mda = win.get_widget(WidgetAction.MDA_WIDGET)
+    mda = cast("Any", win.get_widget(WidgetAction.MDA_WIDGET))
 
-    def wait_status(predicate) -> str:
-        qtbot.waitUntil(lambda: predicate(mda._status_label.text()))
-        return mda._status_label.text()
+    def emit_status(trigger: StatusTrigger) -> str:
+        with qtbot.waitSignal(mda.statusRequested) as blocker:
+            trigger()
+        args = cast("tuple[object, ...] | None", blocker.args)
+        assert args is not None
+        return str(args[0])
 
     sequence = useq.MDASequence(
-        stage_positions=[
+        stage_positions=(
             useq.Position(x=0.0, y=0.0, name="P1"),
             useq.Position(x=1.0, y=1.0, name="P2"),
-        ],
-        channels=[useq.Channel(config="DAPI")],
-        time_plan=useq.TIntervalLoops(interval=0.1, loops=2),
+        ),
+        channels=(useq.Channel(config="DAPI", exposure=1.0),),
+        time_plan=useq.TIntervalLoops(interval=timedelta(seconds=0.1), loops=2),
     )
     event = next(sequence.iter_events())
 
     assert mda._status_label.text() == "Idle"
-    mda._on_sequence_started(sequence, {})
+    status = emit_status(lambda: mda._on_sequence_started(sequence, {}))
     assert mda._frame_total == 4
-    assert wait_status(lambda text: text == "Frame 0/4 | Step: Preparing")
+    assert status == "Frame 0/4 | Step: Preparing"
 
-    mda._on_event_started(event)
-    status = wait_status(lambda text: text.endswith("Step: Acquiring"))
+    status = emit_status(lambda: mda._on_event_started(event))
+    assert status.endswith("Step: Acquiring")
     assert "Pos 1/2" in status
     assert "T 1/2" in status
     assert "Channel DAPI" in status
 
-    mda._on_frame_ready(object(), event, {})
-    assert wait_status(lambda text: text.startswith("Frame 1/4"))
+    status = emit_status(lambda: mda._on_frame_ready(object(), event, {}))
+    assert status.startswith("Frame 1/4")
 
-    mda._on_awaiting_event(event, 1.25)
-    status = wait_status(lambda text: "Step: Waiting next frame" in text)
+    status = emit_status(lambda: mda._on_awaiting_event(event, 1.25))
+    assert "Step: Waiting next frame" in status
     assert "Next: 1.2 s" in status
 
-    mda._on_pause_toggled(True)
-    assert "Step: Paused" in wait_status(lambda text: "Step: Paused" in text)
+    status = emit_status(lambda: mda._on_pause_toggled(True))
+    assert "Step: Paused" in status
 
-    af_event = useq.MDAEvent(index={"p": 0}, action=useq.HardwareAutofocus())
-    mda._on_event_started(af_event)
-    assert "Step: Autofocus" in wait_status(lambda text: "Step: Autofocus" in text)
+    af_event = useq.MDAEvent(action=useq.HardwareAutofocus())
+    status = emit_status(lambda: mda._on_event_started(af_event))
+    assert "Step: Autofocus" in status
 
-    mda._on_sequence_canceled(sequence)
-    assert "Step: Canceled" in wait_status(lambda text: "Step: Canceled" in text)
-    mda._on_sequence_finished(sequence)
-    assert "Step: Canceled" in wait_status(lambda text: "Step: Canceled" in text)
+    status = emit_status(lambda: mda._on_sequence_canceled(sequence))
+    assert "Step: Canceled" in status
+    status = emit_status(lambda: mda._on_sequence_finished(sequence))
+    assert "Step: Canceled" in status
