@@ -8,9 +8,9 @@ run:
 bundle:
     uv run pyinstaller app/mmgui.spec --clean --noconfirm --log-level INFO
 
-# lint all files with pre-commit
+# lint all files with prek
 lint:
-    uv run pre-commit run --all-files
+    uv run prek run -a
 
 # run tests
 test:
