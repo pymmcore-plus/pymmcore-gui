@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
@@ -18,12 +17,13 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from useq import Position
 
 if TYPE_CHECKING:
-    from qtpy.QtCore import QItemSelection, QItemSelectionModel
+    from collections.abc import Sequence
 
     from pymmcore_widgets.mda._core_mda import MDAWidget
+    from qtpy.QtCore import QItemSelection
+    from useq import Position
 
 
 @dataclass(slots=True)
@@ -97,7 +97,9 @@ class MDAPositionMapWidget(QWidget):
         layout.addWidget(self._view, 1)
         layout.addWidget(self._status, 0)
 
-        self._position_items: dict[int, tuple[QGraphicsRectItem, QGraphicsSimpleTextItem]] = {}
+        self._position_items: dict[
+            int, tuple[QGraphicsRectItem, QGraphicsSimpleTextItem]
+        ] = {}
         self._selection_model: QItemSelectionModel | None = None
 
         self._mda_widget.valueChanged.connect(self.refresh)
@@ -144,8 +146,12 @@ class MDAPositionMapWidget(QWidget):
             self._position_items[footprint.row] = (rect_item, label_item)
 
         margin = max(footprints[0].width_um, footprints[0].height_um) * 0.5
-        self._scene.setSceneRect(self._scene.itemsBoundingRect().adjusted(-margin, -margin, margin, margin))
-        self._view.fitInView(self._scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
+        self._scene.setSceneRect(
+            self._scene.itemsBoundingRect().adjusted(-margin, -margin, margin, margin)
+        )
+        self._view.fitInView(
+            self._scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio
+        )
         self._update_selection_highlight()
 
     def _attach_selection_model(self) -> None:
@@ -155,7 +161,9 @@ class MDAPositionMapWidget(QWidget):
             return
         if self._selection_model is not None:
             try:
-                self._selection_model.selectionChanged.disconnect(self._on_selection_changed)
+                self._selection_model.selectionChanged.disconnect(
+                    self._on_selection_changed
+                )
             except (RuntimeError, TypeError):
                 pass
         self._selection_model = selection_model
@@ -210,7 +218,9 @@ class MDAPositionMapWidget(QWidget):
         model.select(idx, flags)
         table.setCurrentCell(row, 0)
 
-    def _on_selection_changed(self, _selected: QItemSelection, _deselected: QItemSelection) -> None:
+    def _on_selection_changed(
+        self, _selected: QItemSelection, _deselected: QItemSelection
+    ) -> None:
         self._update_selection_highlight()
 
     def _update_selection_highlight(self) -> None:

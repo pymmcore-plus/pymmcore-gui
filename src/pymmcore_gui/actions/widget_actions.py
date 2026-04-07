@@ -206,7 +206,9 @@ def create_mda_position_map_widget(parent: QWidget) -> QWidget:
     if mmwin is None:  # pragma: no cover
         raise RuntimeError("MDA Position Map requires a MicroManagerGUI parent")
     mda_widget = mmwin.get_widget(WidgetAction.MDA_WIDGET)
-    return MDAPositionMapWidget(parent=parent, mmcore=_get_core(parent), mda_widget=mda_widget)
+    return MDAPositionMapWidget(
+        parent=parent, mmcore=_get_core(parent), mda_widget=mda_widget
+    )
 
 
 # ######################## WidgetAction Enum #########################
