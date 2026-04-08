@@ -4,7 +4,6 @@ import threading
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import mido  # type: ignore[import-untyped]
-from pymmcore_midi._core_connect import connect_knob_to_property
 from pymmcore_midi._device import Buttons, Knobs, MidiDevice
 from pymmcore_midi._xtouch import XTouchMini
 
@@ -117,10 +116,29 @@ def connect_midi(core: CMMCorePlus) -> Callable[[], None]:
         core.events.configSet.connect(_on_config_set)
         disconnects.append(lambda: core.events.configSet.disconnect(_on_config_set))
 
-    # --- Knob 8: Exposure on camera device ---
+    # --- Knobs 1-4: LED intensity controls (throttled) ---
+    led_knobs = {
+        1: ("LED:L:37:1", "LED Intensity(%)"),  # LED BF
+        2: ("LED:L:37:2", "LED Intensity(%)"),  # LED 405
+        3: ("LED:L:37:3", "LED Intensity(%)"),  # LED 491
+        4: ("LED:L:37:4", "LED Intensity(%)"),  # LED 561
+    }
+    for knob_id, (dev_label, prop_name) in led_knobs.items():
+        try:
+            dc = _connect_knob_throttled(
+                device.knob[knob_id], core, dev_label, prop_name
+            )
+            disconnects.append(dc)
+        except Exception:
+            pass
+
+    # --- Knob 8: Exposure on camera device (1ms - 1500ms) ---
     cam = core.getCameraDevice()
     if cam:
-        dc = connect_knob_to_property(device.knob[8], core, cam, "Exposure")
+        dc = _connect_knob_throttled(
+            device.knob[8], core, cam, "Exposure",
+            prop_min=1.0, prop_max=500.0,
+        )
         disconnects.append(dc)
 
     # --- Button 23 (record): Snap ---
@@ -172,6 +190,98 @@ def connect_midi(core: CMMCorePlus) -> Callable[[], None]:
     def disconnect() -> None:
         for d in disconnects:
             d()
+
+    return disconnect
+
+
+def _connect_knob_throttled(
+    knob: Any,
+    core: CMMCorePlus,
+    device_label: str,
+    property_name: str,
+    interval_ms: int = 50,
+    prop_min: float | None = None,
+    prop_max: float | None = None,
+) -> Callable[[], None]:
+    """Like connect_knob_to_property, but throttles setProperty calls.
+
+    Only the most recent knob value is sent to hardware, at most once per
+    `interval_ms`. Intermediate values are dropped so the knob stays responsive.
+    A trailing timer ensures the final value is always applied.
+
+    If prop_min/prop_max are provided, they override the device property limits.
+    """
+    import time
+    import warnings
+
+    if prop_min is not None and prop_max is not None:
+        prop_lower = prop_min
+        prop_range = prop_max - prop_min
+    elif core.hasPropertyLimits(device_label, property_name):
+        prop_lower = core.getPropertyLowerLimit(device_label, property_name)
+        prop_range = (
+            core.getPropertyUpperLimit(device_label, property_name) - prop_lower
+        )
+    else:
+        warnings.warn(
+            f"Property {device_label}.{property_name} has no limits and "
+            "cannot be connected to a MIDI knob",
+            stacklevel=2,
+        )
+        return lambda: None
+    min_interval = interval_ms / 1000.0
+
+    def knob2value(value: float) -> float:
+        v = value / 127.0 * prop_range + prop_lower
+        return float(round(v))
+
+    def value2knob(value: float | str) -> int:
+        out = (float(value) - prop_lower) / prop_range * 127.0
+        return min(max(int(out), 0), 127)
+
+    # Set knob to current property value
+    knob.set_value(value2knob(float(core.getProperty(device_label, property_name))))
+
+    _last_set: list[float] = [0.0]
+    _trailing: list[threading.Timer | None] = [None]
+
+    def _set_property(value: float) -> None:
+        _last_set[0] = time.monotonic()
+        core.setProperty(device_label, property_name, knob2value(value))
+
+    def _on_knob_changed(value: float) -> None:
+        # Cancel any pending trailing call
+        if _trailing[0] is not None:
+            _trailing[0].cancel()
+            _trailing[0] = None
+
+        now = time.monotonic()
+        elapsed = now - _last_set[0]
+
+        if elapsed >= min_interval:
+            _set_property(value)
+        else:
+            # Schedule a trailing call so the final value is always applied
+            delay = min_interval - elapsed
+            t = threading.Timer(delay, _set_property, args=(value,))
+            t.daemon = True
+            t.start()
+            _trailing[0] = t
+
+    knob.changed.connect(_on_knob_changed)
+
+    # Bidirectional: update knob when property changes externally
+    def _update_knob_value(dev: str, prop: str, value: str) -> None:
+        if dev == device_label and prop == property_name:
+            knob.set_value(value2knob(value))
+
+    core.events.propertyChanged.connect(_update_knob_value)
+
+    def disconnect() -> None:
+        if _trailing[0] is not None:
+            _trailing[0].cancel()
+        knob.changed.disconnect(_on_knob_changed)
+        core.events.propertyChanged.disconnect(_update_knob_value)
 
     return disconnect
 
