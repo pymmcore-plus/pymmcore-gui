@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 from contextlib import suppress
 from itertools import chain
 from typing import TYPE_CHECKING, ClassVar
@@ -106,7 +105,7 @@ class _StagePoller(QThread):
                 self.positionReady.emit(x, y, z, has_xy, has_z)
             except Exception:
                 pass
-            time.sleep(POLL_INTERVAL_MS / 1000)
+            self.msleep(POLL_INTERVAL_MS)
 
     def stop(self) -> None:
         self._running = False
@@ -388,11 +387,10 @@ class StagesControlWidget(QWidget):
         self._build_ui()
         self._connect_signals()
         self._on_cfg_loaded()
-        self._stage_poller = _StagePoller(self._mmc, self)
+        self._stage_poller = _StagePoller(self._mmc)
         self._stage_poller.positionReady.connect(self._on_polled_position)
         if self._poll_cb.isChecked():
             self._stage_poller.start()
-        self.destroyed.connect(self._disconnect)
 
     def _disconnect(self) -> None:
         self._stage_poller.stop()

@@ -175,6 +175,10 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
             if stage_exp and isinstance(stage_exp, _StageExplorer):
                 _setup_stage_mda_connections(stage_exp, mda_widget)
 
+    # set z tab to range around
+    mda_widget.z_plan._btn_range.setChecked(True)
+    mda_widget.z_plan.range.setValue(5.0)
+    mda_widget.z_plan.step.setValue(0.5)
     return mda_widget
 
 

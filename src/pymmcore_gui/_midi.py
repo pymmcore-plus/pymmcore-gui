@@ -136,8 +136,12 @@ def connect_midi(core: CMMCorePlus) -> Callable[[], None]:
     cam = core.getCameraDevice()
     if cam:
         dc = _connect_knob_throttled(
-            device.knob[8], core, cam, "Exposure",
-            prop_min=1.0, prop_max=500.0,
+            device.knob[8],
+            core,
+            cam,
+            "Exposure",
+            prop_min=1.0,
+            prop_max=500.0,
         )
         disconnects.append(dc)
 

@@ -35,6 +35,9 @@ class _KeyFilter(QObject):
         return False
 
 
+_ORTHO_VIEWS = [("y", "x"), ("z", "x"), ("z", "y")]
+
+
 class MMArrayViewer(ndv.ArrayViewer):
     """ArrayViewer subclass that hides the ROI button and adds a Save button."""
 
@@ -56,6 +59,24 @@ class MMArrayViewer(ndv.ArrayViewer):
 
         with suppress(Exception):
             _add_save_button(self)
+        with suppress(Exception):
+            _add_roll_axes_button(self)
+
+    def _roll_axes(self) -> None:
+        """Cycle visible_axes through the three orthogonal ZYX views."""
+        wrapper = self.data_wrapper
+        if wrapper is None:
+            return
+        keys = set(wrapper.sizes())
+        if not {"x", "y", "z"}.issubset(keys):
+            return
+
+        current = self.display_model.visible_axes
+        try:
+            idx = _ORTHO_VIEWS.index(current)  # type: ignore[arg-type]
+        except ValueError:
+            idx = 0
+        self.display_model.visible_axes = _ORTHO_VIEWS[(idx + 1) % len(_ORTHO_VIEWS)]
 
     def _save_data(self) -> None:
         """Save the current viewer data as an OME-TIFF file."""
@@ -143,6 +164,21 @@ def _add_save_button(viewer: MMArrayViewer) -> QPushButton:
     btn.clicked.connect(viewer._save_data)
 
     # Insert after the 3D button (ndims_btn is at index 3)
+    ndims_idx = btn_layout.indexOf(q_widget.ndims_btn)
+    btn_layout.insertWidget(ndims_idx + 1, btn)
+    return btn
+
+
+def _add_roll_axes_button(viewer: MMArrayViewer) -> QPushButton:
+    """Add a roll-axes button to the viewer's button bar."""
+    q_widget = viewer.widget()
+    btn_layout = q_widget._btn_layout
+
+    btn = QPushButton(q_widget)
+    btn.setIcon(QIconifyIcon("fluent:cube-rotate-20-regular"))
+    btn.setToolTip("Cycle orthogonal views")
+    btn.clicked.connect(viewer._roll_axes)
+
     ndims_idx = btn_layout.indexOf(q_widget.ndims_btn)
     btn_layout.insertWidget(ndims_idx + 1, btn)
     return btn
