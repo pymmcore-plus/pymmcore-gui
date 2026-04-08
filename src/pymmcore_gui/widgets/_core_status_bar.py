@@ -113,6 +113,21 @@ class CoreStatusBar(QWidget):
                 self._xy_accum.moveFinished.disconnect(self._update_xy_position)
             self._xy_accum = None
 
+    # ---- public position update (called by stage poller) ----
+
+    def update_stage_position(
+        self, x: float, y: float, z: float, has_xy: bool, has_z: bool
+    ) -> None:
+        """Update displayed stage positions. Called from the stage widget poller."""
+        if has_xy:
+            self._xy_label.setText(f"XY: {x:.1f}, {y:.1f}")
+        else:
+            self._xy_label.setText("XY: --")
+        if has_z:
+            self._z_label.setText(f"Z: {z:.1f}")
+        else:
+            self._z_label.setText("Z: --")
+
     # ---- update helpers ----
 
     def _update_xy_position(self) -> None:

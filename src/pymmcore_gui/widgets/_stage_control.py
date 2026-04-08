@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from contextlib import suppress
 from itertools import chain
 from typing import TYPE_CHECKING, ClassVar
@@ -13,7 +14,7 @@ from pymmcore_gui._qt.Qlementine import (  # type: ignore[attr-defined]
     QlementineStyle,
     SegmentedControl,
 )
-from pymmcore_gui._qt.QtCore import QSignalBlocker, QSize, Qt, QTimer, Signal
+from pymmcore_gui._qt.QtCore import QSignalBlocker, QSize, Qt, QThread, QTimer, Signal
 from pymmcore_gui._qt.QtGui import QColor, QFont, QPalette
 from pymmcore_gui._qt.QtWidgets import (
     QApplication,
@@ -76,6 +77,39 @@ def _mono_font(size: int = 11) -> QFont:
     font = QFont("Menlo, Consolas, monospace", size)
     font.setStyleHint(QFont.StyleHint.Monospace)
     return font
+
+
+# ── Stage position poller (background thread) ───────────────────────
+
+
+class _StagePoller(QThread):
+    """Polls stage positions off the UI thread."""
+
+    # x, y, z, has_xy, has_z
+    positionReady = Signal(float, float, float, bool, bool)
+
+    def __init__(self, mmc: CMMCorePlus, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._mmc = mmc
+        self._running = True
+
+    def run(self) -> None:
+        while self._running:
+            try:
+                x = y = z = 0.0
+                has_xy = bool(self._mmc.getXYStageDevice())
+                has_z = bool(self._mmc.getFocusDevice())
+                if has_xy:
+                    x, y = self._mmc.getXYPosition()
+                if has_z:
+                    z = self._mmc.getPosition()
+                self.positionReady.emit(x, y, z, has_xy, has_z)
+            except Exception:
+                pass
+            time.sleep(POLL_INTERVAL_MS / 1000)
+
+    def stop(self) -> None:
+        self._running = False
 
 
 # ── Position bar ─────────────────────────────────────────────────────
@@ -354,10 +388,15 @@ class StagesControlWidget(QWidget):
         self._build_ui()
         self._connect_signals()
         self._on_cfg_loaded()
+        self._stage_poller = _StagePoller(self._mmc, self)
+        self._stage_poller.positionReady.connect(self._on_polled_position)
+        if self._poll_cb.isChecked():
+            self._stage_poller.start()
         self.destroyed.connect(self._disconnect)
 
     def _disconnect(self) -> None:
-        self._poll_timer.stop()
+        self._stage_poller.stop()
+        self._stage_poller.wait()
         self._disconnect_accumulators()
         evts = self._mmc.events
         evts.systemConfigurationLoaded.disconnect(self._on_cfg_loaded)
@@ -449,17 +488,14 @@ class StagesControlWidget(QWidget):
         checks_row.setSpacing(15)
         self._snap_cb = QCheckBox("Snap on Click", self)
         self._snap_cb.setToolTip("Snap image after each move")
+        self._snap_cb.setChecked(True)
         self._poll_cb = QCheckBox("Poll", self)
         self._poll_cb.setToolTip("Poll stage position periodically")
+        self._poll_cb.setChecked(True)
         checks_row.addWidget(self._snap_cb)
         checks_row.addWidget(self._poll_cb)
         checks_row.addStretch()
         root.addLayout(checks_row)
-
-        # Poll timer
-        self._poll_timer = QTimer(self)
-        self._poll_timer.setInterval(POLL_INTERVAL_MS)
-        self._poll_timer.timeout.connect(self._update_positions)
 
     # ── Signal wiring ────────────────────────────────────────────────
 
@@ -606,6 +642,7 @@ class StagesControlWidget(QWidget):
     # ── Position updates ─────────────────────────────────────────────
 
     def _update_positions(self) -> None:
+        """Immediate (synchronous) position refresh for config/device changes."""
         xy_dev = self._current_xy_device()
         if xy_dev:
             try:
@@ -623,6 +660,22 @@ class StagesControlWidget(QWidget):
             except Exception:
                 pass
 
+    def _on_polled_position(
+        self, x: float, y: float, z: float, has_xy: bool, has_z: bool
+    ) -> None:
+        """Handle position data arriving from the background poller."""
+        if has_xy:
+            self._pos_bar.set_position("X", x)
+            self._pos_bar.set_position("Y", y)
+        if has_z:
+            self._pos_bar.set_position("Z", z)
+
+        # Also update the main window's status bar
+        from pymmcore_gui.actions.widget_actions import get_mm_main_window
+
+        if (win := get_mm_main_window(self)) and hasattr(win, "_core_status"):
+            win._core_status.update_stage_position(x, y, z, has_xy, has_z)
+
     def _on_xy_pos_changed(self, device: str, x: float, y: float) -> None:
         if device == self._current_xy_device():
             self._pos_bar.set_position("X", x)
@@ -636,9 +689,11 @@ class StagesControlWidget(QWidget):
 
     def _on_poll_toggled(self, checked: bool) -> None:
         if checked:
-            self._poll_timer.start()
+            self._stage_poller._running = True
+            self._stage_poller.start()
         else:
-            self._poll_timer.stop()
+            self._stage_poller.stop()
+            self._stage_poller.wait()
 
     # ── Keyboard & mouse ─────────────────────────────────────────────
 
