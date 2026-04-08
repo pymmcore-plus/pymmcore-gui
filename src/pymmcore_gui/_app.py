@@ -79,7 +79,7 @@ class MMQApplication(QApplication):
             if os.name == "nt":
                 import ctypes
 
-                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
+                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)  # type: ignore
             elif sys.platform.startswith("darwin"):
                 _set_osx_app_name(APP_NAME)
 

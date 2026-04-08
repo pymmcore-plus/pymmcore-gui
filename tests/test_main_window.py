@@ -174,6 +174,58 @@ def test_stream(gui: MicroManagerGUI, qtbot: QtBot) -> None:
     core.stopSequenceAcquisition()
 
 
+def test_core_status_bar(gui: MicroManagerGUI, qtbot: QtBot) -> None:
+    """Test that the status bar shows and updates core state."""
+    sb = gui._core_status
+    core = gui._mmc
+
+    # Initial state should be populated from demo config
+    assert "XY:" in sb._xy_label.text()
+    assert "Z:" in sb._z_label.text()
+    assert "Ch:" in sb._channel_label.text()
+    assert "512x512" in sb._camera_label.text()
+    assert sb._mda_label.text() == "MDA: idle"
+    assert not sb._mda_progress.isVisible()
+
+    # XY position update via accumulator moveFinished
+    assert sb._xy_accum is not None
+    sb._xy_accum.moveFinished.emit()
+    assert "XY:" in sb._xy_label.text()
+    assert sb._xy_label.text() != "XY: --"
+
+    # Z position update via signal
+    core.events.stagePositionChanged.emit("Z", 42.5)
+    assert "42.5" in sb._z_label.text()
+
+    # Channel update
+    core.setConfig("Channel", "FITC")
+    assert "FITC" in sb._channel_label.text()
+
+    # Camera binning update
+    cam = core.getCameraDevice()
+    core.setProperty(cam, "Binning", "2")
+    assert "bin:2" in sb._camera_label.text()
+
+    # MDA progress bar
+    seq = useq.MDASequence(
+        time_plan=useq.TIntervalLoops(interval=0, loops=2),  # pyright: ignore
+        channels=["DAPI"],  # pyright: ignore
+    )
+    expected_total = len(list(seq))
+    with qtbot.waitSignal(gui._viewers_manager.mdaViewerCreated):
+        core.mda.run(seq)
+    # After MDA finishes, progress should be at max and label says done
+    assert sb._mda_progress.value() == expected_total
+    assert sb._mda_progress.maximum() == expected_total
+    assert sb._mda_label.text() == "MDA: done"
+
+    # After the hide timer fires, progress bar hides and label resets
+    sb._mda_hide_timer.timeout.emit()
+    assert not sb._mda_progress.isVisible()
+    assert sb._mda_label.text() == "MDA: idle"
+    assert sb._mda_progress.value() == 0
+
+
 def test_mda(gui: MicroManagerGUI, qtbot: QtBot) -> None:
     vm = gui._viewers_manager
     assert vm._active_mda_viewer is None
