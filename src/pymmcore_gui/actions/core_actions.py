@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import TYPE_CHECKING
 
 from ._action_info import ActionInfo, ActionKey
@@ -60,7 +61,10 @@ def _init_snap_image(action: QCoreAction) -> None:
     mmc = action.mmc
 
     def _on_load() -> None:
-        action.setEnabled(bool(mmc.getCameraDevice()))
+        # the action's underlying Qt widget may already be gone (e.g. a core
+        # event fired during app shutdown, after this action's window closed)
+        with suppress(RuntimeError):
+            action.setEnabled(bool(mmc.getCameraDevice()))
 
     mmc.events.systemConfigurationLoaded.connect(_on_load)
 
@@ -71,12 +75,14 @@ def _init_toggle_live(action: QCoreAction) -> None:
     mmc = action.mmc
 
     def _on_load() -> None:
-        action.setEnabled(bool(mmc.getCameraDevice()))
+        with suppress(RuntimeError):
+            action.setEnabled(bool(mmc.getCameraDevice()))
 
     mmc.events.systemConfigurationLoaded.connect(_on_load)
 
     def _on_change() -> None:
-        action.setChecked(mmc.isSequenceRunning())
+        with suppress(RuntimeError):
+            action.setChecked(mmc.isSequenceRunning())
 
     mmc.events.sequenceAcquisitionStarted.connect(_on_change)
     mmc.events.continuousSequenceAcquisitionStarted.connect(_on_change)

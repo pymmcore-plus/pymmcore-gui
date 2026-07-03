@@ -10,7 +10,7 @@ import useq
 from pymmcore_gui import MicroManagerGUI
 from pymmcore_gui._app import MMQApplication
 from pymmcore_gui._notification_manager import NotificationManager
-from pymmcore_gui._qt.QtWidgets import QApplication, QDialog
+from pymmcore_gui._qt.QtWidgets import QApplication, QDialog, QMessageBox
 from pymmcore_gui.actions import CoreAction, WidgetAction
 from pymmcore_gui.widgets._toolbars import ShuttersToolbar
 
@@ -259,3 +259,60 @@ def test_mda(gui: MicroManagerGUI, qtbot: QtBot) -> None:
             ),
         )
     assert vm._active_mda_viewer is not None
+
+
+def test_close_stops_live_and_unloads_devices(gui: MicroManagerGUI) -> None:
+    """Closing the window while live must stop the camera and unload devices."""
+    core = gui._mmc
+    core.startContinuousSequenceAcquisition(0)
+    assert core.isSequenceRunning()
+
+    assert gui.close()
+
+    assert not core.isSequenceRunning()
+    assert core.getLoadedDevices() == ("Core",)
+
+
+def test_close_with_running_mda_confirmed_cancels(
+    gui: MicroManagerGUI, qtbot: QtBot
+) -> None:
+    """Confirming the close-while-running-MDA prompt cancels the MDA and unloads."""
+    core = gui._mmc
+    thread = core.run_mda(
+        useq.MDASequence(
+            time_plan=useq.TIntervalLoops(interval=1, loops=1000),  # pyright: ignore
+        ),
+    )
+    qtbot.waitUntil(lambda: core.mda.is_running(), timeout=2000)
+
+    with patch.object(QMessageBox, "exec", lambda self: QMessageBox.StandardButton.Yes):
+        assert gui.close()
+
+    thread.join(2)
+    assert not thread.is_alive()
+    assert not core.mda.is_running()
+    assert core.getLoadedDevices() == ("Core",)
+
+
+def test_close_with_running_mda_declined_keeps_open(
+    gui: MicroManagerGUI, qtbot: QtBot
+) -> None:
+    """Declining the close-while-running-MDA prompt keeps the MDA alive."""
+    core = gui._mmc
+    thread = core.run_mda(
+        useq.MDASequence(
+            time_plan=useq.TIntervalLoops(interval=1, loops=1000),  # pyright: ignore
+        ),
+    )
+    qtbot.waitUntil(lambda: core.mda.is_running(), timeout=2000)
+
+    with patch.object(QMessageBox, "exec", lambda self: QMessageBox.StandardButton.No):
+        assert not gui.close()
+
+    # closeEvent was ignored: devices are still loaded and the MDA is untouched
+    assert core.mda.is_running()
+    assert core.getLoadedDevices() != ("Core",)
+
+    # clean up: cancel the still-running acquisition before the test ends
+    core.mda.cancel()
+    thread.join(2)

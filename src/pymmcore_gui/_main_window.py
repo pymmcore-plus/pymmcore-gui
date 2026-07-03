@@ -19,6 +19,7 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QMenu,
     QMenuBar,
+    QMessageBox,
     QPushButton,
     QStatusBar,
     QToolBar,
@@ -27,6 +28,7 @@ from PyQt6.QtWidgets import (
 from PyQt6Ads import CDockManager, CDockWidget, SideBarLocation
 from superqt import QIconifyIcon
 
+from ._mmcore_shutdown import shutdown_mmcore, track_mda_thread
 from ._ndv_viewers import NDVViewersManager
 from ._notification_manager import NotificationManager
 from ._settings import Settings
@@ -178,6 +180,9 @@ class MicroManagerGUI(QMainWindow):
         self._mmc.events.systemConfigurationLoaded.connect(
             self._on_system_config_loaded
         )
+        # so that closeEvent can reliably wait for any in-progress MDA to
+        # actually finish before unloading devices (see _mmcore_shutdown.py)
+        track_mda_thread(self._mmc)
 
         self._viewers_manager = NDVViewersManager(self, self._mmc)
         self._viewers_manager.mdaViewerCreated.connect(self._on_mda_viewer_created)
@@ -436,8 +441,29 @@ class MicroManagerGUI(QMainWindow):
                     menu.addAction(self.get_action(action))
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
+        if self._mmc.mda.is_running() and not self._confirm_close_with_running_mda():
+            if a0 is not None:
+                a0.ignore()
+            return
         self._save_state()
+        try:
+            shutdown_mmcore(self._mmc)
+        except Exception:
+            logger.exception("Error during mmcore shutdown on close")
         return super().closeEvent(a0)
+
+    def _confirm_close_with_running_mda(self) -> bool:
+        box = QMessageBox(
+            QMessageBox.Icon.Warning,
+            "Acquisition in progress",
+            "An acquisition (MDA) is currently running.\n\n"
+            "Closing pyMM now will cancel it immediately. Continue?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            self,
+        )
+        box.setDefaultButton(QMessageBox.StandardButton.No)
+        box.setEscapeButton(QMessageBox.StandardButton.No)
+        return box.exec() == QMessageBox.StandardButton.Yes
 
     def restore_state(self, *, show: bool = False) -> None:
         """Restore the state of the window from settings (or load default state).

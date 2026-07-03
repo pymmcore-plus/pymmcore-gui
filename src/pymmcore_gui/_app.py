@@ -136,6 +136,17 @@ def create_mmgui(
     win = MicroManagerGUI(mmcore=mmcore)
     QTimer.singleShot(0, lambda: win.restore_state(show=True))
 
+    def _on_about_to_quit() -> None:
+        # Safety net for exit paths that bypass MicroManagerGUI.closeEvent
+        # (e.g. app.quit() from the embedded console). Idempotent: calling
+        # this after closeEvent already ran is a cheap no-op.
+        with suppress(Exception):
+            from pymmcore_gui._mmcore_shutdown import shutdown_mmcore
+
+            shutdown_mmcore(win.mmcore)
+
+    app.aboutToQuit.connect(_on_about_to_quit)
+
     # Optional auto-close delay for test_bundle.py
     if quit_s := os.environ.get("PYMMGUI_TEST_QUIT_AFTER"):
         QTimer.singleShot(int(float(quit_s) * 1000), win.close)
