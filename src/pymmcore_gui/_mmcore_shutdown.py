@@ -14,9 +14,10 @@ import logging
 import threading
 import time
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from threading import Thread
 
     from pymmcore_plus import CMMCorePlus
@@ -26,6 +27,7 @@ logger = logging.getLogger("pymmcore_gui")
 _LIVE_STOP_TIMEOUT_S = 5.0
 _MDA_CANCEL_TIMEOUT_S = 10.0
 _UNLOAD_TIMEOUT_S = 10.0
+_WORKER_QUIESCE_TIMEOUT_S = 5.0
 _POLL_INTERVAL_S = 0.05
 
 _LAST_MDA_THREAD_ATTR = "_mmcore_gui_last_mda_thread"
@@ -64,6 +66,7 @@ def shutdown_mmcore(
     live_stop_timeout: float = _LIVE_STOP_TIMEOUT_S,
     mda_cancel_timeout: float = _MDA_CANCEL_TIMEOUT_S,
     unload_timeout: float = _UNLOAD_TIMEOUT_S,
+    worker_quiesce_timeout: float = _WORKER_QUIESCE_TIMEOUT_S,
 ) -> None:
     """Stop any running acquisition and unload all devices from *mmc*.
 
@@ -83,6 +86,7 @@ def shutdown_mmcore(
     _stop_live(mmc, live_stop_timeout)
     _cancel_mda_and_wait(mmc, mda_thread, mda_cancel_timeout)
     _close_lasers()
+    _quiesce_background_reads(worker_quiesce_timeout)
     _run_with_timeout(mmc.unloadAllDevices, unload_timeout, "unloadAllDevices")
 
 
@@ -120,6 +124,30 @@ def _cancel_mda_and_wait(
         _wait_until(lambda: not mmc.mda.is_running(), timeout_s)
 
 
+def _quiesce_background_reads(timeout_s: float) -> None:
+    """Drain background worker threads (telemetry pollers) before unloading.
+
+    Widget pollers -- CRISP autofocus, stage position, ... -- read device
+    properties on ``superqt`` worker threads. ``unloadAllDevices`` runs on its
+    own thread (see ``_run_with_timeout``), so a read still in flight races the
+    unload and pymmcore-plus logs ``No device with label ...`` warnings. Waiting
+    for the workers to finish first lets any in-flight read complete against
+    still-loaded devices. Bounded so a stuck read cannot block shutdown.
+    """
+    try:
+        from superqt.utils import WorkerBase
+
+        WorkerBase.await_workers(msecs=int(timeout_s * 1000))
+    except RuntimeError:
+        logger.warning(
+            "Background worker threads did not finish within %.1fs; "
+            "continuing shutdown anyway",
+            timeout_s,
+        )
+    except Exception:
+        logger.exception("Error waiting for background workers during shutdown")
+
+
 def _close_lasers() -> None:
     try:
         from pymmcore_gui.asi_z_stack.asi_controller import close_all_lasers
@@ -142,7 +170,7 @@ def _run_with_timeout(fn: Callable[[], None], timeout_s: float, label: str) -> N
     def _target() -> None:
         try:
             fn()
-        except BaseException as exc:  # noqa: BLE001
+        except BaseException as exc:
             errors.append(exc)
 
     t = threading.Thread(target=_target, name=f"mmcore-shutdown-{label}", daemon=True)
