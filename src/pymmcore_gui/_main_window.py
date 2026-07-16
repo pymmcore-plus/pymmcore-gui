@@ -170,6 +170,8 @@ class MicroManagerGUI(QMainWindow):
         self._dock_widgets = WeakValueDictionary[str, CDockWidget]()
 
         # get global CMMCorePlus instance
+        # NOTE If we create the core, we are responsible for cleaning it up
+        self._owns_mmcore = mmcore is None
         self._mmc = mmcore or CMMCorePlus.instance()
         self._mmc.events.systemConfigurationLoaded.connect(
             self._on_system_config_loaded
@@ -422,6 +424,8 @@ class MicroManagerGUI(QMainWindow):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self._save_state()
+        if self._owns_mmcore:
+            self._mmc.reset()
         return super().closeEvent(a0)
 
     def restore_state(self, *, show: bool = False) -> None:

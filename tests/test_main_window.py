@@ -185,3 +185,19 @@ def test_mda(gui: MicroManagerGUI, qtbot: QtBot) -> None:
             ),
         )
     assert vm._active_mda_viewer is not None
+
+
+def test_reset_on_close(qtbot: QtBot) -> None:
+    """Test that not providing CMMCorePlus instance resets the core on close."""
+    gui = MicroManagerGUI()
+    qtbot.addWidget(gui)
+    core = gui._mmc
+    with patch.object(core, "reset") as mock_reset:
+        gui.close()
+    mock_reset.assert_called_once()
+
+    guiWithExternalCore = MicroManagerGUI(mmcore=core)
+    qtbot.addWidget(guiWithExternalCore)
+    with patch.object(core, "reset") as mock_reset:
+        guiWithExternalCore.close()
+    mock_reset.assert_not_called()
