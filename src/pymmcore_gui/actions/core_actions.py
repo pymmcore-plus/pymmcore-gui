@@ -47,6 +47,9 @@ def _init_snap_image(action: QCoreAction) -> None:
         action.setEnabled(bool(mmc.getCameraDevice()))
 
     mmc.events.systemConfigurationLoaded.connect(_on_load)
+    action.destroyed.connect(
+        lambda: mmc.events.systemConfigurationLoaded.disconnect(_on_load)
+    )
 
     _on_load()
 
@@ -58,6 +61,9 @@ def _init_toggle_live(action: QCoreAction) -> None:
         action.setEnabled(bool(mmc.getCameraDevice()))
 
     mmc.events.systemConfigurationLoaded.connect(_on_load)
+    action.destroyed.connect(
+        lambda: mmc.events.systemConfigurationLoaded.disconnect(_on_load)
+    )
 
     def _on_change() -> None:
         action.setChecked(mmc.isSequenceRunning())
