@@ -106,6 +106,30 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
+
+# Remove MSVC runtime DLLs bundled by PyQt6 (in Qt6/bin/).
+# These older copies conflict with the versions required by pymmcore and its
+# device adapters, causing a segfault on Windows when CMMCore is constructed.
+# The system-installed versions (from vc_redist) are loaded at runtime instead
+# (see pymmcore_gui/__init__.py).
+if os.name == "nt":
+    _msvc_basenames = {
+        "concrt140.dll",
+        "msvcp140.dll",
+        "msvcp140_1.dll",
+        "msvcp140_2.dll",
+        "vcruntime140.dll",
+        "vcruntime140_1.dll",
+    }
+    a.binaries = [
+        (dest, src, tag)
+        for dest, src, tag in a.binaries
+        if not (
+            ("Qt6" in src or "Qt6" in dest or "PyQt6" in src or "PyQt6" in dest)
+            and os.path.basename(dest).lower() in _msvc_basenames
+        )
+    ]
+
 pyz = PYZ(a.pure)
 if SPLASH:
     splash = Splash(

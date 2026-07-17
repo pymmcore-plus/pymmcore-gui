@@ -50,5 +50,7 @@ def test_notification_manager(qtbot: QtBot, monkeypatch: MonkeyPatch) -> None:
     nm.show_info_message("info", "Action", on_action=action_mock)
     toast = nm._notification_widgets[-1]
     assert isinstance(toast, NotificationToast)
-    toast.findChild(QPushButton, "Action").click()
+    child = toast.findChild(QPushButton, "Action")
+    assert child is not None
+    child.click()
     action_mock.assert_called_with("Action")

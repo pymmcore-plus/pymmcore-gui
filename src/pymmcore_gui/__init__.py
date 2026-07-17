@@ -1,5 +1,7 @@
 """A Micro-Manager GUI based on pymmcore-widgets and pymmcore-plus."""
 
+import os
+import sys
 from importlib.metadata import PackageNotFoundError, version
 
 try:
@@ -7,7 +9,9 @@ try:
 except PackageNotFoundError:
     __version__ = "uninstalled"
 
-import sys
+# to avoid https://github.com/pymmcore-plus/pymmcore-gui/issues/114
+# set this env var to instruct pymmcore-plus to use the Qt backend for signals
+os.environ.setdefault("PYMM_SIGNALS_BACKEND", "qt")
 
 if sys.platform == "win32":
     # On Windows, a DLL of a given basename is only loaded once per process.

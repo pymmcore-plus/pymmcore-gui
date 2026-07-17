@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Annotated, TypeVar, cast
 
+import pymmcore_widgets as pmmw
 from pymmcore_plus import CMMCorePlus
 
 from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea, SideBarLocation
@@ -15,7 +16,7 @@ from pymmcore_gui._qt.QtWidgets import QDialog, QVBoxLayout, QWidget
 from ._action_info import ActionKey, WidgetActionInfo, _ensure_isinstance
 
 if TYPE_CHECKING:
-    import pymmcore_widgets as pmmw
+    from pathlib import Path
 
     from pymmcore_gui._main_window import MicroManagerGUI
     from pymmcore_gui._qt.QtCore import QObject
@@ -100,8 +101,29 @@ def create_install_widgets(parent: QWidget) -> QDialog:
 
 def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
     """Create the MDA widget."""
-    # from pymmcore_gui.widgets import _MDAWidget
-    from pymmcore_widgets import MDAWidget
+
+    class MDAWidget(pmmw.MDAWidget):
+        """MDAWidget subclass: defaults to in-memory output and hides tiff-sequence."""
+
+        def __init__(
+            self, parent: QWidget | None = None, mmcore: CMMCorePlus | None = None
+        ) -> None:
+            super().__init__(parent=parent, mmcore=mmcore)
+            self._hide_tiff_sequence()
+
+        def _hide_tiff_sequence(self) -> None:
+            """Remove the 'tiff-sequence' option from the save widget's writer combo."""
+            combo = self.save_info._writer_combo
+            for i in range(combo.count()):
+                if combo.itemText(i) == "tiff-sequence":
+                    combo.removeItem(i)
+                    break
+
+        def prepare_mda(self) -> bool | str | Path | None:
+            output = super().prepare_mda()
+            if output is None:
+                output = "memory"
+            return output
 
     return MDAWidget(parent=parent, mmcore=_get_core(parent))
 
@@ -122,7 +144,22 @@ def create_config_groups(parent: QWidget) -> pmmw.GroupPresetTableWidget:
 
 def create_pixel_config(parent: QWidget) -> pmmw.PixelConfigurationWidget:
     """Create the Pixel Configuration widget."""
-    from pymmcore_widgets import PixelConfigurationWidget
+    from pymmcore_gui._qt.QtAds import CDockWidget
+
+    class PixelConfigurationWidget(pmmw.PixelConfigurationWidget):
+        def close(self) -> bool:
+            # Hide the parent CDockWidget container instead of closing this widget,
+            # so the widget is preserved and can be reopened. Qt-ADS may nest this
+            # widget inside intermediate containers (e.g. a scroll area or wrapper
+            # widget) before the CDockWidget ancestor, so we need to walk up the parent
+            # chain to find it
+            parent = self.parent()
+            while parent is not None:
+                if isinstance(parent, CDockWidget):
+                    parent.toggleView(False)
+                    return True
+                parent = parent.parent()
+            return super().close()
 
     return PixelConfigurationWidget(parent=parent, mmcore=_get_core(parent))
 
@@ -280,4 +317,5 @@ stage_explorer_widget = WidgetActionInfo(
     icon="mdi:map-search",
     create_widget=create_stage_explorer_widget,
     dock_area=DockWidgetArea.LeftDockWidgetArea,
+    floatable=False,
 )

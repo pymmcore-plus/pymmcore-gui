@@ -51,12 +51,13 @@ class MMConsole(QtConsole):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
 
-        cast("QWidget", self).setWindowTitle("Python kernel")
+        self.setWindowTitle("Python kernel")
         self.set_default_style(colors="linux")
 
         # this makes calling `setFocus()` on a QtConsole give keyboard focus to
         # the underlying `QTextEdit` widget
-        cast("QWidget", self).setFocusProxy(self._control)
+        if self._control is not None:
+            self.setFocusProxy(self._control)
 
         # Create an in-process kernel
         self.kernel_manager = QtInProcessKernelManager()
@@ -121,7 +122,7 @@ class MMConsole(QtConsole):
         """Return the variables pushed to the console."""
         return {k: v for k, v in self.shell.user_ns.items() if k != "__builtins__"}
 
-    def closeEvent(self, a0: QCloseEvent | None) -> None:
+    def closeEvent(self, a0: QCloseEvent) -> None:
         """Clean up the integrated console."""
         if self.kernel_client is not None:
             self.kernel_client.stop_channels()
@@ -140,7 +141,7 @@ class MMConsole(QtConsole):
     # the `parent` method is broken by setting it to traitlets.Instance
     # this may have unintended consequences, but having `parent` not return a QObject
     # is a bigger problem
-    def parent(self) -> QObject | None:
+    def parent(self) -> QObject:
         return QWidget.parent(self)
 
     parent._find_my_config = lambda cfg: _FakeCfg()  # type: ignore

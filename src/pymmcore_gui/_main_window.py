@@ -16,12 +16,12 @@ from superqt import QIconifyIcon
 from pymmcore_gui._qt.QtAds import CDockManager, CDockWidget, SideBarLocation
 from pymmcore_gui._qt.QtCore import Qt
 from pymmcore_gui._qt.QtGui import QAction, QCloseEvent, QGuiApplication, QIcon
+from pymmcore_gui._qt.QtOpenGLWidgets import QOpenGLWidget
 from pymmcore_gui._qt.QtWidgets import (
     QApplication,
     QDialog,
     QMainWindow,
     QMenu,
-    QMenuBar,
     QPushButton,
     QStatusBar,
     QToolBar,
@@ -222,6 +222,12 @@ class MicroManagerGUI(QMainWindow):
             CDockManager.eAutoHideFlag.AutoHideFeatureEnabled, True
         )
         self.dock_manager = CDockManager(self)
+        # Fix: QtAds default stylesheet uses palette(dark) for inactive tab text,
+        # which is invisible on Windows dark themes.
+        self.dock_manager.setStyleSheet(
+            self.dock_manager.styleSheet()
+            + "\nads--CDockWidgetTab QLabel { color: palette(placeholder-text); }"
+        )
 
         self._central = CDockWidget(self.dock_manager, "Viewers", self)
         self._central.setFeature(CDockWidget.DockWidgetFeature.NoTab, True)
@@ -234,7 +240,14 @@ class MicroManagerGUI(QMainWindow):
         self._central.setWidget(blank)
         self._central_dock_area = self.dock_manager.setCentralWidget(self._central)
 
-        # QTimer.singleShot(0, self._restore_state)
+        # Adding a QOpenGLWidget (e.g. ndv canvas) to a window that uses raster
+        # rendering forces Qt to destroy and recreate the native window with an
+        # OpenGL-compatible surface, causing a visible flash. Adding a zero-size
+        # QOpenGLWidget before the first show() ensures the window is born with
+        # the right surface type, avoiding the flash.
+        _gl = QOpenGLWidget(self)
+        _gl.setFixedSize(0, 0)
+        _gl.close()
 
     # --------------------- Properties ----------------------
 
@@ -338,6 +351,10 @@ class MicroManagerGUI(QMainWindow):
             dock.setMinimumSize(widget.minimumSize())
             dock.setIcon(action.icon())
             dock.resize(widget.sizeHint())
+            if not info.floatable:
+                dock.setFeature(
+                    CDockWidget.DockWidgetFeature.DockWidgetFloatable, False
+                )
             self._dock_widgets[key] = dock
             if area is None:
                 self.dock_manager.addDockWidgetFloating(dock)
@@ -401,7 +418,7 @@ class MicroManagerGUI(QMainWindow):
             tb = tb_entry(self._mmc, self)
             self.addToolBar(tb)
         else:
-            tb = cast("QToolBar", self.addToolBar(name))
+            tb = self.addToolBar(name)
             for action in tb_entry:
                 if action is None:
                     tb.addSeparator()
@@ -410,19 +427,19 @@ class MicroManagerGUI(QMainWindow):
         tb.setObjectName(name)
 
     def _add_menubar(self, name: str, menu_entry: MenuDictValue) -> None:
-        mb = cast("QMenuBar", self.menuBar())
+        mb = self.menuBar()
         if callable(menu_entry):
             menu = menu_entry(self._mmc, self)
             mb.addMenu(menu)
         else:
-            menu = cast("QMenu", mb.addMenu(name))
+            menu = mb.addMenu(name)
             for action in menu_entry:
                 if action is None:
                     menu.addSeparator()
                 else:
                     menu.addAction(self.get_action(action))
 
-    def closeEvent(self, a0: QCloseEvent | None) -> None:
+    def closeEvent(self, a0: QCloseEvent) -> None:
         self._save_state()
         if self._owns_mmcore:
             self._mmc.reset()
@@ -482,7 +499,7 @@ class MicroManagerGUI(QMainWindow):
         """Save the state of the window to settings."""
         # save position and size of the main window
         settings = Settings.instance()
-        settings.window.geometry = self.saveGeometry().data()
+        settings.window.geometry = bytes(self.saveGeometry().data())
         # remember which widgets are open, and preserve their state.
         settings.window.open_widgets = open_ = self._open_widgets()
         if open_:
@@ -516,7 +533,7 @@ class MicroManagerGUI(QMainWindow):
         # if the widget is a dock widget, we want to toggle the dock widget
         # rather than the inner widget
         if action.key in self._dock_widgets:
-            widget: QWidget = self.get_dock_widget(action.key)
+            widget = self.get_dock_widget(action.key)
         else:
             # this will create the widget if it doesn't exist yet,
             # e.g. for a click event on a Toolbutton that doesn't yet have a widget
@@ -538,7 +555,7 @@ class MicroManagerGUI(QMainWindow):
         dw = CDockWidget(self.dock_manager, f"ndv-{sha}", self)
         # small hack ... we need to retain a pointer to the viewer
         # otherwise the viewer will be garbage collected
-        dw._viewer = ndv_viewer  # type: ignore
+        dw._viewer = ndv_viewer  # pyright: ignore reportAttributeAccessIssue]``
         dw.setWidget(q_viewer)
         dw.setFeature(dw.DockWidgetFeature.DockWidgetFloatable, False)
         self.dock_manager.addDockWidgetTabToArea(dw, self._central_dock_area)

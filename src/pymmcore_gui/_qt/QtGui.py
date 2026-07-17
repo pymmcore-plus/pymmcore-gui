@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeAlias
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from PyQt6.QtGui import *
-    # from PySide6.QtGui import *
+    from PySide6.QtGui import *
 else:
     try:
         from PyQt6.QtGui import *
