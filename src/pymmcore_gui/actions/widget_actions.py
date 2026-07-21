@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Annotated, TypeVar, cast
 
@@ -11,7 +12,8 @@ from pymmcore_plus import CMMCorePlus
 from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea, SideBarLocation
 from pymmcore_gui._qt.QtCore import Qt
 from pymmcore_gui._qt.QtGui import QAction
-from pymmcore_gui._qt.QtWidgets import QDialog, QVBoxLayout, QWidget
+from pymmcore_gui._qt.QtWidgets import QDialog, QHeaderView, QVBoxLayout, QWidget
+from pymmcore_gui.widgets._stage_explorer import _StageExplorer
 
 from ._action_info import ActionKey, WidgetActionInfo, _ensure_isinstance
 
@@ -110,6 +112,11 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
         ) -> None:
             super().__init__(parent=parent, mmcore=mmcore)
             self._hide_tiff_sequence()
+            # Temporary, we should fix it in poymmcore_widgets. Doing it here just to
+            # see the ROI names sent by the StageExplorer to the MDAWidget
+            if h := self.stage_positions._table.horizontalHeader():
+                h.setSectionResizeMode(0, QHeaderView.ResizeMode.Interactive)  # type: ignore[call-overload]
+                h.setMinimumSectionSize(75)
 
         def _hide_tiff_sequence(self) -> None:
             """Remove the 'tiff-sequence' option from the save widget's writer combo."""
@@ -125,7 +132,18 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
                 output = "memory"
             return output
 
-    return MDAWidget(parent=parent, mmcore=_get_core(parent))
+    mda_widget = MDAWidget(parent=parent, mmcore=_get_core(parent))
+
+    main_window = _get_mm_main_window(parent)
+    if main_window:
+        with contextlib.suppress(KeyError):
+            stage_exp = main_window.get_widget(
+                WidgetAction.STAGE_EXPLORER, create=False
+            )
+            if stage_exp and isinstance(stage_exp, _StageExplorer):
+                _setup_stage_mda_connections(stage_exp, mda_widget)
+
+    return mda_widget
 
 
 def create_camera_roi(parent: QWidget) -> pmmw.CameraRoiWidget:
@@ -190,11 +208,18 @@ def create_config_wizard(parent: QWidget) -> pmmw.ConfigWizard:
     return ConfigWizard(config_file=config_file, core=mmcore, parent=parent)
 
 
-def create_stage_explorer_widget(parent: QWidget) -> pmmw.StageExplorer:
+def create_stage_explorer_widget(parent: QWidget) -> _StageExplorer:
     """Create the Stage Explorer widget."""
-    from pymmcore_widgets import StageExplorer
+    stage_explorer = _StageExplorer(parent=parent, mmcore=_get_core(parent))
 
-    return StageExplorer(parent=parent, mmcore=_get_core(parent))
+    main_window = _get_mm_main_window(parent)
+    if main_window:
+        with contextlib.suppress(KeyError):
+            mda_wdg = main_window.get_widget(WidgetAction.MDA_WIDGET, create=False)
+            if mda_wdg and isinstance(mda_wdg, pmmw.MDAWidget):
+                _setup_stage_mda_connections(stage_explorer, mda_wdg)
+
+    return stage_explorer
 
 
 # ######################## WidgetAction Enum #########################
@@ -319,3 +344,21 @@ stage_explorer_widget = WidgetActionInfo(
     dock_area=DockWidgetArea.LeftDockWidgetArea,
     floatable=False,
 )
+
+
+def _setup_stage_mda_connections(
+    stage_explorer: _StageExplorer | None = None,
+    mda_widget: pmmw.MDAWidget | None = None,
+) -> None:
+    """Helper function to connect the StageExplorer ROIs to the MDAWidget positions."""
+    if stage_explorer is None or mda_widget is None:
+        return
+
+    def _on_send_to_mda(positions: list, clear: bool) -> None:
+        if clear:
+            mda_widget.stage_positions.setValue(positions)
+        else:
+            current = list(mda_widget.stage_positions.value() or [])
+            mda_widget.stage_positions.setValue(current + positions)
+
+    stage_explorer.sendToMDARequested.connect(_on_send_to_mda)
