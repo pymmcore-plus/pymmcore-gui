@@ -1,6 +1,6 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21455476.svg)](https://doi.org/10.5281/zenodo.21455476)
-
 # pymmcore-gui
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21455476.svg)](https://doi.org/10.5281/zenodo.21455476)
 
 *Name pending – this is a working title for the project*
 
