@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import TYPE_CHECKING, Annotated, TypeVar, cast
+from collections.abc import Callable, Mapping
+from typing import TYPE_CHECKING, Annotated, Any, TypeVar, cast
 
 import pymmcore_widgets as pmmw
 from pymmcore_plus import CMMCorePlus
+from useq import AcquireImage, HardwareAutofocus, MDAEvent, MDASequence
 
 from pymmcore_gui._qt.QtAds import CDockWidget, DockWidgetArea, SideBarLocation
-from pymmcore_gui._qt.QtCore import Qt
+from pymmcore_gui._qt.QtCore import QObject, Qt, Signal
 from pymmcore_gui._qt.QtGui import QAction
-from pymmcore_gui._qt.QtWidgets import QDialog, QVBoxLayout, QWidget
+from pymmcore_gui._qt.QtWidgets import QDialog, QLabel, QVBoxLayout, QWidget
 
 from ._action_info import ActionKey, WidgetActionInfo, _ensure_isinstance
 
@@ -19,7 +20,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from pymmcore_gui._main_window import MicroManagerGUI
-    from pymmcore_gui._qt.QtCore import QObject
     from pymmcore_gui.widgets._exception_log import ExceptionLog
     from pymmcore_gui.widgets._mm_console import MMConsole
     from pymmcore_gui.widgets._stage_control import StagesControlWidget
@@ -27,6 +27,10 @@ if TYPE_CHECKING:
 QWidgetType = Annotated[QWidget, _ensure_isinstance(QWidget)]
 
 CT = TypeVar("CT", bound=Callable[[QWidget], QWidget])
+
+
+class _MDAStatusEmitter(QObject):
+    statusRequested = Signal(str)
 
 
 class WidgetAction(ActionKey):
@@ -110,6 +114,37 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
         ) -> None:
             super().__init__(parent=parent, mmcore=mmcore)
             self._hide_tiff_sequence()
+            self._status_emitter = _MDAStatusEmitter(self)
+            self._active_sequence: MDASequence | None = None
+            self._frame_total = 0
+            self._frame_index = 0
+            self._last_event: MDAEvent | None = None
+            self._is_paused = False
+            self._was_canceled = False
+
+            self._status_label = QLabel("Idle", self)
+            self._status_label.setObjectName("mdaStatusLabel")
+            self._status_label.setWordWrap(True)
+            self._status_label.setTextInteractionFlags(
+                Qt.TextInteractionFlag.TextSelectableByMouse
+            )
+            self.statusRequested.connect(self._status_label.setText)
+
+            layout = cast("QVBoxLayout", self.layout())
+            layout.addWidget(self._status_label)
+
+            events = self._mmc.mda.events
+            events.sequenceStarted.connect(self._on_sequence_started)
+            events.eventStarted.connect(self._on_event_started)
+            events.frameReady.connect(self._on_frame_ready)
+            events.awaitingEvent.connect(self._on_awaiting_event)
+            events.sequencePauseToggled.connect(self._on_pause_toggled)
+            events.sequenceCanceled.connect(self._on_sequence_canceled)
+            events.sequenceFinished.connect(self._on_sequence_finished)
+
+        @property
+        def statusRequested(self) -> Any:
+            return self._status_emitter.statusRequested
 
         def _hide_tiff_sequence(self) -> None:
             """Remove the 'tiff-sequence' option from the save widget's writer combo."""
@@ -124,6 +159,123 @@ def create_mda_widget(parent: QWidget) -> pmmw.MDAWidget:
             if output is None:
                 output = "memory"
             return output
+
+        def _axis_value(self, event: MDAEvent | None, axis: str) -> int | None:
+            if event is None:
+                return None
+            for key, value in event.index.items():
+                if str(key) == axis:
+                    return int(value) + 1
+            return None
+
+        def _axis_total(self, axis: str) -> int | None:
+            if self._active_sequence is None:
+                return None
+            for key, value in self._active_sequence.sizes.items():
+                if str(key) == axis and value:
+                    return int(value)
+            return None
+
+        def _channel_name(self, event: MDAEvent | None) -> str | None:
+            if event is None or event.channel is None:
+                return None
+            return event.channel.config or None
+
+        def _event_produces_frame(self, event: MDAEvent) -> bool:
+            action = getattr(event, "action", None)
+            return action is None or isinstance(action, AcquireImage)
+
+        def _count_expected_frames(self, sequence: MDASequence) -> int:
+            return sum(
+                1
+                for event in sequence.iter_events()
+                if self._event_produces_frame(event)
+            )
+
+        def _format_status(
+            self,
+            *,
+            step: str,
+            event: MDAEvent | None = None,
+            next_seconds: float | None = None,
+        ) -> str:
+            current_event = event or self._last_event
+            parts = [f"Frame {self._frame_index}/{self._frame_total}"]
+
+            for axis, label in (("p", "Pos"), ("t", "T"), ("z", "Z")):
+                value = self._axis_value(current_event, axis)
+                total = self._axis_total(axis)
+                if value is not None and total:
+                    parts.append(f"{label} {value}/{total}")
+
+            if channel := self._channel_name(current_event):
+                parts.append(f"Channel {channel}")
+
+            parts.append(f"Step: {step}")
+
+            if next_seconds is not None:
+                parts.append(f"Next: {next_seconds:.1f} s")
+
+            return " | ".join(parts)
+
+        def _set_status(
+            self,
+            *,
+            step: str,
+            event: MDAEvent | None = None,
+            next_seconds: float | None = None,
+        ) -> None:
+            self.statusRequested.emit(
+                self._format_status(step=step, event=event, next_seconds=next_seconds)
+            )
+
+        def _on_sequence_started(
+            self, sequence: MDASequence, meta: Mapping[str, object]
+        ) -> None:
+            self._active_sequence = sequence
+            self._frame_total = self._count_expected_frames(sequence)
+            self._frame_index = 0
+            self._last_event = None
+            self._is_paused = False
+            self._was_canceled = False
+            self._set_status(step="Preparing")
+
+        def _on_event_started(self, event: MDAEvent) -> None:
+            self._last_event = event
+            action = getattr(event, "action", None)
+            if isinstance(action, HardwareAutofocus):
+                self._set_status(step="Autofocus", event=event)
+            else:
+                self._set_status(step="Acquiring", event=event)
+
+        def _on_frame_ready(
+            self, image: object, event: MDAEvent, meta: Mapping[str, object]
+        ) -> None:
+            self._last_event = event
+            self._frame_index += 1
+            self._set_status(step="Acquiring", event=event)
+
+        def _on_awaiting_event(self, event: MDAEvent, remaining_sec: float) -> None:
+            self._last_event = event
+            step = "Paused" if self._is_paused else "Waiting next frame"
+            self._set_status(step=step, event=event, next_seconds=remaining_sec)
+
+        def _on_pause_toggled(self, paused: bool) -> None:
+            self._is_paused = paused
+            step = "Paused" if paused else "Waiting next frame"
+            self._set_status(step=step)
+
+        def _on_sequence_canceled(self, sequence: MDASequence) -> None:
+            self._was_canceled = True
+            self._set_status(step="Canceled")
+
+        def _on_sequence_finished(self, sequence: MDASequence) -> None:
+            finish_reason = getattr(self._mmc.mda.status, "finish_reason", None)
+            if finish_reason is not None and str(finish_reason) == "errored":
+                step = "Error"
+            else:
+                step = "Canceled" if self._was_canceled else "Finished"
+            self._set_status(step=step)
 
     return MDAWidget(parent=parent, mmcore=_get_core(parent))
 
