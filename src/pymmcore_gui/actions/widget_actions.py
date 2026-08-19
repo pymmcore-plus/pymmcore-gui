@@ -43,6 +43,7 @@ class WidgetAction(ActionKey):
     EXCEPTION_LOG = "pymmcore_gui.exception_log"
     STAGE_CONTROL = "pymmcore_gui.stage_control_widget"
     STAGE_EXPLORER = "pymmcore_gui.stage_explorer_widget"
+    MDA_POSITION_MAP = "pymmcore_gui.mda_position_map_widget"
     CONFIG_WIZARD = "pymmcore_gui.hardware_config_wizard"
 
 
@@ -197,6 +198,19 @@ def create_stage_explorer_widget(parent: QWidget) -> pmmw.StageExplorer:
     return StageExplorer(parent=parent, mmcore=_get_core(parent))
 
 
+def create_mda_position_map_widget(parent: QWidget) -> QWidget:
+    """Create an experimental map of the MDA positions."""
+    from pymmcore_gui.widgets._mda_position_map import MDAPositionMapWidget
+
+    mmwin = _get_mm_main_window(parent)
+    if mmwin is None:  # pragma: no cover
+        raise RuntimeError("MDA Position Map requires a MicroManagerGUI parent")
+    mda_widget = mmwin.get_widget(WidgetAction.MDA_WIDGET)
+    return MDAPositionMapWidget(
+        parent=parent, mmcore=_get_core(parent), mda_widget=mda_widget
+    )
+
+
 # ######################## WidgetAction Enum #########################
 
 
@@ -318,4 +332,12 @@ stage_explorer_widget = WidgetActionInfo(
     create_widget=create_stage_explorer_widget,
     dock_area=DockWidgetArea.LeftDockWidgetArea,
     floatable=False,
+)
+
+mda_position_map_widget = WidgetActionInfo(
+    key=WidgetAction.MDA_POSITION_MAP,
+    text="MDA Position Map",
+    icon="mdi:map-marker-multiple-outline",
+    create_widget=create_mda_position_map_widget,
+    dock_area=DockWidgetArea.RightDockWidgetArea,
 )
